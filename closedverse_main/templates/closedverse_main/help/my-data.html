@@ -1,0 +1,74 @@
+{% extends "closedverse_main/layout.html" %}
+{% block main-body %}{% load closedverse_user %}
+{% user_sidebar request user user.profile 0 True %}
+<div id="help" class="main-column">
+	<div class="post-list-outline">
+		<h2 class="label">My data</h2>
+			<div class="help-content">
+				<p>Like any other site, we collect small bits of information from you for security reasons.
+			<h3>General account information:</h3>
+				<p>IP address: <span>{% if user.addr %}{{ user.addr }}{% else %}Data missing{% endif %}
+				<p>Signup IP address: <span>{% if user.signup_addr %}{{ user.signup_addr }}{% else %}Data missing{% endif %}</p>
+				<p>User agent: <span>{% if user.user_agent %}{{ user.user_agent }}{% else %}Data missing{% endif %}
+				<p>Rank: <span>{% if user.staff %}You are a staff member.{% elif not user.level <= 0 %}You are a moderator. (Level {{ user.level }}){% else %}You are a regular user.{% endif %}
+				<h3>My content:</h3>
+				<p>Your account has existed for {{ age }} days! During that time, we've collected:</p>
+				<ul>
+				<li>My posts: <span> {{ posts }}
+				<li>My comments: <span> {{ comments }}
+				<li>My messages: <span> {{ messages }}
+				<li>My yeahs: <span> {{ yeahs }}
+				<li>My notifications: <span> {{ notifications }}
+				</ul>
+			<h3>Restrictions:</h3>
+				<ul>
+				<li>Sending images and creating new accounts: <span> {% if user.has_freedom %}Good standing{% else %}Restricted{% endif %}
+				<li>Post limit: <span> {% if request.user.profile.limit_post == 0 %}Good standing{% else %}{{ user.profile.limit_post }}{% endif %}
+				<li>Editing your profile: <span> {% if not user.profile.cannot_edit %}Good standing{% else %}Restricted{% endif %}
+				</ul>
+			<h3>Collected data:</h3>
+			<div class="user-data">
+				<p class="label">Account login history:</p>
+				<p>Each time you try and sign in to your account, we grab the <strong>IP</strong> and <strong>User agent</strong> from the device used. If you see any login attempts that you don't recognize as your own, you may want to change your password.</p>
+			<table style="width:100%">
+				<tr>
+					<th>Time</th>
+					<th>Success</th>
+					<th class="ip">IP</th>
+					<th>User agent</th>
+				</tr>
+				{% for log_attempt in log_attempt %}
+				<tr>
+					<td>{{ log_attempt.created }}</td>
+					<td{% if not log_attempt.success %} style="border: #f44336 2px solid;"{% endif %}>{{ log_attempt.success }}</td>
+					<td class="ip">{% if log_attempt.success %}{{ log_attempt.addr }}{% else %}REDACTED{% endif %}</td>
+					<td>{{ log_attempt.user_agent }}
+				</tr>
+				{% endfor %}
+				</table>
+				{% if history %}
+				<p class="label">Nickname and Comment history:</p>
+				<table style="width:100%">
+				<tr>
+					<th>Time changed</th>
+					<th>New Nickname</th>
+					<th>New Comment</th>
+				</tr>
+				{% for history in history %}
+				<tr>
+					<td>{{ history.created }}</td>
+					<td>{{ history.new_nickname }}</td>
+					<td>{% if not history.new_comment %}N/A{% else %}{{ history.new_comment|truncatechars:300 }}{% endif %}</td>
+				</tr>
+				{% endfor %}
+				</table>
+				{% else %}
+				<p class="label">No name or comment changes to show.</p>
+				{% endif %}
+			</div>
+			<h3>I want this data removed.</h3>
+			<p>Please contact a staff member, if you wish, your account will be deleted along with all your data attached to it.</p>
+			</div>
+		</div>
+	</div>
+{% endblock %}

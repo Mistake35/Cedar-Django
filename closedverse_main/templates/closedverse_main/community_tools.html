@@ -1,0 +1,64 @@
+{% extends "closedverse_main/layout.html" %}
+{% block main-body %}{% load closedverse_user %}{% load closedverse_tags %}{% load closedverse_community %}
+{% if community.is_feature %}<div class='notice'>
+<p>Who the fuck gave you ownership of a fucking featured community!</p>
+</div>{% endif %}
+{% community_sidebar community request %}
+<div class="main-column"><div class="post-list-outline">
+<h2 class="label">Change settings for {{ community.creator }}'s community</h2>
+<form class="setting-form" method="post" action={% url "main:community-tools-set" community.id %}>
+	<li class="setting-community-name">
+	<p class="settings-label">Set name:</p>
+		<div class="center center-input">
+			<input type="text" name="community_name" maxlength="32" placeholder="New Name" value="{{ community.name }}">
+		</div>
+	</li>
+	<li class="setting-community-description">
+		<p class="settings-label">Community description:</p>
+		<textarea class="textarea" name="community_description" maxlength="2200" placeholder="Community description">{{ community.description }}</textarea>
+	  </li>
+	{% if request.user.has_freedom %}
+	<li class="setting-community-icon">
+		<label class="file-button-container">
+		<p class="input-label">Community icon: {{ max_icon_size }}MB</p>
+		<span class="button file-upload-button">Upload a new icon</span>
+		<input accept="image/gif, image/png, image/webp, image/jpeg, image/jpg, image/svg+xml, image/bmp" type="file" style="display: none;" name="community_icon" onchange="loadFile(event)" id="upload-file">
+		</label>
+	  </li>
+	  <li class="setting-community-banner">
+	  <label class="file-button-container">
+		<p class="input-label">Community banner: {{ max_banner_size }}MB</p>
+		<span class="button file-upload-button">Upload a new banner</span>
+		<input accept="image/gif, image/png, image/webp, image/jpeg, image/jpg, image/svg+xml, image/bmp" type="file" style="display: none;" name="community_banner" onchange="loadFile(event)" id="upload-file">
+	  </label>
+	  </li>
+	  {% endif %}
+	  <li>
+	  <p>&nbsp;</p>
+	  <input type="checkbox" name="force_login" {% if  community.require_auth %}checked{% endif %}>Require login:
+			<p class="note">If this is on, users will need to sign in to view your community.</p>
+	  </li>
+	  <li>
+        <p class="settings-label">Platform</p>
+        <div class="select-content">
+          <div class="select-button">
+            <select name="community_platform" id="community_platform">
+              <option value="0"{% if community.platform == 0 %} selected{% endif %}>None</option>
+              <option value="1"{% if community.platform == 1 %} selected{% endif %}>3DS</option>
+              <option value="2"{% if community.platform == 2 %} selected{% endif %}>Wii U</option>
+			  <option value="3"{% if community.platform == 3 %} selected{% endif %}>Switch</option>
+			  <option value="4"{% if community.platform == 4 %} selected{% endif %}>3DS and Wii U</option>
+			  <option value="5"{% if community.platform == 5 %} selected{% endif %}>PC</option>
+			  <option value="6"{% if community.platform == 6 %} selected{% endif %}>Xbox</option>
+			  <option value="7"{% if community.platform == 7 %} selected{% endif %}>Playstation</option>
+            </select>
+          </div>
+        </div>
+		<p class="note">If your community is for a video game, you can set the platform here. This will show an icon corresponding to what platform you pick.</p>
+      </li>
+		{% csrf_token %}
+		<div class="form-buttons">
+			<input type="submit" class="black-button apply-button" value="Save">
+		</div>
+</form></div></div>
+{% endblock %}

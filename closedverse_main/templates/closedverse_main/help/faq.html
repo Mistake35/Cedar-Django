@@ -1,0 +1,38 @@
+{% extends "closedverse_main/layout.html" %}
+{% block main-body %}{% load closedverse_user %}
+{% user_sidebar request user user.profile 0 True %}
+<div class="main-column" id="help">
+<div class="post-list-outline">
+    <h2 class="label">Frequently Asked Questions (FAQ)</h2>
+    <div id="guide" class="help-content">
+      <div class="faq">
+			<p>Hey there! If you have any questions about Cedar, this page aims to answer them.</p>
+		<h2>What is Cedar?</h2>
+			<p>Cedar is a social network that offers a safe and secure platform for users to connect and share. It is based on the Closedverse project and has some unique features compared to other sites, such as customizable communities and a drawing tool.</p>
+		<h3>The history of cedar</h3>
+			<p>The domain "cedar.doctor" was originally owned by a guy named Seth, who used it to host his own social network. However, Seth stopped hosting the site and the domain expired. I decided to purchase this domain and use it to host this website.</p>
+		<h2>What is Closedverse?</h2>
+			<p>Closedverse was a social network project that was developed by PF2M and Arian Kordi. It was inspired by Miiverse, a social networking service that was offered by Nintendo for its gaming consoles. Closedverse was originally intended to be a safe and friendly community for users to connect and share, but it unfortunately had to shut down on April 4, 2019.</p>
+		<h2>The legacy of Miiverse clones</h2>
+			<p>Miiverse clones, such as Closedverse and Cedar, have a complicated history. Many of these projects have faced challenges and faced criticism for their moderation and management. Closedverse, for example, was known for its drama and conflict, which ultimately led to its shut down.</p>
+			<p>Despite these challenges, Cedar aims to provide a safe and friendly space for users to connect and share. We are committed to maintaining a positive and respectful community, and we have put in place measures to ensure that our moderation is effective and fair. If you have any concerns or questions, please don't hesitate to contact us.</p>
+		<h2>What data do we collect?</h2>
+			<p>For security reasons, we collect and store certain data about our users, such as their IP address, nickname, and comment history. This information is used to protect the site and its users from any potential harm.</p>
+			<p>In addition, any data that users choose to include in their profiles is stored in our database. Users can remove this data at any time, unless they are banned from the site.</p>
+		{% if request.user.is_authenticated %}
+		<div class="center center-input">
+			<button class="button" data-href="{% url "main:my-data" %}">View your data</button>
+		</div>
+		{% endif %}
+		<h2>What can I do on Cedar?</h2>
+			<p>Cedar offers a variety of features that allow users to connect and share with others. These include the ability to change the color and 	background of the website, create and customize communities, and rate user content using "Yeahs" instead of likes.</p>
+		<h2>Is this allowed?</h2>
+			<p>Cedar is a fork of Closedverse, which was originally created by PF2M and Arian Kordi. It is not affiliated with Nintendo or Hatena in any way, and these companies have no involvement with our service.</p>
+		<h2>Any funny details?</h2>
+			<p>Cedar is built using the Django web application framework, which makes it easy to add and modify features. It is a personal project that is not intended to generate revenue or profit. Instead, it is meant to be a fun and safe space for users to connect and share.</p>
+		</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}--

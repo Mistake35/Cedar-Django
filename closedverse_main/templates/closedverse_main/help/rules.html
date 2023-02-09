@@ -1,0 +1,41 @@
+{% extends "closedverse_main/layout.html" %}
+{% block main-body %}{% load closedverse_user %}
+{% user_sidebar request user user.profile 0 True %}
+<div id="help" class="main-column">
+<div class="post-list-outline">
+<h2 class="label">Cedar Rules</h2>
+<div class="help-content">
+<p>To keep the site healthy and enjoyable for all users, we have a few rules in place. Please read them carefully:</p>
+<h3>User age requirement</h3>
+<p>In accordance with the Children's Online Privacy Protection Act (COPPA), users under the age of 13 are not allowed to join the site. If we discover that a user is under 13, their account will be banned.</p>
+<h3>No illegal content</h3>
+<p>Please do not post any content that violates the law. This includes illegal activities, stolen intellectual property, and any other unlawful material.</p>
+<h3>No NSFW or NSFL content</h3>
+<p>We do not allow Not Safe For Work (NSFW) content, such as pornography, or Not Safe For Life (NSFL) content, such as graphic violence or gore. Please do not post or share this type of material on the site.</p>
+<h3>Community standards</h3>
+<p>To create a positive and respectful community, we ask that users avoid the following behaviors:</p>
+<ul>
+<li>Doxing (sharing personal information without consent)</li>
+<li>Threatening or promoting harm to oneself or others</li>
+<li>Using hate speech or discriminatory language</li>
+<!--<li>Spamming or posting excessive amounts of irrelevant content</li>-->
+<li>Harassing or bullying other users</li>
+<li>Posting extremely offensive or edgy content</li>
+<li>Asking for moderator or staff privileges</li>
+</ul>
+<h3>Community creation</h3>
+<p>We want users to be able to create and participate in vibrant communities on the site. However, we ask that users do not:</p>
+<ul>
+<li>Create communities that promote NSFW or NSFL content</li>
+<li>Use icons, banners, descriptions, or titles that feature edgy, violent, or sexual content</li>
+<li>Create duplicate communities that already exist on the site</li>
+<li>Create communities using alternate accounts</li>
+</ul>
+<p>Please note that each user is only allowed to create one community. If your community is removed, you will not be able to create another one.</p>
+<h3>Consequences for rule violations</h3>
+<p>If a user violates any of the rules on the site, they will receive a warning from the moderators or site administrators. In most cases, a single warning will suffice. However, if the user continues to break the rules or engages in severe misconduct, they may be banned from the site.</p>
+<p>Please note that exceptions may apply for more severe cases, such as illegal activities or threats of harm. In these situations, the user may be banned without warning.</p>
+</div>
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "closedverse_main/layout.html" %}
+{% load static %}{% block main-body %}
+<div class="main-column center">
+    <div class="post-list-outline login-page">
+        <form method="post" onload="">
+			<img src="{% static "img/menu-logo.png" %}">
+			<p class="lh">Sign Up</p>
+			<p>Create a Closedverse account to make posts and comments to various communities, give Yeahs to other users' content, and interact with other members of the Closedverse community.</p><br>
+                        <p>If you want to be, at least, not sus to us, you can join our Discord Server. https://discord.gg/PXKhXXk</p><br>
+			<p>Please follow <a href="{% url "main:help-rules" %}">our rules</a>. If you don't, mercy will not be laid on yourself.<br><br>You <strong>must</strong> be 13 years of age or older to join, no exceptions.<br>If you are suspected to be younger than 12 years old, the moderators will decide what to do with you.</p>
+			<h3 class="label"><label><span class="red">*$</span> User ID: <input type="text" class="auth-input" name="username" maxlength="32" minlength="4" placeholder="ID"></label></h3>
+			<h3 class="label"><label>Nickname: <input type="text" class="auth-input" name="nickname" maxlength="32" placeholder="Nick/Mii name?"></label></h3>
+			<h3 class="label nnid"><label>Nintendo Network ID: <input type="text" class="auth-input" name="origin_id" maxlength="16" minlength="6" placeholder="NNID" data-action="{% url "main:origin-id-get" %}">
+				<img class="none">
+			</label></h3>
+			<h3 class="label"><label><span class="red">%</span> E-Mail address: <input type="email" class="auth-input" name="email" maxlength="254" minlength="6" placeholder="E-Mail"></label></h3>
+			<h3 class="label"><label><span class="red">*</span> Password: <input type="password" class="auth-input" name="password" maxlength="32" minlength="6" placeholder="Password"></label></h3>
+			<h3 class="label"><label><span class="red">*</span> Confirm password: <input type="password" class="auth-input" name="password_again" maxlength="32" minlength="6" placeholder="Password again"></label></h3>
+			{% csrf_token %}
+			{% if recaptcha %}
+			<div class="g-recaptcha" data-sitekey="{{ recaptcha }}" data-theme="dark"></div>
+			<script src='https://www.google.com/recaptcha/api.js'></script>
+			{% endif %}
+			
+			<p class="red" style="margin-bottom:6px"></p>
+			<button type="submit" class="button" onclick="event.preventDefault();cac();">Create Account</button>
+			<div class="ll">
+				<p>All fields with a red asterisk (<span class="red">*</span>) are required.</p>
+				<p>NNIDs are only required for getting a Mii and a nickname from.</p>
+				<p>If you do not provide a nickname but provide an NNID, the nickname will be taken from that ID. The ID's nickname, however, is prioritized over the nickname field.</p>
+				<p>You will be able to change your avatar after you sign up.</p>
+				<p><span class="red">%</span>: If you don't fill in your email address, you can't reset your password until you have one.</p>
+				<p><span class="red">$</span>: Your username is used to log in. It'll appear similarly to your NNID on Miiverse, below your nickname.</p>
+			</div>
+		</form>
+	</div>
+</div>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "closedverse_main/layout.html" %}
+{% load closedverse_tags %}{% load closedverse_community %}{% block main-body %}
+<div class="community-main">
+	</div>
+	<div class="community-top-sidebar">
+	<div class="post-list-outline index-memo">
+		<h2 class="label">Community creation Q&amp;A</h2>
+		<h2>Why?</h2>
+		<p>I have no idea, I guess it's cool to have. You can have your own little corner of this site now...</p>
+		<h2>What can I do with my own community?</h2>
+		<p>You can edit it, and that's basically it.</p>
+		<h2>What are C-Tokens, and how do I get them?</h2>
+		<p>Community tokens are a stupid and overcomplicated method of preventing 200,000 communities from being made by one person. You get one when signing up, and you can use it to make your own community. You'll have to ask a staff member for more C-Tokens if you want to make more communities.&nbsp;</p>
+		<h2>Any future plans?</h2>
+		<p>Fuck, I got no clue. Maybe I should make C-Tokens tradable, or make a community ban system, so you can block people from posting and commenting in your own communities.</p>
+	</div>
+	{% if request.user.c_tokens > 0 %}<a class="big-button" href={% url "main:community-create" %}><span class="symbol-label">Create a community</span></a>{% endif %}
+	</div>
+	<div class="community-main">
+		<br>
+			<div class="community-switcher">
+				<a class="community-switcher-tab gen selected" href="#">General</a>
+				<a class="community-switcher-tab game" href="#">Game</a>
+				<a class="community-switcher-tab special" href="#">Special</a>
+				<a class="community-switcher-tab usr" href="#">User</a>
+			</div>
+			<div class="communities gen">
+				{% community_page_element general "General Communities" %}
+			</div>
+			<div class="communities game none">
+				{% community_page_element game "Game Communities" %}
+			</div>
+			<div class="communities special none">
+				{% community_page_element special "Special Communities" %}
+			</div>
+			<div class="communities usr none">
+				{% community_page_element user_communities "User Communities" %}
+			</div>
+			{% if has_next %}
+				<a href="{% url "main:community-viewall" %}?offset={{ next }}" class="big-button">Next</a>
+			{% endif %}
+		{% if has_back %}
+			<p>&nbsp</p>
+			<a href="{% url "main:community-viewall" %}?offset={{ back }}" class="big-button">Back</a>
+		{% endif %}
+	</div>
+{% endblock %}

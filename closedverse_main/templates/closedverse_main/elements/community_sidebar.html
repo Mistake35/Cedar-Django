@@ -1,0 +1,46 @@
+<div id="sidebar">
+  <section class="sidebar-container" id="sidebar-community">
+      {% if community.banner %}
+	  <span id="sidebar-cover">
+        <a href="{% url "main:community-view" community.id %}">
+          <img src="{{ community.banner.url }}">
+        </a>
+      </span>
+	  {% endif %}
+    <header id="sidebar-community-body">
+      <span id="sidebar-community-img">
+        <span class="icon-container">
+          <a href="{% url "main:community-view" community.id %}">
+            <img src="{{ community.icon }}" class="icon">
+          </a>
+        </span>
+		<span class="platform-tag">
+		{% if community.type_platform %}{% load static %}	<img src="{% static community.type_platform %}">{% endif %}
+		</span>
+      </span>
+	  {% if community.tags == 'announcements' %}
+	  <span class="news-community-badge">Announcement Community</span>
+	  {% elif community.tags == 'changelog' %}
+	  <span class="news-community-badge">Changelog Community</span>
+	  {% elif community.tags == 'general' %}
+	  <span class="news-community-badge">General</span>
+	  {% endif %}
+      <h1 class="community-name">
+        <a href="{% url "main:community-view" community.id %}">{{ community.name }}
+        </a>      </h1>
+    </header>
+	{% if community.description %}
+      <div class="community-description js-community-description">
+        <p class="text js-truncated-text">{{ community.description|linebreaksbr|urlize }}</p>
+      </div>
+	  {% endif %}
+	  {% if request.user.is_authenticated %}
+		<button type="button" class="symbol button favorite-button{% if community.has_favorite %} checked{% endif %}" data-action-favorite="{% url "main:community-favorite-add" community.id %}" data-action-unfavorite="{% url "main:community-favorite-rm" community.id %}"><span class="favorite-button-text">Favorite</span></button>
+	  <!--<button class="button reload-btn">Refresh posts</button>
+	  -->
+	  {% if request.user == community.creator %}
+	  <button class="button" data-href="{% url "main:community-tools" community.id %}">Community Settings</button>
+	  {% endif %}
+	{% endif %}
+  </section>
+</div>

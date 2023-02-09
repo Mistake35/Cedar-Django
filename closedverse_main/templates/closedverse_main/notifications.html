@@ -1,0 +1,37 @@
+{% extends "closedverse_main/layout.html" %}
+{% block main-body %}{% load closedverse_tags %}{% load closedverse_user %}
+{% user_sidebar request user user.profile 0 True %}
+<div class="main-column messages">
+  <div class="post-list-outline">
+
+    <h2 class="label">{{ title }}</h2>
+
+	<div id="notification-tab-container" class="tab-container">
+     	 <div class="tab2">
+       	 <a class="tab-icon-my-news selected" href="{% url "main:notifications" %}">
+			<span class="symbol nf"></span>
+			<span>Notifications</span>
+		</a>
+
+        <a class="tab-icon-my-news{% if frs %} notify{% endif %}" href="{% url "main:friend-requests" %}">
+			<span class="symbol fr"></span>
+			<span>Friend Requests</span>
+			{% if frs %}<span class="badge" style></span>{% endif %}
+		</a>
+
+      </div>
+
+    </div>
+	<div class="list news-list">
+	{% if notifications %}
+		{% for notification in notifications %}
+		{% user_notification notification request %}
+		{% endfor %}
+	{% else %}
+		{% nocontent "No notifications yet." %}
+	{% endif %}
+	</div>
+
+  </div>
+</div>
+{% endblock %}

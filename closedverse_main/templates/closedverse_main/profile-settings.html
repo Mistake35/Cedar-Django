@@ -1,0 +1,239 @@
+{% extends "closedverse_main/layout.html" %}
+{% block main-body %}{% load closedverse_user %}{% load closedverse_tags %}
+{% user_sidebar request user profile 0 %}
+
+<div class="main-column"><div class="post-list-outline">
+<h2 class="label">{{ title }}</h2>
+<form class="setting-form" method="post" action="{% url "main:user-view" user.username %}">
+<ul class="settings-list">
+
+	{% if profile.cannot_edit %}
+	<p>You cannot change user settings for this account</p>
+	{% endif %}
+
+		{% if not profile.cannot_edit %}
+      <li class="setting-nickname">
+        <p class="settings-label">Nickname</p>
+        <div class="center center-input">
+			<input type="text" name="screen_name" maxlength="32" placeholder="Nickname" value="{{ user.nickname }}">
+		</div>
+        <p class="note">Nickname, up to 32 characters.</p>
+      </li>
+      <li class="setting-profile-comment">
+        <p class="settings-label">Profile comment</p>
+        <textarea class="textarea" name="profile_comment" maxlength="2200" placeholder="Write about yourself here.">{{ profile.comment }}</textarea>
+        <p class="note">Anything you write here will appear on your profile. Remember to keep it brief. Please don't write anything that'll violate <a href="{% url "main:help-rules" %}">Cedar's rules</a>.</p>
+      </li>
+	  <!--
+      <li>
+        <p class="settings-label"><label for="relationship_visibility">Who should be able to see your friends, followers and following lists?</label></p>
+        <div class="select-content">
+          <div class="select-button">
+            <select name="relationship_visibility" id="relationship_visibility">
+              <option value="0"{% if profile.relationship_visibility == 0 %} selected{% endif %}>Everyone</option>
+              <option value="1"{% if profile.relationship_visibility == 1 %} selected{% endif %}>My friends</option>
+              <option value="2"{% if profile.relationship_visibility == 2 %} selected{% endif %}>Only me</option>
+            </select>
+          </div>
+        </div>
+      </li>
+	  -->
+      <li class="setting-country">
+        <p class="settings-label">Region</p>
+        <div class="center center-input">
+			<input type="text" name="country" maxlength="64" placeholder="Region" value="{{ profile.country }}">
+		</div>
+        <p class="note">Enter your region here. It'll appear on your profile.
+		<br>
+		</p>
+      </li>
+      <li class="setting-email">
+        <p class="settings-label">E-mail address</p>
+        <div class="center center-input">
+			<input type="text" name="email" maxlength="255" placeholder="Email address" value="{{ user.email }}">
+		</div>
+        <p class="note">Please note that your email can be a fake one, however if you need to reset your password, this must be accessible. You can't share emails.</p>
+		{% if user.email %}
+		<p class="settings-label"><label for="email_login">Allow logging in to your account with your e-mail address?</label></p>
+        <div class="select-content">
+          <div class="select-button">
+            <select name="email_login" id="email_login">
+              <option value="0"{% if profile.email_login == 0 %} selected{% endif %}>Do not allow (username login only)</option>
+              <option value="1"{% if profile.email_login == 1 %} selected{% endif %}>Allow</option>
+              <option value="2"{% if profile.email_login == 2 %} selected{% endif %}>Only allow (email login only)</option>
+            </select>
+          </div>
+        </div>
+		{% endif %}
+      </li>
+      <li class="setting-website">
+        <p class="settings-label">Web URL</p>
+        <div class="center center-input">
+			<input type="text" name="website" maxlength="255" placeholder="URL" value="{{ profile.weblink }}">
+		</div>
+        <p class="note">If you want to advertise a URL of some sorts on your profile, this is where it goes.</p>
+      </li>
+      <li class="setting-website">
+        <p class="settings-label">Discord Tag</p>
+        <div class="center center-input">
+			<input type="text" name="external" maxlength="255" placeholder="Discord Tag" value="{{ profile.external }}">
+		</div>
+        <p class="note">Actually, you don't have to put a Discord Tag here, you can put anything here, such as your PlayStation Network account. Discord sure is popular though.</p>
+      </li>
+      <li class="setting-website">
+        <p class="settings-label">What are you?</p>
+        <div class="center center-input">
+			<input type="text" name="whatareyou" maxlength="255" placeholder="What are you?" value="{{ profile.whatareyou }}">
+		</div>
+        <p class="note">So what exactly are you? Are you a Human, attack helicopter, something in between?</p>
+      </li>
+      <li class="setting-color">
+        <p class="settings-label">Nickname color</p>
+        <div class="center center-input">
+			<input type="hidden" name="color" maxlength="7" placeholder="Enter a hex color value here" value="{{ user.color }}">
+			<button class="button color-thing">Open color picker</button>
+		</div>
+        <p class="note">This is the color your nickname will appear as. Leave it blank for the default. It will appear like so.</p>
+		{% user_sidebar_info user %}
+      </li>
+	  	  {% if profile.origin_id %}
+      <li>
+        <p class="settings-label"><label for="id_visibility">Who should be able to see your Nintendo Network ID? ({{ profile.origin_id }})</label></p>
+        <div class="select-content">
+          <div class="select-button">
+            <select name="id_visibility" id="id_visibility">
+              <option value="0"{% if profile.id_visibility == 0 %} selected{% endif %}>Everyone</option>
+              <option value="1"{% if profile.id_visibility == 1 %} selected{% endif %}>My friends</option>
+              <option value="2"{% if profile.id_visibility == 2 %} selected{% endif %}>Nobody</option>
+            </select>
+          </div>
+        </div>
+      </li>
+	  {% endif %}
+      <li>
+        <p class="settings-label"><label for="let_friendrequest">Who should be able to send you friend requests?</label></p>
+        <div class="select-content">
+          <div class="select-button">
+            <select name="let_friendrequest" id="let_friendrequest">
+              <option value="0"{% if profile.let_friendrequest == 0 %} selected{% endif %}>Everyone</option>
+              <option value="1"{% if profile.let_friendrequest == 1 %} selected{% endif %}>People I'm following</option>
+              <option value="2"{% if profile.let_friendrequest == 2 %} selected{% endif %}>Nobody</option>
+            </select>
+          </div>
+        </div>
+      </li>
+      <li>
+        <p class="settings-label"><label for="pronoun_dot_is">What's your preferred pronoun?</label></p>
+        <div class="select-content">
+          <div class="select-button">
+            <select name="pronoun_dot_is" id="pronoun_dot_is">
+              <option value="0"{% if profile.pronoun_is == 0 %} selected{% endif %}>I don't know</option>
+              <option value="1"{% if profile.pronoun_is == 1 %} selected{% endif %}>He/him</option>
+              <option value="2"{% if profile.pronoun_is == 2 %} selected{% endif %}>She/her</option>
+			  <option value="3"{% if profile.pronoun_is == 3 %} selected{% endif %}>He/she</option>
+			  <option value="4"{% if profile.pronoun_is == 4 %} selected{% endif %}>It</option>
+			  <option value="5"{% if profile.pronoun_is == 5 %} selected{% endif %}>They/Them</option>
+            </select>
+          </div>
+        </div>
+      </li>
+	  <li>
+        <p class="settings-label"><label for="gender_select">Are you a girl, boy or something else?</label></p>
+        <div class="select-content">
+          <div class="select-button">
+            <select name="gender_select" id="gender_select">
+              <option value="0"{% if profile.gender_is == 0 %} selected{% endif %}>I don't know</option>
+              <option value="1"{% if profile.gender_is == 1 %} selected{% endif %}>Girl</option>
+              <option value="2"{% if profile.gender_is == 2 %} selected{% endif %}>Boy</option>
+			  <option value="3"{% if profile.gender_is == 3 %} selected{% endif %}>Minion</option>
+			  <option value="4"{% if profile.gender_is == 4 %} selected{% endif %}>Toaster</option>
+			  <option value="5"{% if profile.gender_is == 5 %} selected{% endif %}>Dino</option>
+			  <option value="6"{% if profile.gender_is == 6 %} selected{% endif %}>Truck</option>
+			  <option value="7"{% if profile.gender_is == 7 %} selected{% endif %}>Robot</option>
+			  <option value="8"{% if profile.gender_is == 8 %} selected{% endif %}>Monkey</option>
+			  <option value="9"{% if profile.gender_is == 9 %} selected{% endif %}>Big chungus</option>
+			  <option value="10"{% if profile.gender_is == 10 %} selected{% endif %}>Other</option>
+            </select>
+          </div>
+        </div>
+      </li>
+      <li>
+        <p class="settings-label"><label for="yeahs_visibility">Who should be able to see your Yeahs given?</label></p>
+        <div class="select-content">
+          <div class="select-button">
+            <select name="yeahs_visibility" id="yeahs_visibility">
+              <option value="0"{% if profile.yeahs_visibility == 0 %} selected{% endif %}>Everyone</option>
+              <option value="1"{% if profile.yeahs_visibility == 1 %} selected{% endif %}>My friends</option>
+              <option value="2"{% if profile.yeahs_visibility == 2 %} selected{% endif %}>Nobody</option>
+            </select>
+          </div>
+        </div>
+      </li>
+      <li>
+        <p class="settings-label"><label for="comments_visibility">Who should be able to see your comments made?</label></p>
+        <div class="select-content">
+          <div class="select-button">
+            <select name="comments_visibility" id="comments_visibility">
+              <option value="0"{% if profile.comments_visibility == 0 %} selected{% endif %}>Everyone</option>
+              <option value="1"{% if profile.comments_visibility == 1 %} selected{% endif %}>My friends</option>
+              <option value="2"{% if profile.comments_visibility == 2 %} selected{% endif %}>Nobody</option>
+            </select>
+          </div>
+        </div>
+      </li>
+	  <li class="setting-background">
+        <p class="settings-label">Website theme:</p>
+        <div class="center center-input">
+			<input type="text" name="bg_url" maxlength="300" placeholder="Background URL" value="{% if user.bg_url %}{{ user.bg_url }}{% endif %}">
+		</div>
+        <p class="note">To set an image as the background for this site, paste its URL into the box above. Note: this change will only be visible to you.</p>
+		<div class="center center-input">
+			<input type="hidden" name="theme" maxlength="7" placeholder="Enter a hex color value here" value="{{ user.theme }}">
+			<button class="button color-thing2">Open color picker</button>
+		</div>
+		<p class="current-theme" style="color:{{ user.theme }}">Remember to save and refresh the page.</p>
+		{% if user.theme %}<input type="checkbox" name="reset-theme">Reset to default{% endif %}
+		{% if settings.site_wide_theme_hex %}<p class="note">Default theme: "{{ settings.site_wide_theme_hex }}"</p>{% endif %}
+      </li>
+		<li class="setting-background">
+        <p class="settings-label">Change your password:</p>
+	  	  <div class="center center-input">
+			<p class="note">You can now <a href="{% url "main:change-password" %}">change your password</a>.</p>
+		</div>
+		</li>
+		<li class="setting-nnid">
+                <p class="settings-label">Nintendo Network ID</p>
+                <div class="icon-container">
+                    <img class="icon nnid-icon mii" src="{% miionly user.mh %}">
+                </div>
+                  <input type="text" name="origin_id" minlength="6" maxlength="16" placeholder="Nintendo Network ID{% if not profile.origin_id %} (None){% endif %}" value="{% if profile.origin_id %}{{ profile.origin_id }}{% endif %}" data-action="{% url "main:origin-id-get" %}">
+				  <input type="hidden" name="mh" value="{{ user.mh }}">
+                <p class="error"></p>
+                <p class="note">Enter your Nintendo Network ID here. It'll appear on your profile if you set it to be visible.</p>
+              </li>
+		{% if not user.has_plain_avatar %}
+              <li class="setting-avatar">
+                <div class="icon-container">
+                    <img class="icon nnid-icon mii{% if not user.has_mh %} none{% endif %}" src="{% miionly user.mh %}">
+					<img class="icon nnid-icon gravatar{% if user.has_mh %} none{% endif %}" src="{{ user.gravatar }}">
+                  </div>
+                <p class="settings-label">Do you want the avatar shown beside your content to use the Mii from your Nintendo Network ID or a Gravatar?</p>
+                <label><input type="radio" name="avatar" value="0"{% if user.has_mh %} checked{% endif %}>Mii</label>
+                <label><input type="radio" name="avatar" value="1"{% if not user.has_mh %} checked{% endif %}>Gravatar</label>
+                <p class="note">Selecting the Gravatar option will cause your avatar to be pulled from the <a href="https://gravatar.com">Gravatar account</a> linked to your email address, and feelings won't be shown in your posts unless you choose to use a Mii instead.</p>
+         </li>
+		 {% else %}
+		 <p class="settings-label">It appears that you somehow have a plain URL avatar, change it here (<strong>if you change it to nothing then it will reset to being selectable !!</strong>)</p>
+		 <div class="center center-input">
+			<input type="text" name="avatar" maxlength="255" placeholder="Avatar url" value="{{ user.avatar }}">
+		</div>
+		 {% endif %}
+
+	{% csrf_token %}
+	<div class="form-buttons">
+	<input type="submit" class="black-button apply-button" value="Save these settings">
+	</div>
+	{% endif %}
+
+</ul></form></div></div>
+{% endblock %}

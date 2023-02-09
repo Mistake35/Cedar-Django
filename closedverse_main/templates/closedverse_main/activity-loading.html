@@ -1,0 +1,44 @@
+{% extends "closedverse_main/layout.html" %}
+{% load static %}{% load closedverse_user %}{% load closedverse_community %}{% load closedverse_tags %}
+{% block main-body %}
+{% user_sidebar request user user.profile 0 True %}
+<div class="main-column">
+  <div class="headline">
+    <h2 class="headline-text">
+      <span class="symbol activity-headline">Activity Feed</span>
+    </h2>
+	<div class="post-filter">
+		<form method="GET">
+			<input type="checkbox" name="my" value="{% if request.session.activity_no_my %}n{% else %}1{% endif %}"{% if not request.session.activity_no_my %} checked{% endif %}> Show my own posts
+			<input type="checkbox" name="ds" value="{% if request.session.activity_ds %}n{% else %}1{% endif %}"{% if request.session.activity_ds %} checked{% endif %}> Show one of each person's posts
+		</form>
+	</div>
+
+<form class="search" action="{% url "main:user-search" %}">
+  <input type="text" name="query" title="Search users" placeholder="Search users" minlength="2" maxlength="16">
+  <input type="submit" value="q" title="Search">
+</form>
+
+  </div>
+  {% if community %}
+  <div class="post-form none">
+  		{% post_form request.user community %}
+  </div>
+  {% endif %}
+  <div id="js-main">
+    <div class="activity-feed content-loading-window">
+      <div>
+        {% discordapp_spinner %}
+        <p class="tleft"><span>Loading activity feed...</span></p>
+      </div>
+    </div>
+    <div class="activity-feed content-load-error-window none">
+      <div>
+        <p>The activity feed couldn't be loaded. Check your Internet connection, wait a moment, and then try reloading.</p>
+        <div class="buttons-content"><a href="{% url "main:activity" %}" class="button">Reload</a></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

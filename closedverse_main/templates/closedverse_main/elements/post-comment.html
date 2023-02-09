@@ -1,0 +1,51 @@
+{% if not comment.is_rm %}{% load closedverse_tags %}<li id="{{ comment.unique_id }}" {% if comment.spoils or not comment.creator.is_active %}data-href-hidden{% else %}data-href{% endif %}="{% url "main:comment-view" comment.id %}" class="post {% if comment.owner_post %}my{% else %}other{% endif %}{% if comment.spoils or not comment.creator.is_active %} hidden{% endif %} trigger">
+  {% user_icon_container comment.creator comment.feeling %}
+  <div class="body">
+    <div class="header">
+      <p class="user-name"><a {% if comment.creator.color %}style=color:{{ comment.creator.color }}{% endif %} href="{% url "main:user-view" comment.creator.username %}">{{ comment.creator.nickname }}</a></p>
+      {% if not comment.creator.is_active %}
+		  <p style="color: #f00;">Banned</p>
+		  {% endif %}
+	  <p class="timestamp-container">
+        <a class="timestamp" {% if comment.spoils and not comment.is_mine %}data-href-hidden{% else %}href{% endif %}="{% url "main:comment-view" comment.id %}">{% time comment.created %}</a>
+				{% if comment.drawing %}
+				<span class="spoiler">(drawing)</span>
+				{% endif %}
+		{% if comment.has_edit %}
+			<span class="spoiler">· Edited</span>
+		{% endif %}
+        <span class="spoiler-status{% if comment.spoils %} spoiler{% endif %}"> · Spoilers</span>
+      </p>
+    </div>
+
+    {% if comment.drawing %}
+    <p class="reply-content-memo"><img src="{{ comment.drawing }}"></p>
+	{% else %}
+    <div class="reply-content-text">{{ comment.body|linebreaksbr }}</div>
+	{% endif %}
+	{% if comment.screenshot %}
+	<div class="screenshot-container still-image"><img src="{{ comment.screenshot }}"></div>
+	{% endif %}
+	{% if comment.spoils and comment.creator.is_active %}
+		<div class="hidden-content"><p>This comment contains spoilers.</p>
+      <button type="button" class="hidden-content-button">View Comment</button>
+    </div>
+	{% endif %}
+	{% if not comment.creator.is_active %}
+			<div class="hidden-content"><p>Content hidden because its creator was banned. </p>
+			{% if comment.creator.get_warned_reason %}
+			<p>Reason: {{comment.creator.get_warned_reason}}
+			{% endif %}
+                <button type="button" class="hidden-content-button">View Anyway</button>
+          </p></div>
+			{% endif %}
+
+    <div class="reply-meta">
+		<button type="button" {% if not comment.can_yeah %}disabled{% endif %} class="symbol submit yeah-button
+		  {% if comment.has_yeah %}empathy-added{% endif %}
+		  " data-is-in-reply-list="1" data-feeling="" data-action="{% url "main:comment-add-yeah" comment.id %}" data-url-id="{{ comment.id }}"><span class="yeah-button-text">{% empathy_txt comment.feeling comment.has_yeah %}</span></button>
+        <div class="empathy symbol"><span class="symbol-label">Yeahs</span><span class="empathy-count">{{ comment.number_yeahs }}</span></div>
+    </div>
+  </div>
+</li>
+{% endif %}

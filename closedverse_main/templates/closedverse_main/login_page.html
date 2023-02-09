@@ -1,0 +1,33 @@
+{% extends "closedverse_main/layout.html" %}
+{% load static %}{% block main-body %}
+<div class="main-column center">
+    <div class="post-list-outline login-page">
+        <form method="post">
+			<img src="{% static "img/menu-logo.png" %}">
+			<h1 class="lh">Sign In</h1>
+			<h2 class="lh">Please sign in to access Cedar.</h2>
+			<div class="login-box">
+    			<h3 class="label"><input type="text" class="auth-input" name="username" maxlength="32" placeholder="Username"></h3>
+    			<h3 class="label"><input type="password" class="auth-input" name="password" maxlength="32" placeholder="Password"></h3>
+    		</div>
+			{% csrf_token %}
+
+			<p class="red" style="margin-bottom:6px"></p>
+
+			<button type="submit" class="black-button">Sign In</button>
+
+			{% if allow_signups %}
+			<div class="ll">
+				<p>Can't remember your password?  <a href="{% url "main:forgot-passwd" %}"> Reset it here!</a></a></p>
+			    <p>If you don't have an account, you're in luck! <a href="{% url "main:signup" %}"> You can create an account there.</a></a></p>
+			</div>
+			{% endif %}
+			{% if not allow_signups %}
+			<div class="ll">
+			    <p>Signing up is disabled for now, check by later.</p>
+			</div>
+			{% endif %}
+		</form>
+	</div>
+</div>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% load closedverse_tags %}{% if title %}<h3 class="community-title">{{ title }}</h3>
+{% endif %}{% if communities %}
+<ul class="list community-list{% if title %} community-card-list {% if feature %}test-community-list-item{% else %}device-new-community-list{% endif %}{% endif %}">
+	{% for community in communities %}
+	<li class="trigger" data-href="{% url "main:community-view" community.id %}"{% if not title %} class="test-community-list-item"{% endif %}>
+		{% if feature and community.banner %}
+		<img src="{{ community.banner.url }}" class="community-list-cover">
+		{% endif %}
+		<div class="community-list-body">
+			<span class="icon-container">
+				<img class="icon" src="{{ community.icon }}">
+			</span>
+			<div class="body">
+				<a class="title" href="{% url "main:community-view" community.id %}">{{ community.name }}</a>
+				<span class="platform-tag">
+				{% if community.type_platform %}{% load static %}	<img src="{% static community.type_platform %}">{% endif %}
+				</span>
+				<span class="text">{{ community.type_txt }}</span>
+			</div>
+		</div>
+	</li>
+	{% endfor %}
+</ul>
+{% else %}
+	{% if title %}<div class="post-list-outline">{% endif %}
+		{% if title %}
+			{% nocontent "No communities of this type have been created yet." %}
+		{% else %}
+			{% nocontent "You haven't favorited any communities yet. Use the favorite button in a community to add it here." %}
+		{% endif %}
+	{% if title %}</div>{% endif %}
+{% endif %}

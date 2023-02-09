@@ -1,0 +1,20 @@
+{% extends "closedverse_main/layout.html" %}
+{% load static %}{% block main-body %}
+<div class="main-column center">
+    <div class="post-list-outline login-page">
+        <form method="post">
+			<img src="{% static "img/menu-logo.png" %}">
+			<p class="lh">{{ title }}</p>
+			<p>If you've forgotten your password or need to reset it for some reason, you've come to the right place.<br>Yes, this works.</p>
+				<h3 class="label"><label>E-mail address: <input type="email" class="auth-input" name="email" placeholder="Email" required></label></h3>				
+				{% csrf_token %}
+			<p class="red" style="margin-bottom:6px"></p>
+			<button type="submit" class="button">Submit</button>
+			<div class="ll">
+				<p>Having issues? Want to get back into your account? Try <a href="{% url "main:help-contact" %}">contacting us</a> if you need help with this.</p>
+				<p>Notice: Your user ID is used to log in, and is sometimes referred to as a username. It is below your nickname in most cases, please make sure you are using your user ID and your password.</p>
+			</div>
+		</form>
+	</div>
+</div>
+{% endblock %}

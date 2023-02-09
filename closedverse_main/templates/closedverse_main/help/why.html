@@ -1,0 +1,17 @@
+{% extends "closedverse_main/layout.html" %}
+{% block main-body %}{% load closedverse_user %}
+{% user_sidebar request user user.profile 0 True %}
+<div class="main-column" id="help">
+<div class="post-list-outline">
+    <h2 class="label">Why?</h2>
+    <div id="guide" class="help-content">
+      <div class="faq">
+		<h2>Why should I join ?</h2>
+		<ul>
+		    <li>I don't know...</li>
+		</ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

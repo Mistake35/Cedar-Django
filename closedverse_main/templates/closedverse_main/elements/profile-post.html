@@ -1,0 +1,64 @@
+{% load closedverse_tags %}<div id="{{ post.unique_id }}" {% if post.spoils or not post.creator.is_active %}data-href-hidden{% else %}data-href{% endif %}="{% url "main:post-view" post.id %}" class="post trigger{% if post.screenshot %} with-image{% endif %}{% if post.spoils or not post.creator.is_active %} hidden test-hidden{% endif %}" tabindex="0">
+  
+    <p class="community-container"><a {% if post.community.clickable %}href="{% url "main:community-view" post.community_id %}"{% endif %}><img src="{{ post.community.icon }}" class="community-icon">{{ post.community.name }}</a></p>
+
+  <div class="body">
+    <div class="post-content">
+		  {% user_icon_container post.creator post.feeling %}
+          
+          <p class="user-name"><a {% if post.creator.color %}style=color:{{ post.creator.color }}{% endif %} href="{% url "main:user-view" post.creator.username %}">{{ post.creator.nickname }}</a></p>
+          
+            <p class="timestamp-container">
+				{% if post.spoils %}
+				<span class="spoiler">Spoilers</span>·
+				{% endif %}
+				{% if post.has_edit %}
+				<span class="spoiler">Edited ({% time post.edited %})</span>·
+				{% endif %}
+              <a class="timestamp" {% if post.spoils and not post.is_mine %}data-href-hidden{% else %}href{% endif %}="{% url "main:post-view" post.id %}">{% time post.created %}</a>
+			  	{% if post.drawing %}
+				<span class="spoiler">(handwritten)</span>
+				{% endif %}
+            </p>
+					{% if post.yt_vid %}
+					<a href="{% url "main:post-view" post.id %}" class="screenshot-container video"><img height="48" src="https://i.ytimg.com/vi/{{ post.yt_vid }}/default.jpg"></a>
+					{% endif %}
+			{% if post.screenshot %}
+			<a href="{% url "main:post-view" post.id %}" class="screenshot-container still-image"><img src="{{ post.screenshot }}"></a>
+			{% endif %}
+			{% if post.drawing %}
+			<p class="post-content-memo"><img src="{{ post.drawing }}" class="post-memo"></p>
+			{% else %}
+				{% if post.has_line_trun %}
+				<p class="post-content-text">{{ post.body|truncatechars:100 }}</p>
+				{% else %}
+				<p class="post-content-text">{{ post.body|truncatechars:100|linebreaksbr }}</p>
+				{% endif %}
+			{% endif %}
+			{% if post.spoils and post.creator.is_active %}
+			<div class="hidden-content"><p>This post contains spoilers.
+                <button type="button" class="hidden-content-button">View Post</button>
+          </p></div>
+			{% endif %}
+			{% if not post.creator.is_active %}
+			<div class="hidden-content"><p>Content hidden because its creator was banned. </p>
+			{% if post.creator.get_warned_reason %}
+			<p>Reason: {{post.creator.get_warned_reason}}
+			{% endif %}
+                <button type="button" class="hidden-content-button">View Anyway</button>
+          </p></div>
+			{% endif %}
+        <div class="post-meta">
+		  <button type="button"{% if not post.can_yeah %} disabled{% endif %} class="symbol submit yeah-button
+		  {% if post.has_yeah %}empathy-added{% endif %}
+		  " data-feeling="" data-action="{% url "main:post-add-yeah" post.id %}" data-community-id="{{ post.community.unique_id }}" data-url-id="{{ post.id }}"><span class="yeah-button-text">{% empathy_txt post.feeling post.has_yeah %}</span></button>
+          {% if post.url %}
+		  <a class="link-confirm symbol button" href="{{ post.url }}"></a>
+		  {% endif %}
+		  <div class="empathy symbol"><span class="symbol-label">Yeahs</span><span class="empathy-count">{{ post.number_yeahs }}</span></div>
+          <div class="reply symbol"><span class="symbol-label">Comments</span><span class="reply-count">{{ post.number_comments }}</span></div>
+        </div>
+
+    </div>
+  </div>
+</div>

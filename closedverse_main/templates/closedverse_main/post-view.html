@@ -1,0 +1,142 @@
+{% extends "closedverse_main/layout.html" %}
+{% load markdown_deux_tags %}
+{% load closedverse_tags %}{% load closedverse_community %}{% block main-body %}
+<div class="main-column replyform-bottom"><div class="post-list-outline">
+<section id="post-content" class="post post-subtype-default">
+
+  <header class="community-container">    
+    <h1 class="community-container-heading">
+      <a {% if post.community.clickable %}href="{% url "main:community-view" post.community_id %}"{% endif %}><img src="{{ post.community.icon }}" class="community-icon">{{ post.community.name }}</a>
+    </h1>
+  </header>
+  {% if post.is_mine or post.can_rm %}
+  {% if user.is_active %}
+	<div class="edit-buttons-content">
+	  <button type="button" class="symbol button edit-button rm-post-button" data-action="{% url "main:post-rm" post.id %}"><span class="symbol-label">Delete</span></button>
+	  {% if post.is_mine and not post.has_edit %}
+	  <button type="button" class="symbol button edit-button edit-post-button"><span class="symbol-label">Edit</span></button>
+	  {% endif %}
+	  {% if post.is_mine and post.screenshot %}
+	  <button type="button" class="symbol button edit-button profile-post-button{% if post.is_favorite %} done {% endif %}" data-action="{% if post.is_favorite %}{% url "main:post-unset-profile" post.id %}{% else %}{% url "main:post-set-profile" post.id %}{% endif %}"><span class="symbol-label">Set as profile post</span></button>
+	  {% endif %}
+    </div>
+	{% endif %}
+{% endif %}
+
+  <div class="user-content">
+    {% user_icon_container post.creator post.feeling %}
+    <div class="user-name-content">
+		{% if post.creator.get_class.1 %}<p class="user-organization">{% user_level post.creator %}</p>{% endif %}
+      {% p_username post.creator %}
+	  {% if not post.creator.is_active %}
+		  <p style="color: #f00;">Banned</p>
+		  {% endif %}
+      <p class="timestamp-container">
+        <span class="timestamp">{% time post.created %}</span>
+			{% if post.drawing %}
+			<span class="spoiler">(drawing)</span>
+			{% endif %}
+        <span class="spoiler-status{% if post.spoils %} spoiler{% endif %}">·Spoilers</span>
+		{% if post.has_edit %}
+		· <span class="spoiler">Edited ({% time post.edited %})</span>
+		{% endif %}
+      </p>
+    </div>
+  </div>
+  <div class="body">
+		{% if post.is_mine %}
+		<div id="post-edit" class="none">
+			<form data-action="{% url "main:post-change" post.id %}" id="edit-form" method="post">
+			{% feeling_selector post.feeling %}
+			<div class="textarea-container">
+				<textarea name="body" class="textarea-text textarea " maxlength="2200" placeholder="Edit your post." data-required="">{{ post.body }}</textarea>
+			</div>
+				<div class="post-form-footer-options">
+					<label class="spoiler-button symbol"><input id="is_spoiler" name="is_spoiler" type="checkbox" value="1"{% if post.spoils %} checked{% endif %}>Spoilers</label>
+				</div>
+				<div class="form-buttons">
+					<button type="button" class="cancel-button gray-button">Cancel</button>
+					<button type="submit" class="post-button black-button">Submit</button>
+				</div>
+			</form>
+		</div>
+		{% endif %}
+		<div id="the-post">
+		  {% if post.drawing %}
+		  <p class="post-content-memo"><img src="{{ post.drawing }}" class="post-memo"></p>
+		  {% else %}
+          <p class="post-content-text">{{ post.body }}</p>
+	      {% endif %}
+		  
+		  {% if post.poll %}
+		  <div class="post-poll{% if post.poll.has_vote %} selected{% endif %}" data-action="{% url "main:poll-vote" post.poll.unique_id %}" data-action-unvote="{% url "main:poll-unvote" post.poll.unique_id %}">
+			<a class="poll-votes">{{ post.poll.num_votes }} vote{% if not post.poll.num_votes == 1 %}s{% endif %}</a>
+				<div class="poll-options{% if post.screenshot %} with-background" style="background-image:url('{{ post.screenshot }}')"
+<div class="poll-background" style="width:50%"></div>{% else %}">{% endif %}
+						{% for choice in post.poll.choices %}
+					<a class="poll-option{% if post.poll.has_vote and post.poll.has_vote.1 == choice %} selected{% endif %}" votes="{{ choice.num_votes }}">
+						{{ choice }}<span class="percentage">%</span>
+					</a>
+						{% endfor %}
+				</div>
+			</div>
+		  {% elif post.screenshot %}<div class="screenshot-container still-image"><img src="{{ post.screenshot }}"></div>{% endif %}
+
+			{% if post.yt_vid %}
+			<div class="screenshot-container video"><iframe class="youtube-player" type="text/html" width="490" height="276" src="https://www.youtube.com/embed/{{ post.yt_vid }}?rel=0&modestbranding=1&iv_load_policy=3" frameborder="0"></iframe></div>
+			{% elif post.url %}
+			<p class="url-link"><a class="link-confirm" href="{{ post.url }}" target="_blank">{{ post.url }}</a></p>
+			{% endif %}
+
+    <div class="post-meta">
+          <button type="button" {% if not post.can_yeah %} disabled{% endif %} class="symbol submit yeah-button
+		  {% if post.has_yeah %}empathy-added{% endif %}
+		  " data-feeling="" data-action="{% url "main:post-add-yeah" post.id %}" data-url-id="{{ post.id }}"><span class="yeah-button-text">{% empathy_txt post.feeling post.has_yeah %}</span></button>
+          <div class="empathy symbol"><span class="symbol-label">Yeahs</span><span class="empathy-count">{{ post.number_yeahs }}</span></div>
+          <div class="reply symbol"><span class="symbol-label">Comments</span><span class="reply-count">{{ all_comment_count }}</span></div>
+  </div>
+</div>
+
+</section>
+
+
+{% empathy_content yeahs request post.has_yeah %}
+
+  
+  
+
+
+
+<div id="reply-content">
+  <h2 class="reply-label">Comments</h2>
+  <div class="no-reply-content{% if all_comment_count %} none{% endif %}"><div>
+    <p>This post has no comments.</p>
+  </div></div>
+{% if all_comment_count > 20 %}
+<button data-fragment-url="{% url "main:post-comments" post.id %}" class="more-button all-replies-button" data-reply-count="{{ all_comment_count }}"><span class="symbol">Show all comments ({{ all_comment_count }})</span></button>
+{% endif %}
+{% post_comments comments %}
+
+</div>
+<h2 class="reply-label">Add a Comment</h2>
+{% if not request.user.is_authenticated %}
+<div class="guest-message">
+  <p>You must sign in to post a comment.<br><br>Sign in using a Cedar account to make posts and comments, as well as give Yeahs and follow users.</p>
+  <a href="{% url "main:signup" %}" class="arrow-button"><span>Create an account</span></a>
+  <a href="{% url "main:help-faq" %}" class="arrow-button"><span>FAQ/Frequently Asked Questions</span></a>
+  <a href="{% url "main:help-contact" %}" class="arrow-button"><span>Contact Us</span></a>
+</div>
+{% elif not post.can_comment %}
+<div class="cannot-reply"><div>
+  <p>You cannot comment on this post.</p>
+</div></div>
+{% else %}
+{% comment_form post request.user %}
+{% endif %}
+
+	</div>
+
+
+      </div>
+
+{% endblock %}

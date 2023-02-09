@@ -1,0 +1,165 @@
+{% load static %}{% load closedverse_tags %}{% block html %}{% if not request.META.HTTP_X_PJAX %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+	{% endif %}
+    <title>{% if title %}{{ title }} - Cedar{% else %}Cedar{% endif %}</title>
+    {% if not request.META.HTTP_X_PJAX %}
+	<meta http-equiv="content-style-type" content="text/css">
+    <meta http-equiv="content-script-type" content="text/javascript">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-title" content="Cedar">
+    <meta name="description" content="It's Closedverse but Cedar!">
+	<meta property="og:locale" content="en_US">
+	{% if ogdata %}
+		<meta property="og:title" content="{{ ogdata.title }}">
+		<meta property="og:type" content="article">
+		<meta property="og:url" content="{{ request.build_absolute_uri }}">
+		<meta property="og:image" content="{{ ogdata.image }}">
+		<meta property="og:description" content="{{ ogdata.description|truncatechars:150 }}">
+		<meta property="og:site_name" content="Cedar">
+		<meta property="article:published_time" content="{{ ogdata.date }}">
+	{% endif %}
+	<link rel="shortcut icon" type="image/png" href="{% static "img/favicon.png" %}">
+    <link rel="stylesheet" type="text/css" href="{% static "closedverse.css" %}">
+	<link id="darkness" {% if request.session.lights %}disabled {% endif %}rel="stylesheet" type="text/css" href="{% static "blueness.css" %}">
+	<script src="{% static "jslibs.js" %}"></script>
+    <script src="{% static "closedverse.js" %}"></script>
+		{% if request.user.ColorTheme %}<script>
+  var mainColor = "{{ request.user.ColorTheme }}";
+  var darkColor;
+  var slightlyDarkColor;
+  var darkerColor;
+  var lightColor;
+
+  function changeThemeColor() {
+    // Convert hex to RGB
+    var rgb = hexToRgb(mainColor);
+    var mainColorR = rgb[0];
+    var mainColorG = rgb[1];
+    var mainColorB = rgb[2];
+
+    // Calculate light color
+    var lightColorR = mainColorR > 85 ? mainColorR * 2 : mainColorR + 175;
+    lightColorR = lightColorR > 255 ? 255 : lightColorR;
+    var lightColorG = mainColorG > 85 ? mainColorG * 2 : mainColorG + 175;
+    lightColorG = lightColorG > 255 ? 255 : lightColorG;
+    var lightColorB = mainColorB > 85 ? mainColorB * 2 : mainColorB + 175;
+    lightColorB = lightColorB > 255 ? 255 : lightColorB;
+
+    // Calculate dark colors
+    darkColor = rgb2hex(mainColorR / 4, mainColorG / 4, mainColorB / 4);
+    lightColor = rgb2hex(lightColorR, lightColorG, lightColorB);
+    slightlyDarkColor = rgb2hex(mainColorR / 1.4, mainColorG / 1.4, mainColorB / 1.4);
+    darkerColor = rgb2hex(mainColorR / 8, mainColorG / 8, mainColorB / 8);
+
+    // Set CSS variables
+    document.documentElement.style.setProperty("--theme", `rgb(${mainColorR}, ${mainColorG}, ${mainColorB})`);
+    document.documentElement.style.setProperty("--theme-dark", darkColor);
+    document.documentElement.style.setProperty("--theme-slightly-dark", slightlyDarkColor);
+    document.documentElement.style.setProperty("--theme-darker", darkerColor);
+    document.documentElement.style.setProperty("--theme-light", lightColor);
+  }
+
+  // hex -> rgb
+  function hexToRgb(hex) {
+    var bigint = parseInt(hex, 16);
+    var mainColorR = (bigint >> 16) & 255;
+    var mainColorG = (bigint >> 8) & 255;
+    var mainColorB = bigint & 255;
+    return [mainColorR, mainColorG, mainColorB];
+  }
+
+  // rgb -> hex
+  function rgb2hex(red, green, blue) {
+    var rgb = blue | (green << 8) | (red << 16);
+    return "#" + (0x1000000 + rgb).toString(16).slice(1)
+  }
+
+  function toDefault() {
+    document.documentElement.style.setProperty("--theme", "initial");
+    document.documentElement.style.setProperty("--theme-dark", "initial");
+    document.documentElement.style.setProperty("--theme-slightly-dark", "initial");
+    document.documentElement.style.setProperty("--theme-darker", "initial");
+    document.documentElement.style.setProperty("--theme-light", "initial");
+  }
+
+  changeThemeColor();
+        </script>{% endif %}
+		<style>
+			:root {
+			{% if request.user.bg_url %}--background: url({{ request.user.bg_url }});{% endif %}
+			}
+		</style>
+  </head>
+
+  <body class=""{% if request.user.is_authenticated %}
+  sess-usern="{{ request.user.username }}"
+  {% endif %}>
+    <div id="wrapper"{% if not request.user.is_authenticated %} class="guest"{% endif %}>
+      <div id="sub-body">
+        <menu id="global-menu">
+          <li id="global-menu-logo"><h1><a href="/"><img src="{% static "img/menu-logo.png" %}" alt="Cedar"></a></h1></li>
+		  {% if request.user.unique_id %}
+          <li id="global-menu-list">
+            <ul>
+              <li id="global-menu-mymenu"><a href="{% url "main:user-view" request.user.username %}"><span class="icon-container {% user_class request.user %}"><img src="{% avatar request.user %}" alt="My Profile"></span><span>My Profile</span></a></li>
+			  <li id="global-menu-feed"><a href="{% url "main:activity" %}" class="symbol"><span>Activity Feed</span></a></li>
+              <li id="global-menu-community"><a href="/" class="symbol"><span>Communities</span></a></li>
+			  <li id="global-menu-message"><a href="{% url "main:messages" %}" class="symbol"><span>Messages</span></a></li>
+			  <li id="global-menu-news"><a href="{% url "main:notifications" %}" class="symbol"></a></li>
+              <li id="global-menu-my-menu"><button class="symbol js-open-global-my-menu open-global-my-menu"></button>
+                <menu id="global-my-menu" class="invisible none">
+                  <li><a href="{% url "main:profile-settings" %}" class="symbol my-menu-profile-setting"><span>Profile settings</span></a></li>
+                  <li><a href="#" class="symbol my-menu-account-setting"><span>Account preferences</span></a></li>
+                  <li><a href="{% url "main:special-community-tag" "announcements" %}" class="symbol my-menu-openman"><span>Cedar Announcements</span></a></li>
+                  <li><a href="{% url "main:help-faq" %}" class="symbol my-menu-guide"><span>Frequently Asked Questions (FAQ)</span></a></li>
+				  <li><a href="{% url "main:help-rules" %}" class="symbol my-menu-guide"><span>Cedar Rules</span></a></li>
+				    <li><a href="#" class="symbol my-menu-white-power"><span>Feedback/bug report</span></a></li>
+                  <li><a href="{% url "main:server-stat" %}" class="symbol my-menu-openman"><span>Server Statistics</span></a></li>
+				  <li>
+                    <form action="{% url "main:logout" %}" method="post" id="my-menu-logout" class="symbol">
+                      {% csrf_token %}
+                      <input type="submit" value="Log out">
+                    </form>
+                  </li>
+                </menu>
+              </li>
+            </ul>
+          </li>
+		  {% else %}
+		  <li id="global-menu-login">
+            <a href="{% url "main:login" %}" class="login">
+              <input type="image" alt="Sign in" src="{% static "img/sign-in.png" %}">
+            </a>
+          </li>
+		  {% endif %}
+        </menu>
+      </div>
+	  <div id="container">
+	  {% endif %}
+      <div id="main-body"
+    class="{% if classes %}{{ classes|join:" " }} {% endif %}{% if not request.user.is_authenticated %}
+	guest{% endif %}"
+	csrf-token="{{ csrf_token }}">
+	  {% block main-body %}
+	  {% endblock %}
+      </div>
+	  {% if not request.META.HTTP_X_PJAX %}
+	  </div>
+	  <!--
+      <div id="footer">
+        <div id="footer-inner">
+          <div class="link-container">
+			<p><a href="/help/contact">Contact</a> <a href="/help/rules">Rules</a></p>
+			<p id="copyright">Cedar Team, 2022</p>
+			</div>
+        </div>
+		-->
+      </div>
+    </div>
+  </body>
+</html>
+{% endif %}{% endblock html %}

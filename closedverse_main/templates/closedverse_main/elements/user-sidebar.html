@@ -1,0 +1,232 @@
+{% load closedverse_tags %}{% load closedverse_user %}
+{% if user.is_authenticated %}<div id="sidebar" class="{% if general %}general{% else %}user{% endif %}-sidebar">
+
+		{% if not user.is_active %}
+		<div class="notice" style="background-color: #ff9797;border: 1px solid #ff5252;">
+			<b>Notice</b>: This user account is disabled.
+			<div> 
+		{% if user.get_warned_reason %}
+		<p>Reason: "{{ user.get_warned_reason }}"</p>
+		{% endif %}
+		</div>
+		</div>
+		{% endif %}
+		
+		{% if user.is_warned and user.is_active %}
+		<div class="notice" style="background-color: #ffc783;border: 1px solid #ffb358;">
+		<p><b>Notice</b>: This user has received a warning by an administrator.</p>
+		<div> 
+		{% if user.get_warned_reason %}
+		<p>Reason: "{{ user.get_warned_reason }}"</p>
+		{% endif %}
+		</div>
+		</div>
+		{% endif %}
+
+  <div class="sidebar-container">
+      {% if profile.favorite.screenshot %}
+	  <a href="{% url "main:post-view" profile.favorite_id %}" id="sidebar-cover" style="background-image:url({{ profile.favorite.screenshot }})">
+        <img src="{{ profile.favorite.screenshot }}" class="sidebar-cover-image">
+      </a>
+	  {% endif %}
+	{% user_sidebar_info user profile %}
+{% if request.user.is_authenticated and not user.is_me %}
+      <div class="user-action-content">
+<div class="toggle-button">
+    <button type="button" data-action="{% url "main:user-follow" user.username %}" class="follow-button button symbol{% if user.is_following %} none{% endif %}">Follow</button>
+    <button type="button" data-action="{% url "main:user-unfollow" user.username %}" class="unfollow-button button symbol{% if not user.is_following %} none{% endif %}" data-screen-name="{{ user.nickname }}">Follow</button>
+	{% if selection == 0 %}
+		{% if user.friend_state == 0 %}
+			{% if profile.can_friend %}
+				<button type="button" data-action="{% url "main:user-fr-create" user.username %}" class="friend-button create button symbol">Send friend request</button>
+			{% endif %}
+		{% elif user.friend_state == 1 %}
+		<button type="button" data-action="{% url "main:user-fr-cancel" user.username %}" data-screen-name="{{ user.nickname }}" class="friend-button unf cancel button symbol">Cancel friend request</button>
+		{% elif user.friend_state == 2 %}
+		<button type="button" data-action="{% url "main:user-fr-create" user.username %}" data-screen-name="{{ user.nickname }}" data-time="{% time fr.created True %}" data-msg="{{ fr.body }}" class="friend-button accept button symbol">Become friends</button>
+		{% elif user.friend_state == 3 %}
+		<button type="button" data-action="{% url "main:user-fr-delete" user.username %}" data-screen-name="{{ user.nickname }}" class="friend-button unf delete button symbol">Friends</button>
+		{% endif %}
+	{% endif %}
+	{% if request.user.can_manage %}
+	<button class="button" data-href="{% url "main:user-tools" user.username %}">User Settings</button>
+	{% endif %}
+</div>
+
+
+	  
+{% if fr %}{% fr_accept fr %}{% endif %}
+{% if user.friend_state == 0 %}
+<div class="dialog none" data-modal-types="post-friend-request">
+<div class="dialog-inner">
+  <div class="window">
+    <h1 class="window-title">Send friend request to {{ user.nickname }}</h1>
+    <div class="window-body">
+      <p class="description">Friend Request: <img width="36px" height="36px" src="{% avatar user %}">{{ user.nickname }}</p>
+      <form method="post">
+	  
+	 
+
+        <textarea name="body" class="textarea" maxlength="2200" data-placeholder="Write a friend request here." placeholder="Write a friend request here."></textarea>
+
+        <div class="form-buttons">
+          <input type="button" class="olv-modal-close-button gray-button" value="Cancel">
+          <input type="submit" value="Send" class="post-button black-button">
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+</div>
+{% endif %}
+
+      </div>
+		{% elif user.is_me and not general %}
+		<div id="edit-profile-settings"><a class="button symbol" href="{% url "main:profile-settings" %}">Profile Settings</a></div>
+		{% endif %}{% if user.is_me %}
+		<button class="button" onclick="Olv.Closed.lights()">Toggle Dark Mode</button>
+		{% endif %}
+
+    <ul id="sidebar-profile-status">
+      <li><a href="{% url "main:user-friends" user.username %}" class="{% if selection == 3 %}selected{% endif %}"><span><span class="number test-friend-count">{{ user.num_friends }}</span>Friends</span></a></li>
+      <li><a href="{% url "main:user-following" user.username %}" class="{% if selection == 4 %}selected{% endif %}"><span><span class="number test-following-count">{{ user.num_following }}</span>Following</span></a></li>
+      <li><a href="{% url "main:user-followers" user.username %}" class="{% if selection == 5 %}selected{% endif %}"><span><span class="number test-follower-count">{{ user.num_followers }}</span>Followers</span></a></li>
+    </ul>
+  </div>
+  {% if not general %}
+  <div class="sidebar-setting sidebar-container">
+    <div class="sidebar-post-menu">
+      <a href="{% url "main:user-posts" user.username %}" class="sidebar-menu-post with-count symbol{% if selection == 1 %} selected{% endif %}">
+        <span>{% if user.is_me %}My{% else %}All{% endif %} Posts</span>
+        <span class="post-count">
+          <span class="test-post-count">{{ user.num_posts }}</span>
+        </span>
+      </a>
+	  {% if profile.comments_visible %}
+	    <a href="{% url "main:user-comments" user.username %}" class="sidebar-menu-replies with-count symbol{% if selection == 6 %} selected{% endif %}">
+        <span>{% if user.is_me %}My{% else %}All{% endif %} Comments</span>
+        <span class="post-count">
+          <span class="test-reply-count">{{ user.num_comments }}</span>
+        </span>
+      </a>
+	  {% endif %}
+	  {% if profile.yeahs_visible and request.user.is_authenticated %}
+      <a href="{% url "main:user-yeahs" user.username %}" class="sidebar-menu-empathies with-count symbol{% if selection == 2 %} selected{% endif %}">
+        <span>Yeahs Given</span>
+        <span class="post-count">
+          <span class="test-empathy-count">{{ user.num_yeahs }}</span>
+        </span>
+      </a>
+	  {% endif %}
+    </div>
+  </div>
+
+  <div class="sidebar-container sidebar-profile">
+	{% if profile.comment %}
+      <div class="profile-comment">
+        <p class="js-truncated-text">{{ profile.comment|truncatechars:300|linebreaksbr|urlize }}</p>
+		{% if profile.comment|length > 299 %}
+          <p class="js-full-text none">{{ profile.comment|linebreaksbr }}</p>
+          <button type="button" class="description-more-button js-open-truncated-text-button">Show More</button>
+		{% endif %}
+      </div>
+    {% endif %}
+	<div class="user-data">
+		<div class="data-content">
+			<h4><span>Region</span></h4>
+			<div class="note">
+				<span>{% if profile.country %}{{ profile.country }}{% else %}Not Set{% endif %}</span>
+			</div>
+		</div>
+		<div class="data-content">
+			<h4><span>NNID</span></h4>
+			<div class="note">
+				<span>{% if profile.origin_id_public == 1 %}Private{% elif not profile.origin_id_public %}None{% else %}{{ profile.origin_id_public }}{% endif %}</span>
+			</div>
+		</div>
+		<div class="data-content">
+			<h4><span>User ID</span></h4>
+			<div class="note">
+				<span>#{{ user.id }}</span>
+			</div>
+		</div>
+		<div class="data-content">
+			<h4><span>Date Joined</span></h4>
+			<div class="note">
+				<span>{% time user.created True %}</span>
+			</div>
+		</div>
+		{% if not user.hide_online %}
+		<div class="data-content">
+			<h4><span>Last Seen</span></h4>
+			<div class="note">
+				<span>{% time user.last_login True %}</span>
+			</div>
+		</div>
+		{% endif %}
+		{% if profile.pronoun_is %}
+		<div class="data-content">
+			<h4><span>Preferred Pronoun</span></h4>
+			<div class="note">
+				<span>{{ profile.get_pronoun_is_display }}</span>
+			</div>
+		</div>
+		{% endif %}
+		{% if profile.gender_is %}
+		<div class="data-content">
+			<h4><span>Gender</span></h4>
+			<div class="note">
+				<span>{{ profile.get_gender_is_display }}</span>
+			</div>
+		</div>
+		{% endif %}
+		{% if profile.external %}
+		<div class="data-content">
+			<h4><span>Discord Tag</span></h4>
+			<div class="note">
+				<span>{{ profile.external }}</span>
+			</div>
+		</div>
+		{% endif %}
+		{% if profile.whatareyou %}
+		<div class="data-content">
+			<h4><span>I am a</span></h4>
+			<div class="note">
+				<span>{{ profile.whatareyou }}</span>
+			</div>
+		</div>
+		{% endif %}
+		<div class="favorite-game-genre">
+			<h4><span>Web URL</span></h4>
+			<div class="note">
+				<span>{% if profile.weblink %}<a class="link-confirm" href="{% if not profile.got_fullurl %}http://{% endif %}{{ profile.weblink }}">{{ profile.weblink }}</a>{% else %}Not Set{% endif %}</span>
+			</div>
+		</div>
+	</div>
+  </div>
+  {% if user.community_favorites %}
+  <div class="sidebar-container sidebar-favorite-community">
+      <h4><a href="{% url "main:community-favorites" %}{% if not user.is_me %}?u={{ user.username }}{% endif %}" class="symbol favorite-community-button"><span>Favorite communities</span></a></h4>
+      <ul class="test-favorite-communities">
+	        {% for community in user.community_favorites %}
+
+              	<li class="favorite-community">
+				  <a href="{% url "main:community-view" community.id %}" class="icon-container">
+					<img src="{{ community.icon }}" class="icon">
+				  </a>
+				</li>
+			{% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+ {% endif %}
+{% if availableads %}
+	<div class="adx">
+		<h3>User-Generated Ad</h3>
+        <p><a href="/help/whatads">What are user-generated ads?</a></p>
+		<a href="{{ ad.url }}"><img src="{{ ad.imageurl.url }}"></a>
+	</div>
+{% endif %}
+
+</div>
+{% endif %}

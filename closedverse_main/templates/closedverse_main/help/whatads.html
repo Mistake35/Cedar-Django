@@ -1,0 +1,19 @@
+{% extends "closedverse_main/layout.html" %}
+{% block main-body %}{% load closedverse_user %}
+{% user_sidebar request user user.profile 0 True %}
+<div class="main-column" id="help">
+<div class="post-list-outline">
+    <h2 class="label">What are user-generated ads?</h2>
+    <div id="guide" class="help-content">
+      <div class="faq">
+		<h2>What is that???</h2>
+		<p>Well, user-generated ads are a way for you to, without any money, promote your clone/website/service.</p>
+        <h2>Where these ads shows up?</h2>
+        <p>These ads shows up in activity, user pages, homepage, and more.</p>
+        <h2>How can I have my user-generated ad?</h2>
+	<p>Contact an admin.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

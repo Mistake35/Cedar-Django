@@ -1,0 +1,96 @@
+{% extends "closedverse_main/layout.html" %}
+{% load closedverse_tags %}{% load closedverse_community %}{% block main-body %}
+<div class="community-main">
+		<div id="community-eyecatch"></div>
+	</div>
+	<div class="community-top-sidebar">
+		<form action="{% url "main:community-search" %}" class="search">
+			<input maxlength="32" name="query" placeholder="Search all communities" type="text"><input title="Search" type="submit" value="q">
+		</form>
+		
+		{% if user.is_warned %}
+		<div class="notice" style="background-color: #ffc783;border: 1px solid #ffb358;">
+		<p><b>WARNING</b>: You have been issued a warning by an administrator. No features have been restricted, as this is just a warning.
+		<div> 
+		{% if user.get_warned_reason %}
+		<p>Reason: "{{ user.get_warned_reason }}"</p>
+		{% endif %}
+		</div>
+		</div>
+		{% endif %}
+		
+	{% if availablemotds and request.user.is_authenticated %}
+	<div class="post-list-outline index-memo">
+		<h2 class="label">MOTD / News</h2>
+		{% for mesoftheday in mesoftheday %}
+		{% if mesoftheday.Title %}<h2>{{ mesoftheday.Title }}</h2>{% endif %}
+		<p>{{ mesoftheday.message|linebreaksbr|urlize }}</p>
+		{% if mesoftheday.image %}<image src={{ mesoftheday.image.url }}></image>{% endif %}
+		{% if mesoftheday.hide_date == False %}<p class="memo-date">Posted {{ mesoftheday.created }}</p>{% endif %}
+		{% endfor %}
+	</div>
+	{% endif %}
+		
+	{% if availablemes and not request.user.is_authenticated %}
+	<div class="post-list-outline index-memo">
+		<h2 class="label">Welcome to Cedar!</h2>
+		{% for welmes in welmes %}
+		<h2>{{ welmes.Title }}</h2>
+		<p>{{ welmes.message|linebreaksbr|urlize }}</p>
+		{% if welmes.image %}<image src={{ welmes.image.url }}></image>{% endif %}
+		{% endfor %}
+	</div>
+	{% endif %}
+	{% if request.user.c_tokens > 0 %}<a class="big-button" href={% url "main:community-create" %}><span class="symbol-label">Create a community</span></a>{% endif %}
+		<!--
+		<iframe src="https://discord.com/widget?id=1001294283040620665&theme=dark" height="300" allowtransparency="true" frameborder="0" sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"></iframe>
+		-->
+		{% if availableads %}
+			<div class="adx">
+				<h3>User-Generated Ad</h3>
+                <p><a href="/help/whatads">What are user-generated ads?</a></p>
+				<a href="{{ ad.url }}"><img src="{{ ad.imageurl.url }}"></a>
+			</div>
+		{% endif %}
+	</div>
+	<div class="community-main">
+	{% if favorites %}
+		<h3 class="community-title symbol community-favorite-title">Favorite communities</h3>
+		<div class="card" id="community-favorite">
+		  <ul>
+			{% for favorite in favorites %}
+				<li class="test-favorite-community">
+				  <a href="{% url "main:community-view" favorite.id %}" class="icon-container">
+					<img src="{{ favorite.icon }}" class="icon">
+
+				  </a>
+				</li>
+			 {% endfor %}
+
+			<li class="read-more">
+			  <a href="{% url "main:community-favorites" %}" class="favorite-community-link symbol"><span class="symbol-label">Show more</span></a>
+			</li>
+		  </ul>
+		</div>
+	{% endif %}
+		{% if feature %}
+			{% community_page_element feature "Featured Communities" True %}
+		{% endif %}
+			{% community_page_element general "General Communities" %}
+			{% community_page_element game "Game Communities" %}
+			{% community_page_element special "Special Communities" %}
+			{% community_page_element user_communities "User owned Communities" %}
+			<a href="{% url "main:community-viewall" %}" class="big-button">Show more</a>
+	</div>
+	<div id="community-guide-footer">
+		<div id="guide-menu">
+			<a class="arrow-button" href="{% url "main:help-why" %}"><span>Why join?</span></a>
+			<a class="arrow-button" href="{% url "main:help-rules" %}"><span>Cedar Rules</span></a>
+			<!--<a class="arrow-button" href="{% url "main:active-clones" %}"><span>Active clones</span></a>-->
+			<a class="arrow-button" href="{% url "main:help-faq" %}"><span>Frequently Asked Questions (FAQ)</span></a>
+			<a class="arrow-button" href="{% url "main:what-ads" %}"><span>What are user-generated ads?</span></a>
+			{% if settings.PROD %}
+			{% endif %}
+		</div>
+	</div>
+{% endblock %}
