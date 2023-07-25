@@ -101,7 +101,7 @@
     <div id="wrapper"{% if not request.user.is_authenticated %} class="guest"{% endif %}>
       <div id="sub-body">
         <menu id="global-menu">
-          <li id="global-menu-logo"><h1><a href="/"><img src="{% static "img/menu-logo.png" %}" alt="Cedar"></a></h1></li>
+          <li id="global-menu-logo"><h1><a href="/"><img src="{% static "img/menu-logo.svg" %}" alt="Cedar"></a></h1></li>
 		  {% if request.user.unique_id %}
           <li id="global-menu-list">
             <ul>
