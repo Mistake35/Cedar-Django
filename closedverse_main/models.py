@@ -1778,8 +1778,8 @@ class ProfileHistory(models.Model):
     id = models.AutoField(primary_key=True)
     created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, null=True, on_delete=models.CASCADE)
-    old_nickname = models.CharField(max_length=64, blank=True)
-    new_nickname = models.CharField(max_length=64, blank=True)
+    old_nickname = models.CharField(max_length=64, blank=True, null=True)
+    new_nickname = models.CharField(max_length=64, blank=True, null=True)
     old_comment = models.TextField(blank=True)
     new_comment = models.TextField(blank=True)
     
