@@ -6,35 +6,36 @@ Readme thing
 - Terminal access (also obviously)
 - Python 3
 
+# Install time
 1.
 SSH into your server.
 
 2.
 Time to update
-$ sudo apt update && sudo apt upgrade
+`sudo apt update && sudo apt upgrade`
 
 3.
 You need Pip
-$ sudo apt install pip
+`sudo apt install pip`
 
 4.
 Get everything else you need.
-$ pip3 install Django==3.2.2 urllib3 lxml passlib bcrypt pillow django-markdown-deux django-markdown2 whitenoise django-colorfield django-admin-interface
+`pip3 install Django==3.2.2 urllib3 lxml passlib bcrypt pillow django-markdown-deux django-markdown2 whitenoise django-colorfield django-admin-interface`
 
 5.
 Clone the clone!
-git clone https://github.com/Mistake35/Cedar-Django
+`git clone https://github.com/Mistake35/Cedar-Django`
 
 5.5 (recommended).
 You should use Filezilla or some other SFTP client to make things easier in the future.
 
 6.
 navigate to Cedar-Django
-$ cd Cedar-Django
+`cd Cedar-Django`
 
 7.
 Edit the settings.py file.
-$ nano closedverse/settings.py
+`nano closedverse/settings.py`
 
 8.
 Fill everything out as needed. Be sure to generate a secret key and paste it in too.
@@ -42,16 +43,16 @@ Fill everything out as needed. Be sure to generate a secret key and paste it in 
 9.
 Now it's time for the good stuff! 
 Let's build the database
-$ python3 manage.py migrate
+`python3 manage.py migrate`
 
 10.
 Do the static files or no CSS or JS.
-$ python3 manage.py collectstatic
+`python3 manage.py collectstatic`
 
 11.
 Test the server!
 Be sure to replace "IP-HERE" with your public IP and make sure it's running on port 80.
-$ python3 manage.py runserver IP-HERE:80
+`python3 manage.py runserver IP-HERE:80`
 
 # Troubleshooting time!
 Q: "HELP I'M GETTING A BAD REQUEST (400) ERROR!"
@@ -74,7 +75,7 @@ Fixing problems yourself is a great way to learn how this shit works.
 12.
 So your server is running, the URL works and everything? Good.
 Now it's time to create your account.
-$ python3 manage.py createsuperuser
+`python3 manage.py createsuperuser`
 Enter your username, and password.
 
 13.
@@ -82,12 +83,12 @@ Make sure its working by signing in.
 
 14.
 Alright now it's time to do some fun stuff! We're going to try and make this run at boot with systemd.
-$ sudo nano /etc/systemd/system/django.service
+`sudo nano /etc/systemd/system/django.service`
 
 15.
 Paste this in!
 Now it's time to change this if needed.
-'''
+```
 [Unit]
 Description=Django Application
 After=network.target
@@ -99,15 +100,15 @@ ExecStart=/usr/bin/python3 manage.py runserver IP-HERE:80
 
 [Install]
 WantedBy=multi-user.target
-'''
+```
 
 16.
 Pop these in!
-$ sudo systemctl daemon-reload
-$ sudo systemctl enable django
-$ sudo systemctl start django
+`sudo systemctl daemon-reload`
+`sudo systemctl enable django`
+`sudo systemctl start django`
 Make sure it works too!
-$ sudo systemctl status django
+`sudo systemctl status django`
 
 17.
 The final stretch! 
