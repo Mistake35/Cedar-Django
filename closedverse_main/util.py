@@ -81,43 +81,40 @@ def recaptcha_verify(request, key):
 	return True
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
+# This image upload code is fucked now thanks to pillow. I gotta go through it and refine it.
 def image_upload(img, stream=False, drawing=False):
-	try:
-		# Decode the image
-		decodedimg = img.read() if stream else base64.b64decode(img)
-		# Open the image
-		im = Image.open(io.BytesIO(decodedimg))
-		# Check for EXIF data and rotate the image if necessary
-		if hasattr(im, '_getexif'):
-			orientation = 0x0112
-			exif = im._getexif()
-			if exif is not None:
-				orientation = exif.get(orientation)
-				rotations = {
-					3: Image.ROTATE_180,
-					6: Image.ROTATE_270,
-					8: Image.ROTATE_90
-				}
-				if orientation in rotations:
-					im = im.transpose(rotations[orientation])
-		# Resize the image
-		im.thumbnail((800, 800), Image.ANTIALIAS)
-		# Check the aspect ratio if this is a drawing
-		if drawing and ((im.size[0] / im.size[1]) < 0.30):
-			return 1
-		# Generate a hash of the image
-		imhash = sha1(im.tobytes()).hexdigest()
-		# Set the file format and location
-		target = 'webp'
-		floc = imhash + '.' + target
-		# Save the file if it doesn't already exist
-		if not os.path.exists(settings.MEDIA_ROOT + floc):
-			im.save(settings.MEDIA_ROOT + floc, target, quality=80, method=6)
-		# Return the URL of the file
-		return settings.MEDIA_URL + floc
-	# Catch any errors
-	except (OSError, SyntaxError, ValueError):
+	# Decode the image
+	decodedimg = img.read() if stream else base64.b64decode(img)
+	# Open the image
+	im = Image.open(io.BytesIO(decodedimg))
+	# Check for EXIF data and rotate the image if necessary
+	if hasattr(im, '_getexif'):
+		orientation = 0x0112
+		exif = im._getexif()
+		if exif is not None:
+			orientation = exif.get(orientation)
+			rotations = {
+				3: Image.ROTATE_180,
+				6: Image.ROTATE_270,
+				8: Image.ROTATE_90
+			}
+			if orientation in rotations:
+				im = im.transpose(rotations[orientation])
+	# Resize the image
+	im.thumbnail((800, 800))
+	# Check the aspect ratio if this is a drawing
+	if drawing and ((im.size[0] / im.size[1]) < 0.30):
 		return 1
+	# Generate a hash of the image
+	imhash = sha1(im.tobytes()).hexdigest()
+	# Set the file format and location
+	target = 'webp'
+	floc = imhash + '.' + target
+	# Save the file if it doesn't already exist
+	if not os.path.exists(settings.MEDIA_ROOT + floc):
+		im.save(settings.MEDIA_ROOT + floc, target, quality=80, method=6)
+	# Return the URL of the file
+	return settings.MEDIA_URL + floc
 
 # Todo: Put this into post/comment delete thingy method
 def image_rm(image_url):
