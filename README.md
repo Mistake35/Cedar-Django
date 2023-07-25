@@ -1,9 +1,40 @@
-Readme thing
+# About
+
+Cedar-Django is a fork of Closedverse with custom features added to it.
+
+### Theme changing
+Just like in Indigo, you can change the color of your theme. While this is only visible to each user specifically, a global theme can be set in Settings.py.
+
+### Overhauled admin panel
+The admin panel has been changed completely. You can now do a lot more things in a much easier way. The intention behind this redesign is to reduce the need to use the normal Django admin panel.
+
+### Community creation
+You can have your users make communities. Each user by default can make one community. User communities can be changed by the owner of said community.
+
+### Password resetting within the settings page
+**This should've been a thing since day one.** Instead of being forced to reset your password through your email, you can now change it via settings.
+
+### Admins can change the sidebar on the front of the page.
+There are two types: `welcomemsgs` and `MOTDs`
+
+`welcomemsgs` are visible on the front page when you aren't signed in.
+
+`MOTDs` are visible when signed in.
+
+## Other features include:
+- Mods can warn users.
+- Better audit logging system.
+- Purging is much easier now.
+- You can fucking ban people now without the Django panel.
+- Each and every ban is an IP ban automatically.
+- A page where every user can view collected data tied to their account.
+
+Can you rewrite this?
 
 # YOU NEED
 - Cloudflare
 - A server (obviously)
-- Terminal access (also obviously)
+- Terminal access (also, obviously)
 - Python 3
 
 # Install time
@@ -27,10 +58,10 @@ Clone the clone!
 `git clone https://github.com/Mistake35/Cedar-Django`
 
 5.5 (recommended).
-You should use Filezilla or some other SFTP client to make things easier in the future.
+You should use FileZilla or some other SFTP client to make things easier in the future.
 
 6.
-navigate to Cedar-Django
+Navigate to Cedar-Django
 `cd Cedar-Django`
 
 7.
@@ -41,7 +72,7 @@ Edit the settings.py file.
 Fill everything out as needed. Be sure to generate a secret key and paste it in too.
 
 9.
-Now it's time for the good stuff! 
+Now it's time for the good stuff!
 Let's build the database
 `python3 manage.py migrate`
 
@@ -55,20 +86,20 @@ Be sure to replace "IP-HERE" with your public IP and make sure it's running on p
 `python3 manage.py runserver IP-HERE:80`
 
 # Troubleshooting time!
-Q: "HELP I'M GETTING A BAD REQUEST (400) ERROR!"
-A: Add your public IP to the ALLOWED_HOSTS bit in settings.py along with your domain that you'll be using.
+Q: "HELP, I'M GETTING A BAD REQUEST (400) ERROR!"
+A: Add your public IP to the `ALLOWED_HOSTS` bit in settings.py along with your domain that you'll be using.
 
 Q: "django.db.utils.OperationalError: no such table: ban_usersban"
 A: You forgot to migrate and make the database.
 
-Q: "Why is the page white with no color or style at all?"
+Q: "Why is the page white, with no color or style at all?"
 A: You need to collect the static files as mentioned prior.
 
 Q: "KeyError: HTTP_CF_CONNECTING_IP"
 A: Cloudflare is needed for this shit to work properly.
 
 You may have to do some additional troubleshooting, and that's the joy of web-hosting.
-Fixing problems yourself is a great way to learn how this shit works. 
+Fixing problems yourself is a great way to learn how this shit works.
 
 # Yet even more steps
 
@@ -79,7 +110,7 @@ Now it's time to create your account.
 Enter your username, and password.
 
 13.
-Make sure its working by signing in.
+Make sure it's working by signing in.
 
 14.
 Alright now it's time to do some fun stuff! We're going to try and make this run at boot with systemd.
@@ -104,13 +135,17 @@ WantedBy=multi-user.target
 
 16.
 Pop these in!
-`sudo systemctl daemon-reload`
-`sudo systemctl enable django`
-`sudo systemctl start django`
+```
+sudo systemctl daemon-reload
+sudo systemctl enable django
+sudo systemctl start django
+```
 Make sure it works too!
-`sudo systemctl status django`
+```
+sudo systemctl status django
+```
 
-17.
-The final stretch! 
-Set up your server with Cloudflare. You need a domain name, and you need patience as this can take some time to take effect.
+18.
+The final stretch!
+Set up your server with Cloudflare. You need a domain name, and you need patience, as this can take some time to take effect.
 If you do this final step right, Cedar should be working fine, and it should have HTTPS working too!
