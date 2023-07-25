@@ -563,7 +563,7 @@ class User(models.Model):
         subject='Reset password',
         html_message=htmlmsg,
         message=htmlmsg,
-        from_email="noreply@cedar.doctor",
+        from_email="noreply@" + settings.YOUR_DOMAIN,
         recipient_list=[self.email],
         fail_silently=False)
     def find_related(self):

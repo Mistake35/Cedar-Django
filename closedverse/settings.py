@@ -136,6 +136,7 @@ EMAIL_HOST_PASSWORD = ''
 EMAIL_PORT = ''
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = 'noreply@domain'
+YOUR_DOMAIN = 'yoursite.com'
 
 AUTH_USER_MODEL = 'closedverse_main.User'
 CSRF_FAILURE_VIEW = 'closedverse_main.views.csrf_fail'
