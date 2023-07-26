@@ -812,6 +812,15 @@ class Post(models.Model):
         except:
             return False
         return thing
+    def discord_vid(self):
+        try:
+            thing = re.search('(https?://)?(www\.)?(cdn)?(discordapp)\.(com)/attachments/([a-zA-Z0-9]+)/([a-zA-Z0-9]+)/(.+)', self.url).group(8)
+            if thing.endswith(".mp4") or thing.endswith(".webm"):
+                return thing
+            else:
+                return False
+        except:
+            return False
     def has_line_trun(self):
         if self.body and len(self.body.splitlines()) > 10:
             return True

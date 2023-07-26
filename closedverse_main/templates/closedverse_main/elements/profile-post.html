@@ -22,7 +22,9 @@
             </p>
 					{% if post.yt_vid %}
 					<a href="{% url "main:post-view" post.id %}" class="screenshot-container video"><img height="48" src="https://i.ytimg.com/vi/{{ post.yt_vid }}/default.jpg"></a>
-					{% endif %}
+				{% elif post.discord_vid %}
+      <div class="screenshot-container video"><video src="{{ post.url }}" width="50" height="48"></video></div>
+			{% endif %}
 			{% if post.screenshot %}
 			<a href="{% url "main:post-view" post.id %}" class="screenshot-container still-image"><img src="{{ post.screenshot }}"></a>
 			{% endif %}

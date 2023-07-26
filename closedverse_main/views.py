@@ -287,9 +287,6 @@ def signup_page(request):
             else:
                 spamuser = True
             if request.POST['origin_id']:
-                if settings.nnid_forbiddens:
-                    if nnid_blacked(request.POST['origin_id']):
-                        return HttpResponseForbidden("You are very funny. Unfortunately, your funniness blah blah blah fuck off.")
                 if User.nnid_in_use(request.POST['origin_id']):
                     return HttpResponseBadRequest("That Nintendo Network ID is already in use, that would cause confusion.")
                 mii = get_mii(request.POST['origin_id'])
@@ -408,9 +405,6 @@ def user_view(request, username):
                 return json_response("Your e-mail address is invalid. Input an e-mail address, or input nothing.")
         if User.nnid_in_use(request.POST.get('origin_id'), request):
             return json_response("That Nintendo Network ID is already in use, that would cause confusion.")
-        if settings.nnid_forbiddens:
-            if nnid_blacked(request.POST['origin_id']):
-                return json_response("You are very funny. Unfortunately, your funniness blah blah blah fuck off.")
         if user.has_plain_avatar():
             user.avatar = request.POST.get('avatar') or ''
         if request.POST.get('avatar') == '1':

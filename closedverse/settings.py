@@ -59,9 +59,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'ban.middleware.BanManagement',
     'closedverse_main.middleware.ClosedMiddleware',
-    'maintenance.middleware.MaintenanceManagement',
     'whitenoise.middleware.WhiteNoiseMiddleware'
 ]
 
