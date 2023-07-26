@@ -1,9 +1,9 @@
 {% extends "closedverse_main/layout.html" %}{% block main-body %}{% load closedverse_community %}
 {% community_sidebar community request %}
 	<div class="main-column">
-		{% if user.is_warned and user.is_authenticated and user.is_active %}
+		{% if user.is_warned %}
 		<div class="notice" style="background-color: #ffc783;border: 1px solid #ffb358;">
-		<p><b>WARNING</b>: You have been issued a warning by an administrator. No features have been restricted, as this is just a warning.
+		<p><b>WARNING</b>: You have been issued a warning by an administrator.
 		<div> 
 		{% if user.get_warned_reason %}
 		<p>Reason: "{{ user.get_warned_reason }}"</p>

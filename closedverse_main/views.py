@@ -27,8 +27,6 @@ from binascii import hexlify
 from os import urandom
 from datetime import date
 
-#from silk.profiling.profiler import silk_profile
-
 def json_response(msg='', code=0, httperr=400):
     thing = {
     # success would be false, but 0 is faster I think (Miiverse used 0 because Perl doesn't have bools)
@@ -46,17 +44,6 @@ def json_response(msg='', code=0, httperr=400):
     return JsonResponse(thing, safe=False, status=httperr)
 def community_list(request):
     """Lists communities / main page."""
-    msg_list = ["eat breakfast.", "The Cedar train must keep going", "be sure to drink a lot of water.", "We, crusaders, will fight for what we believe in!", "be chill, be calm.", "*insert inspiring sentence*", "this is gonna be a great day for you.", "why not try other not-usally-used features of the website?", "work is hard, but results are great!"]
-    msgoftheday = choice(msg_list)
-    
-    #dateopening = date(2022, 7, 3)
-    #datehalloween = date(2022, 10, 31)
-    #datenow = date.today()
-    #age = datenow - dateopening
-    #halloween = datehalloween - datenow
-    #staff_list = User.objects.filter(staff=True)
-    
-    
     if 'json' in request.META.get('HTTP_ACCEPT', ''):
         cs = CommunitySerializer
         response = {
@@ -80,30 +67,16 @@ def community_list(request):
         ad = Ads.get_one()
     else:
         ad = "no ads"
-        
-    availablemotds = Motd.motds_available()
-    if(availablemotds):
-        mesoftheday = Motd.get_one()
-    else:
-        mesoftheday = "no MOTDs"
-        
-    availablemes = welcomemsg.welcomemsg_available()
-    if(availablemes):
-        welmes = welcomemsg.get_one()
-    else:
-        welmes = "no MOTDs"
-        
+    
+    WelcomeMSG = welcomemsg.objects.filter(show=True).order_by('-order', '-id')
+    mesoftheday = Motd.objects.filter(show=True).order_by('-order', '-id')
+    
     return render(request, 'closedverse_main/community_list.html', {
         'title': 'Communities',
         'ad': ad,
         'mesoftheday': mesoftheday,
-        'welmes': welmes,
-        #'staff_list': staff_list,
-        #'age': round(age.days / 30, 2),
-        #'halloween': halloween.days,
+        'WelcomeMSG': WelcomeMSG,
         'availableads': availableads,
-        'availablemotds': availablemotds,
-        'availablemes': availablemes,
         'classes': classes,
         'general': obj.filter(type=0).order_by('-created')[0:8],
         'game': obj.filter(type=1).order_by('-created')[0:8],
@@ -120,6 +93,7 @@ def community_list(request):
             },
     })
 def community_all(request):
+# TODO, redo this completely.
     """All communities, with pagination"""
     try:
         offset = int(request.GET.get('offset', '0'))
@@ -423,10 +397,6 @@ def user_view(request, username):
             return json_response('Big brother it\'s too big, I can\'t take it! (length '+str(len(request.POST.get('external')))+', max 300)')
         if len(request.POST.get('email')) > 500:
             return json_response('Big brother it\'s too big, I can\'t take it! (length '+str(len(request.POST.get('email')))+', max 500)')
-        # Kinda unneeded but gdsjkgdfsg
-        if request.POST.get('website') == 'Web URL' or request.POST.get('country') == 'Region' or request.POST.get('external') == 'DiscordTag':
-            return json_response("I'm laughing right now.")
-
         if len(request.POST.get('avatar')) > 255:
             return json_response('Avatar is too long (length '+str(len(request.POST.get('avatar')))+', max 255)')
         if request.POST.get('email') and not request.POST.get('email') == 'None':

@@ -633,13 +633,13 @@ class Community(models.Model):
         if self.type == 1:
             return {
             0: "",
-            1: "3DS Games",
-            2: "Wii U Games",
-            3: "Switch Games",
-            4: "Wii U Games\u30FB3DS Games",
-            5: 'PC Games',
-            6: 'Xbox Games',
-            7: 'Playstation Games',
+            1: "3DS Game",
+            2: "Wii U Game",
+            3: "Switch Game",
+            4: "Wii U / 3DS Game",
+            5: 'PC Game',
+            6: 'Xbox Game',
+            7: 'Playstation Game',
             }.get(self.platform)
         else:
             return {
@@ -1153,14 +1153,9 @@ class Profile(models.Model):
     
     pronoun_is = models.IntegerField(default=0, choices=(
     (0, "I don't know"), (1, "He/him"), (2, "She/her"), (3, "He/she"), (4, "It"), (5, "They/Them")
-    ))
-    
-    gender_is = models.IntegerField(default=0, choices=(
-    (0, "I don't know"), (1, "Girl"), (2, "Boy"), (3, "Minion"), (4, "Toaster"), (5, "Dinosaur"), (6, "Truck"), (7, "Robot"), (8, "Monkey"), (9, "Big chungus"), (10, "Other")
-    ))
+    )) 
 
     let_friendrequest = models.SmallIntegerField(default=0, choices=visibility)
-
     yeahs_visibility = models.SmallIntegerField(default=0, choices=visibility)
     comments_visibility = models.SmallIntegerField(default=2, choices=visibility)
     #relationship_visibility = models.SmallIntegerField(default=0, choices=visibility)
@@ -1612,7 +1607,7 @@ class RedFlag(models.Model):
     def __str__(self):
         return "Report on a " + self.get_type_display() + " for " + self.get_reason_display() + ": " + str(self.reasoning)
 
-# Login attempts: for incorrect passwords
+# Login attempts:
 class LoginAttempt(models.Model):
     id = models.AutoField(primary_key=True)
     created = models.DateTimeField(auto_now_add=True)
@@ -1689,19 +1684,6 @@ class AuditLog(models.Model):
         else:
             return False
 
-# TODO: MAKE THIS ACTUALLY WORK
-class Restriction(models.Model):
-    id = models.AutoField(primary_key=True)
-    created = models.DateTimeField(auto_now_add=True)
-    type = models.SmallIntegerField(choices=((0, "Prevent yeah"), (1, "Prevent follow"), (2, "Prevent comment"), ))
-    post = models.ForeignKey(Post, related_name='restriction_post', null=True, on_delete=models.CASCADE)
-    comment = models.ForeignKey(Comment, related_name='restriction_comment', null=True, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, related_name='restriction_user', null=True, on_delete=models.CASCADE)
-    by = models.ForeignKey(User, related_name='restriction_by', on_delete=models.CASCADE)
-    
-    def __str__(self):
-        return "Restrict " + str(self.user) + " on " + self.get_type_display() + " at " + str(self.created)
-
 class UserRequest(User):
     # USER AGENT
     ua = models.TextField(default='', null=True, blank=True)
@@ -1740,18 +1722,6 @@ class Motd(models.Model):
     hide_date = models.BooleanField(default=False)
     image = models.ImageField(upload_to='MOTD/%y/%m/%d/', max_length=255, null=True, blank=True)
 
-    def get_one():
-        mesoftheday = Motd.objects.order_by('order', '-id').filter(show=True)
-        return mesoftheday
-
-    def motds_available():
-        global motdsavailable
-        if(Motd.objects.filter(show=True).exists()):
-            motdsavailable = True
-        else:
-            motdsavailable = False
-        return motdsavailable
-
 class welcomemsg(models.Model):
     id = models.AutoField(primary_key=True)
     order = models.IntegerField(max_length=3, default=1)
@@ -1760,18 +1730,6 @@ class welcomemsg(models.Model):
     Title = models.CharField(max_length=256, null=False, blank=False, default='Title')
     message = models.TextField(null=False, blank=False)
     image = models.ImageField(upload_to='welcomemsg/%y/%m/%d/', max_length=255, null=True, blank=True)
-    
-    def get_one():
-        welmes = welcomemsg.objects.order_by('order', '-id').filter(show=True)
-        return welmes
-
-    def welcomemsg_available():
-        global welcomeisavailable
-        if(welcomemsg.objects.filter(show=True).exists()):
-            welcomeisavailable = True
-        else:
-            welcomeisavailable = False
-        return welcomeisavailable
         
 # thing will log changes to your bio or nickname
 class ProfileHistory(models.Model):
