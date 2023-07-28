@@ -614,7 +614,7 @@ class Community(models.Model):
     is_rm = models.BooleanField(default=False)
     is_feature = models.BooleanField(default=False)
     require_auth = models.BooleanField(default=False)
-    allowed_users = models.TextField(null=True, blank=True)
+    rank_needed_to_post = models.IntegerField(default=0)
     creator = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE)
 
     objects = PostManager()
@@ -678,14 +678,29 @@ class Community(models.Model):
                 post.recent_comment = post.recent_comment()
         return posts
     def post_perm(self, request):
-        if self.allowed_users:
-            allows = self.allowed_users.split(',')
-            if not request.user.is_authenticated or str(request.user.id) not in allows:
-                return False
+        if request.user.level >= self.rank_needed_to_post:
+            return True
+        elif request.user.staff == True:
+            return True
+        # If the community is made by you, you should be able to post in there regardless.
+        elif request.user == self.creator:
             return True
         else:
+            return False
+    def can_edit_community(self, request):
+        # yanderedev moment
+        if not request.user.is_authenticated:
+            return False
+        # If the user is a mod but can't post in one community, the user should not edit it either.
+        if not request.user.level >= self.rank_needed_to_post and not request.user.staff == True:
+            return False
+            
+        if request.user == self.creator:
             return True
-    
+        elif request.user.level >= settings.level_needed_to_man_communities or request.user.staff == True:
+            return True
+        else:
+            return False
     def has_favorite(self, request):
         if request.user.communityfavorite_set.filter(community=self).exists():
             return True
@@ -1720,16 +1735,6 @@ class Ads(models.Model):
 
     def __str__(self):
         return "Ad with id " + str(self.id) + ", created at " + str(self.created) + ", with url " + str(self.url) + ", and imageurl " + str(self.imageurl)
-
-class Motd(models.Model):
-    id = models.AutoField(primary_key=True)
-    order = models.IntegerField(max_length=3, default=1)
-    show = models.BooleanField(default=True)
-    created = models.DateTimeField(auto_now_add=True)
-    Title = models.CharField(max_length=256, blank=True, default='Title')
-    message = models.TextField(null=False, blank=False)
-    hide_date = models.BooleanField(default=False)
-    image = models.ImageField(upload_to='MOTD/%y/%m/%d/', max_length=255, null=True, blank=True)
 
 class welcomemsg(models.Model):
     id = models.AutoField(primary_key=True)

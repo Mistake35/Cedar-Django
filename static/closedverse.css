@@ -81,6 +81,18 @@ button {
   font-size: 20px;
   width: 175px;
 }
+.Announcement-content {
+  background: var(--theme-dark, #202030);
+  border: 1px solid black;
+  border-radius: 6px;
+  padding: 6px;
+  margin-bottom: 12px;
+  text-align: left;
+  padding-bottom: 22px;
+}
+.Announcement-content .Announcement-image {
+  padding-top: 6px;
+}
 .none {
   display: none !important;
 }
@@ -857,7 +869,7 @@ left: 10% !important;
   #global-menu #global-my-menu form input:hover,
   #global-menu #global-my-menu form input:active {
     text-indent: 27px;
-  }
+}
 }
 h2.label {
   border-bottom: 3px solid var(--theme, #5ac800);

@@ -38,7 +38,7 @@
 		<button type="button" class="symbol button favorite-button{% if community.has_favorite %} checked{% endif %}" data-action-favorite="{% url "main:community-favorite-add" community.id %}" data-action-unfavorite="{% url "main:community-favorite-rm" community.id %}"><span class="favorite-button-text">Favorite</span></button>
 	  <!--<button class="button reload-btn">Refresh posts</button>
 	  -->
-	  {% if request.user == community.creator %}
+	  {% if can_edit %}
 	  <button class="button" data-href="{% url "main:community-tools" community.id %}">Community Settings</button>
 	  {% endif %}
 	{% endif %}

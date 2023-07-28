@@ -69,12 +69,12 @@ def community_list(request):
         ad = "no ads"
     
     WelcomeMSG = welcomemsg.objects.filter(show=True).order_by('-order', '-id')
-    mesoftheday = Motd.objects.filter(show=True).order_by('-order', '-id')
+    announcements = Post.objects.filter(community__tags='announcements').order_by('-id')[:6]
     
     return render(request, 'closedverse_main/community_list.html', {
         'title': 'Communities',
         'ad': ad,
-        'mesoftheday': mesoftheday,
+        'announcements': announcements,
         'WelcomeMSG': WelcomeMSG,
         'availableads': availableads,
         'classes': classes,
@@ -821,6 +821,7 @@ def community_view(request, community):
     """View an individual community"""
     communities = get_object_or_404(Community, id=community)
     communities.setup(request)
+    can_edit = communities.can_edit_community(request)
     if not communities.clickable():
         return HttpResponseForbidden()
     if not request.user.is_authenticated and communities.require_auth:
@@ -836,7 +837,6 @@ def community_view(request, community):
             next_offset = 50
     else:
         next_offset = None
-
     if request.META.get('HTTP_X_AUTOPAGERIZE'):
             return render(request, 'closedverse_main/elements/post-list.html', {
             'posts': posts,
@@ -875,7 +875,8 @@ def community_tools(request, community):
     the_community = get_object_or_404(Community, id=community)
     if not request.user.is_authenticated:
         raise Http404()
-    if request.user != the_community.creator:
+    can_edit = the_community.can_edit_community(request)
+    if not can_edit:
         raise Http404()
     return render(request, 'closedverse_main/community_tools.html', {
     'title': 'Community tools',
@@ -890,7 +891,8 @@ def community_tools_set(request, community):
         #do the checks
         if not request.user.is_authenticated:
             return HttpResponseForbidden()
-        if request.user != the_community.creator:
+        can_edit = the_community.can_edit_community(request)
+        if not can_edit:
             return HttpResponseForbidden()
         if len(request.POST.get('community_name')) == 0 or len(request.POST.get('community_name')) >= 100:
             return json_response('bad name')

@@ -5,6 +5,7 @@ register = template.Library()
 def community_sidebar(community, request):
 	return {
 		'community': community,
+		'can_edit': community.can_edit_community(request),
 		'request': request,
 	}
 @register.inclusion_tag('closedverse_main/elements/community_post.html')
@@ -15,7 +16,7 @@ def community_post(post, type=0):
 	}
 
 @register.inclusion_tag('closedverse_main/elements/post-list.html')
-def post_list(posts, next_offset=None, type=0, nf_text=''):
+def post_list(posts, next_offset=None, type=0, nf_text='', time=None):
 	text = {
 	0: "This community doesn't have any posts yet.",
 	}.get(type, nf_text)
@@ -23,6 +24,7 @@ def post_list(posts, next_offset=None, type=0, nf_text=''):
 		'posts': posts,
 		'nf': text,
 		'next': next_offset,
+		'time': time,
 	}
 @register.inclusion_tag('closedverse_main/elements/post-form.html')
 def post_form(user, community):

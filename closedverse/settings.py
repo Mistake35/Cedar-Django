@@ -193,6 +193,9 @@ allow_signups = True
 # Mods under this level will still be able to manage users, however will not be able to view any sensitive data.
 min_lvl_metadata_perms = 10
 
+# if someone's level is equal or above this, they can edit any community on your clone.
+level_needed_to_man_communities = 5
+
 # file size limits in megabytes! only applies when using the community tools.
 max_icon_size = .5
 max_banner_size = 1

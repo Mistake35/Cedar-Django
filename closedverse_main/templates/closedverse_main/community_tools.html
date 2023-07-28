@@ -1,11 +1,11 @@
 {% extends "closedverse_main/layout.html" %}
 {% block main-body %}{% load closedverse_user %}{% load closedverse_tags %}{% load closedverse_community %}
-{% if community.is_feature %}<div class='notice'>
-<p>Who the fuck gave you ownership of a fucking featured community!</p>
+{% if not request.user == community.creator %}<div class='notice'>
+<p>Mods and staff members can edit communities.</p>
 </div>{% endif %}
 {% community_sidebar community request %}
 <div class="main-column"><div class="post-list-outline">
-<h2 class="label">Change settings for {{ community.creator }}'s community</h2>
+<h2 class="label">Change settings for {% if community.creator %}{{ community.creator }}'s{% else %}this{% endif %} community</h2>
 <form class="setting-form" method="post" action={% url "main:community-tools-set" community.id %}>
 	<li class="setting-community-name">
 	<p class="settings-label">Set name:</p>
@@ -37,6 +37,7 @@
 	  <p>&nbsp;</p>
 	  <input type="checkbox" name="force_login" {% if  community.require_auth %}checked{% endif %}>Require login:
 			<p class="note">If this is on, users will need to sign in to view your community.</p>
+			<p class="note">I plan on removing this feature as it's implemented in an extremely janky way. Or at least improving it, so you are no longer forced to sign in to view yeahs from anyone. The whole idea behind this feature is to prevent web crawling or unauthorized third parties from seeing content without an account.</p>
 	  </li>
 	  <li>
         <p class="settings-label">Platform</p>

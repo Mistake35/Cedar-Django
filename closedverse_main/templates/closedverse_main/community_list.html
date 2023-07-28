@@ -19,14 +19,15 @@
 		</div>
 		{% endif %}
 		
-	{% if mesoftheday and request.user.is_authenticated %}
-	<div class="post-list-outline index-memo">
-		<h2 class="label">MOTD / News</h2>
-		{% for mesoftheday in mesoftheday %}
-		{% if mesoftheday.Title %}<h2>{{ mesoftheday.Title }}</h2>{% endif %}
-		<p>{{ mesoftheday.message|linebreaksbr|urlize }}</p>
-		{% if mesoftheday.image %}<image src={{ mesoftheday.image.url }}></image>{% endif %}
-		{% if mesoftheday.hide_date == False %}<p class="memo-date">Posted {{ mesoftheday.created }}</p>{% endif %}
+	{% if announcements and request.user.is_authenticated %}
+	<div class="Announcements">
+		{% for announcements in announcements %}
+		<div class='Announcement-content'>
+		{% user_icon_container announcements.creator post.feeling %}
+		<a class='user-name' href={% url "main:user-view" announcements.creator.username %} {% if announcements.creator.color %}style=color:{{ announcements.creator.color }}{% endif %}>{{ announcements.creator }}</a><a class='timestamp"'> - {{ announcements.created }}</a>
+		<p>{{ announcements.body|linebreaksbr|urlize }}</p>
+		{% if announcements.screenshot %}<image class='Announcement-image' src={{ announcements.screenshot }}></image>{% endif %}
+		</div>
 		{% endfor %}
 	</div>
 	{% endif %}
