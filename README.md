@@ -19,8 +19,6 @@ If you have an announcements community, each post will appear there.
 
 `welcomemsgs` are visible on the front page when you aren't signed in.
 
-`MOTDs` are visible when signed in.
-
 ## Other features include:
 - Mods can warn users.
 - Better audit logging system.
