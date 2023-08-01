@@ -14,8 +14,8 @@ You can have your users make communities. Each user by default can make one comm
 ### Password resetting within the settings page
 **This should've been a thing since day one.** Instead of being forced to reset your password through your email, you can now change it via settings.
 
-### Admins can change the sidebar on the front of the page.
-There are two types: `welcomemsgs` and `MOTDs`
+### Announcements appear on the side of the main page.
+If you have an announcements community, each post will appear there.
 
 `welcomemsgs` are visible on the front page when you aren't signed in.
 
