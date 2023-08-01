@@ -189,12 +189,18 @@ MARKDOWN_DEUX_STYLES = {
 # allow sign ups.
 allow_signups = True
 
+# Whatever the reason may be, you have the option to make your clone invite only.
+invite_only = True
+
 # Minimum level required to view IP addresses and user agents. (default: 10)
 # Mods under this level will still be able to manage users, however will not be able to view any sensitive data.
-min_lvl_metadata_perms = 10
+min_lvl_metadata_perms = 100
 
-# if someone's level is equal or above this, they can edit any community on your clone.
-level_needed_to_man_communities = 5
+# if someone's level is equal or above this, they can edit most community on your clone.
+level_needed_to_man_communities = 10
+
+# if someone's level is equal or above this, they can edit any user with a lower level on your clone.
+level_needed_to_man_users = 10
 
 # file size limits in megabytes! only applies when using the community tools.
 max_icon_size = .5
@@ -209,7 +215,9 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 15728640
 
 # Set the default theme here! Set this to None to use the normal Closedverse theme.
 # TODO, make this work for users who aren't logged in.
-site_wide_theme_hex = "#ff00cd"
+# Example: site_wide_theme_hex = "#ff4159"
+# The site wide global theme cannot be deactivated by your users.
+site_wide_theme_hex = 'ff4159'
 
 # The location to redirect to if a user's status is set to 2 (Redirect) (rickroll)
 inactive_redirect = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
@@ -219,4 +227,4 @@ inactive_redirect = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 image_delete_opt = 0
 
 # age (minimal 13 due to C.O.P.P.A)
-age_allowed = "16"
+age_allowed = "13"

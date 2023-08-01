@@ -112,11 +112,9 @@ class AuditAdmin(admin.ModelAdmin):
 
 class AdsAdmin(admin.ModelAdmin):
         raw_id_fileds = ('id', 'created', 'url', 'imageurl')
-
-class MOTDAdmin(admin.ModelAdmin):
-        raw_id_fileds = ('id', 'created', 'message', )
-        list_display = ('message', 'show', 'order', 'created', )
-        actions = [Hide_Memo, Show_Memo]
+        
+class InvitesAdmin(admin.ModelAdmin):
+        raw_id_fileds = ('id', 'created', 'creator')
 
 class WelcomemsgAdmin(admin.ModelAdmin):
         raw_id_fileds = ('id', 'created', 'message', )
@@ -151,11 +149,11 @@ admin.site.register(models.ProfileHistory, HistoryAdmin)
 admin.site.register(models.Post, PostAdmin)
 admin.site.register(models.Comment, CommentAdmin)
 admin.site.register(models.Ads, AdsAdmin)
-admin.site.register(models.Motd, MOTDAdmin)
 admin.site.register(models.welcomemsg, WelcomemsgAdmin)
 admin.site.register(models.Yeah, YeahAdmin)
 admin.site.register(models.Follow)
 admin.site.register(models.FriendRequest)
 admin.site.register(models.Friendship, ConversationAdmin)
+admin.site.register(models.Invites, InvitesAdmin)
 admin.site.register(models.Poll)
 admin.site.register(models.PollVote)

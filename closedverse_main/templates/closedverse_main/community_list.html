@@ -23,7 +23,7 @@
 	<div class="Announcements">
 		{% for announcements in announcements %}
 		<div class='Announcement-content'>
-		{% user_icon_container announcements.creator post.feeling %}
+		{% user_icon_container announcements.creator announcements.feeling %}
 		<a class='user-name' href={% url "main:user-view" announcements.creator.username %} {% if announcements.creator.color %}style=color:{{ announcements.creator.color }}{% endif %}>{{ announcements.creator }}</a><a class='timestamp"'> - {{ announcements.created }}</a>
 		<p>{{ announcements.body|linebreaksbr|urlize }}</p>
 		{% if announcements.screenshot %}<image class='Announcement-image' src={{ announcements.screenshot }}></image>{% endif %}
@@ -32,13 +32,13 @@
 	</div>
 	{% endif %}
 		
-	{% if welmes and not request.user.is_authenticated %}
+	{% if WelcomeMSG and not request.user.is_authenticated %}
 	<div class="post-list-outline index-memo">
 		<h2 class="label">Welcome to Cedar!</h2>
-		{% for welmes in welmes %}
-		<h2>{{ welmes.Title }}</h2>
-		<p>{{ welmes.message|linebreaksbr|urlize }}</p>
-		{% if welmes.image %}<image src={{ welmes.image.url }}></image>{% endif %}
+		{% for WelcomeMSG in WelcomeMSG %}
+		<h2>{{ WelcomeMSG.Title }}</h2>
+		<p>{{ WelcomeMSG.message|linebreaksbr|urlize }}</p>
+		{% if WelcomeMSG.image %}<image src={{ WelcomeMSG.image.url }}></image>{% endif %}
 		{% endfor %}
 	</div>
 	{% endif %}
@@ -78,17 +78,18 @@
 			{% community_page_element game "Game Communities" %}
 			{% community_page_element special "Special Communities" %}
 			{% community_page_element user_communities "User owned Communities" %}
-			<a href="{% url "main:community-viewall" %}" class="big-button">Show more</a>
+			<a href="{% url "main:community-viewall" "gen" %}" class="big-button">Show more</a>
 	</div>
 	<div id="community-guide-footer">
 		<div id="guide-menu">
 			<a class="arrow-button" href="{% url "main:help-why" %}"><span>Why join?</span></a>
-			<a class="arrow-button" href="{% url "main:help-rules" %}"><span>Cedar Rules</span></a>
-			<!--<a class="arrow-button" href="{% url "main:active-clones" %}"><span>Active clones</span></a>-->
+			<a class="arrow-button" href="{% url "main:help-rules" %}"><span>{{ brand_name }} Rules</span></a>
 			<a class="arrow-button" href="{% url "main:help-faq" %}"><span>Frequently Asked Questions (FAQ)</span></a>
 			<a class="arrow-button" href="{% url "main:what-ads" %}"><span>What are user-generated ads?</span></a>
-			{% if settings.PROD %}
+			{% if settings.CLOSEDVERSE_PROD %}
+			<a class="arrow-button" href="{% url "main:help-contact" %}"><span>Contact information</span></a>
 			{% endif %}
+			<a class="arrow-button" href="https://pf2m.com/openverse/"><span>Info about Openverse</span></a>
 		</div>
 	</div>
 {% endblock %}

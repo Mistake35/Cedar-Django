@@ -47,7 +47,7 @@ urlpatterns = [
     url(r'communities.search$', views.community_search, name='community-search'),
     url(r'communities/'+ community +'$', views.community_view, name='community-view'),
     url(r'communities/favorites$', views.community_favorites, name='community-favorites'),
-    url(r'communities/all$', views.community_all, name='community-viewall'),
+    url(r'communities/categories/(?P<category>[a-z]+)$', views.community_all, name='community-viewall'),
     url(r'communities/(?P<tag>[a-z]+)$', views.special_community_tag, name='special-community-tag'),
     url(r'communities/'+ community +'/favorite$', views.community_favorite_create, name='community-favorite-add'),
     url(r'communities/'+ community +'/favorite_rm$', views.community_favorite_rm, name='community-favorite-rm'),
@@ -80,7 +80,6 @@ urlpatterns = [
     url(r'alive$', views.check_notifications, name='check-notifications'),
     url(r'notifications/?$', views.notifications, name='notifications'),
     url(r'notifications/friend_requests/?$', views.friend_requests, name='friend-requests'),
-    url(r'notifications/set_read$', views.notification_setread, name='set-read'),
     url(r'notifications/(?P<notification>'+ uuidr +'+)\.rm$', views.notification_delete, name='notification-delete'),
 
     # User meta + messages
@@ -95,9 +94,9 @@ urlpatterns = [
 
     # Help/configuration
     url(r'lights$', views.set_lighting, name='set-lighting'),
-    #url(r'togglesignups$', views.set_signups, name='set-signups'),
-    #url(r'togglevpn$', views.set_VPN, name='set-VPN'),
     url(r'complaints$', views.help_complaint, name='complaints'),
+    url(r'invite$', views.invites, name='invites'),
+    url(r'invite/create/$', views.create_invite, name='create_invite'),
     url(r'mydata$', views.my_data, name='my-data'),
     url(r'changepassword$', views.change_password, name='change-password'),
     url(r'changepassword/set$', views.change_password_set, name='change-password-set'),

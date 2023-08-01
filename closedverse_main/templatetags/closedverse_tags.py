@@ -1,6 +1,7 @@
 from django import template
 from closedverse_main.models import User
 from closedverse_main.util import HumanTime
+from closedverse_main.models import mii_domain
 from closedverse import settings
 import re
 
@@ -10,11 +11,26 @@ register = template.Library()
 def avatar(user, feeling=0):
 	return user.do_avatar(feeling)
 @register.simple_tag
+def invite_only(settings):
+    if settings.invite_only:
+        return True
+    else:
+        return False
+@register.simple_tag
+def color_theme(request):
+    if request.user.is_authenticated and request.user.theme:
+        theme = request.user.theme.strip("#")
+    elif settings.site_wide_theme_hex:
+        theme = settings.site_wide_theme_hex.strip("#")
+    else:
+        theme = None
+    return theme
+@register.simple_tag
 def miionly(mh):
 	if not mh:
 		return settings.STATIC_URL + 'img/anonymous-mii.png'
 	else:
-		return 'https://mii-secure.cdn.nintendo.net/{0}_normal_face.png'.format(mh)
+		return '{1}{0}_normal_face.png'.format(mh, mii_domain)
 @register.simple_tag
 def time(stamp, full=False):
 	return HumanTime(stamp.timestamp(), full) or "Less than a minute ago"

@@ -117,10 +117,14 @@ class CommunityFavoriteManager(models.Manager):
 color_re = re.compile('^#([A-Fa-f0-9]{6})$')
 validate_color = RegexValidator(color_re, "Enter a valid color", 'invalid')
 class ColorField(models.CharField):
-    default_validators = [validate_color]
-    def __init__(self, *args, **kwargs):
-        kwargs['max_length'] = 18
-        super(ColorField, self).__init__(*args, **kwargs)
+	default_validators = [validate_color]
+	def __init__(self, *args, **kwargs):
+		kwargs['max_length'] = 18
+		super(ColorField, self).__init__(*args, **kwargs)
+
+#mii_domain = 'https://mii-secure.cdn.nintendo.net'
+# as of writing, mii-secure is unstable, nintendo please do not f*ck me for this
+mii_domain = 'https://s3.us-east-1.amazonaws.com/mii-images.account.nintendo.net/'
         
 class User(models.Model):
     unique_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
@@ -151,6 +155,7 @@ class User(models.Model):
     staff = models.BooleanField(default=False)
     #active = models.SmallIntegerField(default=1, choices=((0, 'Redirect'), (1, 'Good'), (2, 'Disabled')))
     active = models.BooleanField(default=True)
+    can_invite = models.BooleanField(default=True)
     warned = models.BooleanField(default=False)
     warned_reason = models.CharField(blank=True, null=True, max_length=600)
     bg_url = models.CharField(max_length=300, null=True, blank=True)
@@ -168,19 +173,6 @@ class User(models.Model):
     
     def __str__(self):
         return self.username
-    def ColorTheme(self):
-        # if the user set a theme, display that.
-        if self.theme:
-            the_theme = self.theme
-            the_theme = the_theme.strip("#")
-        # if there's no theme set by the user, use the site's picked theme.
-        elif settings.site_wide_theme_hex:
-            the_theme = settings.site_wide_theme_hex
-            the_theme = the_theme.strip("#")
-        # If there's no theme set in settings.py, return None.
-        else:
-            the_theme = None
-        return the_theme
     def get_full_name(self):
         return self.username
     def get_short_name(self):
@@ -315,7 +307,7 @@ class User(models.Model):
             4: 'frustrated',
             5: 'puzzled',
             }.get(feeling, "normal")
-            url = 'https://mii-secure.cdn.nintendo.net/{0}_{1}_face.png'.format(self.avatar, feeling)
+            url = '{2}{0}_{1}_face.png'.format(self.avatar, feeling, mii_domain)
             return url
         elif not self.avatar:
             return settings.STATIC_URL + 'img/anonymous-mii.png'
@@ -427,15 +419,18 @@ class User(models.Model):
             
     # Admin can-manage
     def can_manage(self):
-        if (self.level >= 2) or self.is_staff():
-            return True 
-        return False
-    # Does user have authority over self?
+        if self.level >= settings.level_needed_to_man_users or self.staff:
+            can_manage = True 
+        else:
+            can_manage = False
+        return can_manage
+    # Does self have authority over user?
     def has_authority(self, user):
-        if self.is_staff():
-            return False
-        if (self.level < user.level):
-            return True 
+        if user.is_authenticated:
+            if self.staff and not user.staff:
+                return True
+            if self.level >= user.level:
+                return True 
         return False
     def friend_state(self, other):
         # Todo: return -1 for cannot, 0 for nothing, 1 for my friend pending, 2 for their friend pending, 3 for friends
@@ -596,6 +591,26 @@ class User(models.Model):
         except:
             return False
         return user
+        
+# An invite system, for closed off communities or for whatever reason.
+class Invites(models.Model):
+    id = models.AutoField(primary_key=True)
+    created = models.DateTimeField(auto_now_add=True)
+    creator = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE, related_name='invite_creator')
+    code = models.CharField(max_length=36, default=uuid.uuid4)
+    used = models.BooleanField(default=False)
+    void = models.BooleanField(default=False)
+    used_by = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE, related_name='invited_user')
+    
+    def is_valid(self):
+        if self.used or self.void:
+            return False
+        if not self.creator.can_invite:
+            return False
+        return True
+        
+    def __str__(self):
+        return "invite by " + str(self.creator)
 
 class Community(models.Model):
     unique_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
@@ -869,8 +884,8 @@ class Post(models.Model):
             return False
     def can_rm(self, request):
         if self.creator.has_authority(request.user):
-            return True
-        return False
+            return False
+        return True
     def give_yeah(self, request):
         if not request.user.has_freedom() and Yeah.objects.filter(by=request.user, created__gt=timezone.now() - timedelta(seconds=5)).exists():
             return False
@@ -1083,10 +1098,10 @@ class Comment(models.Model):
         #   return False
     def can_rm(self, request):
         if self.creator.has_authority(request.user):
-            return True
+            return False
         #if self.original_post.is_mine(request.user):
         #   return True
-        return False
+        return True
     def give_yeah(self, request):
         if not request.user.has_freedom() and Yeah.objects.filter(by=request.user, created__gt=timezone.now() - timedelta(seconds=5)).exists():
             return False
@@ -1641,7 +1656,7 @@ class LoginAttempt(models.Model):
     user_agent = models.TextField(null=True, blank=True)
     
     def __str__(self):
-        return 'A login attempt to ' + str(self.user) + ' from ' + self.addr + ', ' + str(self.success)
+        return 'A login attempt to ' + str(self.user) + ' from ' + str(self.addr) + ', ' + str(self.success)
         
 class MetaViews(models.Model):
     id = models.AutoField(primary_key=True)

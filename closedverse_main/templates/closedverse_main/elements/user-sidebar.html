@@ -48,7 +48,7 @@
 		<button type="button" data-action="{% url "main:user-fr-delete" user.username %}" data-screen-name="{{ user.nickname }}" class="friend-button unf delete button symbol">Friends</button>
 		{% endif %}
 	{% endif %}
-	{% if request.user.can_manage %}
+	{% if not has_authority and request.user.can_manage %}
 	<button class="button" data-href="{% url "main:user-tools" user.username %}">User Settings</button>
 	{% endif %}
 </div>

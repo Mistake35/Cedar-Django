@@ -66,7 +66,7 @@ function artworkUpdate(evt) {
 	var mousePos = getMousePos(evt);
 	if(artworkTool.type < 2) {
 	if(mousePosOld == 0) mousePosOld = mousePos;
-	if(evt.which == 1 || evt.type == 'touchmove') {
+	if(evt.originalEvent.buttons == 1 || evt.type == 'touchmove') {
 		if(artworkTool.type == 0) {
 			ctx.fillStyle = artworkColor;
 		} else {
@@ -338,68 +338,6 @@ function deleteOption() {
 */
 }
 //!© Nintendo/Hatena 2012-2017 copyright@hatena.com
-function negroThing(b, a) {
-    console.log('negroThing')
-    var e = $("#upload-file"),
-        //h = $("#upload-input"),
-        f = $("#upload-preview"),
-        l = $("#upload-preview-container"),
-        m = $("#image-dimensions"),
-        n = function(a) { console.log('changee')
-            switch (!0) {
-                case void 0 !== a.target.files:
-                    var b = a.target.files;
-                    break;
-                case void 0 !== a.originalEvent.clipboardData:
-                    b = a.originalEvent.clipboardData.files;
-                    break;
-                case void 0 !== a.originalEvent.dataTransfer:
-                    b = a.originalEvent.dataTransfer.files;
-                    break;
-                default:
-                    return
-            }
-            if (!(null === b || 0 > b.length || void 0 === b[0] || 0 > b[0].type.indexOf("image"))) {
-                a.preventDefault();
-                Olv.Form.toggleDisabled($("input.black-button"), !1);
-                f.hide();
-                l.hide();
-                //h.val("");
-                f.attr("src", "");
-                m.text("...");
-                var e = new FileReader,
-                    n = function() {
-                        f.attr("src", e.result);
-                        f.show();
-                        var a = new Image;
-                        a.src = e.result;
-                        var b = function() {
-                            m.text(a.width + " x " + a.height);
-                            a.removeEventListener("load", b)
-                        };
-                        a.addEventListener("load", b);
-                        l.show();
-                        //h.val(e.result.split(";base64,")[1]);
-                        e.removeEventListener("load", n)
-                    };
-                e.addEventListener("load", n);
-                e.readAsDataURL(b[0])
-            }
-        };
-    e.change(n);
-console.log(b)
-    b.on("dragover dragenter", function(a) {
-        a.preventDefault()
-    });
-    b.on("drop paste", n);
-    if (!a) b.on("olv:entryform:post:done", function() {
-        $('image-dimensions').text("PNG, JPEG, and GIF are allowed.");
-        $('upload-preview').hide();
-        $('upload-preview-container').hide();
-        $('upload-preview').attr("src", "");
-        //h.val("")
-    })
-}
 var Olv = Olv || {};
 (function(a, b) {
     b.init || (b.init = a.Deferred(function() {
@@ -494,7 +432,13 @@ var Olv = Olv || {};
 			Olv.Form.get('/lights')
 		},
 		prlinkConf: function() {
-			$('#container').prepend('<div class="dialog linkc none"><div class=dialog-inner><div class=window><h1 class=window-title>Confirm link</h1><div class=window-body><p class=window-body-content>Are you sure you want to visit <b>'+ass+'</b>?</p><div class=form-buttons><button class="olv-modal-close-button gray-button" type=button data-event-type=ok onclick="$(\'.linkc\').remove()">No</button><button class="olv-modal-close-button black-button" type=button onclick="Olv.Net.lo(\''+ass+'\');$(\'.linkc\').remove()">Yes</button></div></div></div></div></div>');
+            if(ass.includes(location.origin)) {
+			    $('#container').prepend('<div class="dialog linkc none"><div class=dialog-inner><div class=window><h1 class=window-title>Link Redirection</h1><div class=window-body><p class=window-body-content>Are you sure you want to go to <b>'+ass+'</b> on this site?</p><div class=form-buttons><button class="olv-modal-close-button gray-button" type=button data-event-type=ok onclick="$(\'.linkc\').remove()">No</button><button class="olv-modal-close-button black-button" type=button onclick="Olv.Net.go(\''+ass+'\');$(\'.linkc\').remove()">Yes</button></div></div></div></div></div>');
+            } else {
+            		// might not always be there but eh it'll work
+            		var brand_name = $('meta[name="apple-mobile-web-app-title"]').attr('content');
+                $('#container').prepend('<div class="dialog linkc none"><div class=dialog-inner><div class=window><h1 class=window-title>You are now leaving '+brand_name+'.</h1><div class=window-body><p class=window-body-content>You are now exiting the '+brand_name+' website.<br>Are you sure you want to visit <b>'+ass+'</b>?</p><div class=form-buttons><button class="olv-modal-close-button gray-button" type=button data-event-type=ok onclick="$(\'.linkc\').remove()">No</button><button class="olv-modal-close-button black-button" type=button onclick="Olv.Net.lo(\''+ass+'\');$(\'.linkc\').remove()">Yes</button></div></div></div></div></div>');
+            }
 			var g = new Olv.ModalWindow($('.linkc'));g.open();
 		},
 		changesel: function(a) {
@@ -564,12 +508,12 @@ var Olv = Olv || {};
 			case 500:
 				errmsg = "An error has been encountered in the server.\n";
 				if(a.getResponseHeader('Content-Type').indexOf('html') < 0) {
-					errmsg += "Error information is available; please send this to an administrator:\n";
-					if(innerWidth <= 480) {
+					window.tmpUnescapedHtmlForError = errmsg + "<br>Error information is available; please send this to an administrator:<code>" + b.SimpleDialog.htmlLineBreak(a.responseText) + "</pre>\n";
+					/*if(innerWidth <= 480) {
 						errmsg += a.responseText.substr(0, 400);
 					} else {
 						errmsg += a.responseText.substr(0, 1000);
-					}
+					}*/
 				}
 				return {
 				error_code: "Internal server error",
@@ -674,6 +618,7 @@ var Olv = Olv || {};
         onDataHrefClick: function(c) {
 			if (a(c.target).attr("data-href")) {
                 b.Net.go($(this).attr("data-href"));
+                return;
 			}
             if (!c.isDefaultPrevented() && !a(c.target).closest("a,button").length) {
                 var d = a(this);
@@ -1173,6 +1118,9 @@ var Olv = Olv || {};
     }),
     a(document).on("olv:pagechange", function() {
         b.ModalWindowManager.closeAll();
+        if(!Olv.ModalWindowManager._windows.length && $('.mask').length) {
+        	b.ModalWindowManager.toggleMask();
+        }
     }),
     b.ModalWindow = function(b, c) {
         this.element = a(b),
@@ -1257,7 +1205,13 @@ var Olv = Olv || {};
               , f = a.trim(c.modalTypes || "");
             e.types = f ? f.split(/\s+/) : [],
             d.find(".window-title").text(c.title || "");
-            var g = this.htmlLineBreak(c.body || "");
+            var g;
+            if(window.tmpUnescapedHtmlForError) {
+                g = window.tmpUnescapedHtmlForError;
+                window.tmpUnescapedHtmlForError = null;
+            } else {
+                g = this.htmlLineBreak(c.body || "");
+            }
             d.find(".window-body-content").html(g),
             d.find(".ok-button").text(c.okLabel || b.loc("olv.portal.ok"));
             var h = d.find(".cancel-button");
@@ -1878,7 +1832,7 @@ var Olv = Olv || {};
         function f(a) {
             // RESET IMAGE. stuuupid yes but input file elements do NOT persist and ye
             // fix thi??s???
-            $('#image-dimensions').text("PNG and JPEG are allowed.");
+            $('#image-dimensions').text(b.EntryForm.tempPollutionButImageFormAllowedText);
                     $('#upload-preview').hide();
                     $('#upload-preview-container').hide();
                     $('#upload-preview').attr("src", "");
@@ -1920,8 +1874,9 @@ var Olv = Olv || {};
                     h = $("#upload-input"),
                     f = $("#upload-preview"),
                     l = $("#upload-preview-container"),
-                    m = $("#image-dimensions"),
-                    n = function(a) {
+                    m = $("#image-dimensions");
+                    b.EntryForm.tempPollutionButImageFormAllowedText = m.text();
+                var n = function(a) {
                         /*window.anus = a
                         console.log(a)
                         */switch (!0) {
@@ -1971,7 +1926,7 @@ var Olv = Olv || {};
                 });
                 c.on("drop paste", n);
                 c.on("olv:entryform:post:done", function() {
-                    m.text("PNG and JPEG are allowed.");
+                    m.text(b.EntryForm.tempPollutionButImageFormAllowedText);
                     f.hide();
                     l.hide();
                     f.attr("src", "");
@@ -2214,12 +2169,13 @@ var Olv = Olv || {};
                     okLabel: b.loc("olv.portal.button.remove"),
                     modalTypes: "unfollow"
                 });
-                f.done(function(a) {
-                    a && b.Form.post(d.attr("data-action"), null, d).done(function() {
+                f.done(function(k) {
+                    k && b.Form.post(d.attr("data-action"), null, d).done(function(l) {
                         // Maybe don't use the b.Net.reload() here
 						d.hasClass("relationship-button") ? b.Net.reload() : (d.addClass("none"),
                         e.removeClass("none"),
                         b.Form.toggleDisabled(e, !1))
+                        "following_count" in l && a(e).trigger("olv:visitor:following-count:change", [l.following_count])
                     })
                 }),
                 c.preventDefault()
@@ -2514,21 +2470,9 @@ var Olv = Olv || {};
 			b.Net.go($(this).attr('action') + '?'+$(this).serialize())
 		})
     }),
-    b.router.connect("^/communities/all$", function(c, d, e) {
+  b.router.connect("^/communities/categories/[^\/]+$", function(c, d, e) {
 		b.Closed.changesel("community");
-		gsl = function(e) {
-			e.preventDefault();
-			$('.community-switcher-tab.selected').removeClass('selected');
-			$(this).addClass('selected');
-			cl = $(this).attr('class').split(' ')[1],
-			$('.' + cl).removeClass('none')
-			$('.communities:not(.none):not(.'+ cl +')').addClass('none')
-		}
-        $('.community-switcher-tab.gen').on('click',gsl),
-		$('.community-switcher-tab.game').on('click',gsl),
-		$('.community-switcher-tab.special').on('click',gsl);
-		$('.community-switcher-tab.usr').on('click',gsl);
-    }),
+  }),
 	b.router.connect("^/communities.search$", function(c) {
 		$('form.search').on('submit', function(s) {
 			s.preventDefault();
@@ -2549,7 +2493,6 @@ var Olv = Olv || {};
 	}),
 	b.router.connect('/notifications/friend_requests(\/)?$', function(a, c, d) {
 		b.Closed.changesel("news");
-		b.Form.post("/notifications/set_read?fr=1")
 		$('.received-request-button').on('click', function(a) {
 			a.preventDefault()
 			fr = new b.ModalWindow($('div[data-modal-types=accept-friend-request][uuid='+ $(this).parent().parent().attr('id') +']'));fr.open();
@@ -2870,6 +2813,10 @@ $('.post-poll .poll-votes').on('click', function() {
 		$('.edit-post-button').on('click',function(){
 			if($('.post-content-memo').length) {
 				b.showMessage("", "You can't edit a drawing, sorry.");
+            } else if($('.vidya').length) {
+                b.showMessage("", "You can't edit your uploaded video, sorry. But you can edit the contents of the post.");
+                et();
+                b.Form.toggleDisabled(submit_btn, true);
 			} else {
 					et();
 					b.Form.toggleDisabled(submit_btn, true);
@@ -3063,12 +3010,27 @@ mode_post = 0;
             b.Form.toggleDisabled(a(c.target), !0)
         }
         function g(b, c) {
-            a("#user-content.is-visitor").length && a("#js-following-count").text(c)
+            /*a("#user-content.is-visitor").length && */a(".test-follower-count").text(c)
         }
         b.User.setupFollowButton(e, {
             container: ".main-column",
             noReloadOnFollow: !0
         }),
+    $(".block-button").on("click", function(g) {
+        g.preventDefault();
+        window.fr = new b.ModalWindow($("div[data-modal-types=post-block]"));
+        window.fr.open()
+    });
+    $("div[data-modal-types=post-block] input.post-button").on("click", function(g) {
+        g.preventDefault();
+        b.Form.toggleDisabled($(this), true);
+        b.Form.post($("div[data-modal-types=post-block] form").attr("data-action")).done(function() {
+            window.fr.close();
+            b.Form.toggleDisabled($(this), true);
+            b.Net.reload()
+        })
+    });
+    
 		$('.friend-button.create').on('click', function(a) {
 			a.preventDefault()
 			fr = new b.ModalWindow($('div[data-modal-types=post-friend-request]'));fr.open();
@@ -3204,16 +3166,17 @@ mode_post = 0;
 								$('p.red').html(null);
 							}
 								$.ajax({
-									url: inp.attr('data-action'),
-									type: 'POST', data: b.Form.csrftoken({'a': inp.val()}),
+									url: inp.attr('data-action') + inp.val(),
+									type: 'GET',
 									success: function(a) {
 										if(a == '') {
 											icon.addClass('none');
 											icon.attr('src', '');
 										} else {
 											icon.removeClass('none');
-											icon.attr('src', 'https://mii-secure.cdn.nintendo.net/' + a + '_happy_face.png');
+											icon.attr('src', inp.attr('data-mii-domain') + a + '_happy_face.png');
 										}
+										$('input[name=mh]').val(a);
 									}, error: function(a) {
 										$('p.red').html(a.responseText);
 										icon.addClass('none');
@@ -3267,7 +3230,7 @@ mode_post = 0;
 			});
 		})
 	}),
-    b.router.connect("^/users/[^\/]+/(tools)$", function(c, d, e) {
+	b.router.connect("^/users/[^\/]+/(tools)$", function(c, d, e) {
         function f(c) {
             var d = a(this)
               , e = d.closest("form");
@@ -3282,6 +3245,20 @@ mode_post = 0;
         })
     }),
 	b.router.connect("^/changepassword$", function(c, d, e) {
+        function f(c) {
+            var d = a(this)
+              , e = d.closest("form");
+            b.Form.isDisabled(d) || c.isDefaultPrevented() || (c.preventDefault(),
+            b.Form.submit(e, d).done(function(a) {
+                b.Net.reload()
+            }))
+        }
+        a(document).on("click", ".apply-button", f),
+        e.done(function() {
+            a(document).off("click", ".apply-button", f)
+        })
+    }),
+    b.router.connect("^/invite$", function(c, d, e) {
         function f(c) {
             var d = a(this)
               , e = d.closest("form");
@@ -3322,13 +3299,13 @@ mode_post = 0;
 							$('p.error').html(null)
 						}
 							$.ajax({
-								url: inp.attr('data-action'),
-								type: 'POST', data: b.Form.csrftoken({'a': inp.val()}),
+								url: inp.attr('data-action') + inp.val(),
+								type: 'GET',
 								success: function(a) {
 									if(a == '') {
 										$('.nnid-icon.mii').attr('src', '');
 									} else {
-										$('.nnid-icon.mii').attr('src', 'https://mii-secure.cdn.nintendo.net/' + a + '_normal_face.png');
+										$('.nnid-icon.mii').attr('src', inp.attr('data-mii-domain') + a + '_normal_face.png');
 									}
 									$('input[name=mh]').val(a);
 								}, error: function(a) {
@@ -3345,14 +3322,27 @@ mode_post = 0;
 					}
 				})
 				
-				$('input[name=avatar][value=0]').change(function() {
-						$('.setting-avatar > .icon-container > .nnid-icon.mii').removeClass('none');
-						$('.nnid-icon.gravatar').addClass('none');
-				})
-				$('input[name=avatar][value=1]').change(function() {
-						$('.setting-avatar > .icon-container > .nnid-icon.mii').addClass('none');
-						$('.nnid-icon.gravatar').removeClass('none');
-				})
+				$("input[name=avatar][value=0]").change(function() {
+					$(".setting-avatar > .icon-container > .nnid-icon.mii").removeClass("none");
+					$(".nnid-icon.gravatar").addClass("none");
+					$(".nnid-icon.custom").addClass("none");
+					$("#upload-thing").addClass("none");
+				});
+				$("input[name=avatar][value=1]").change(function() {
+					$(".setting-avatar > .icon-container > .nnid-icon.mii").addClass("none");
+					$(".nnid-icon.custom").addClass("none");
+					$(".nnid-icon.gravatar").removeClass("none");
+					$("#upload-thing").addClass("none");
+				});
+				$("input[name=avatar][value=2]").change(function() {
+					$(".setting-avatar > .icon-container > .nnid-icon.mii").addClass("none");
+					$(".nnid-icon.gravatar").addClass("none");
+					$(".nnid-icon.custom").removeClass("none");
+					$("#upload-thing").removeClass("none");
+				});
+				// awkward but it should work
+				Olv.EntryForm.setupIdentifiedUserForm($(".settings-list"), {done:function(){}});
+
 				$('.color-thing').click(function(a) {
 					a.preventDefault();
 						$('.color-thing').spectrum({
@@ -3392,8 +3382,13 @@ mode_post = 0;
             var d = a(this)
               , e = d.closest("form");
             b.Form.isDisabled(d) || c.isDefaultPrevented() || (c.preventDefault(),
-            b.Form.submit(e, d).done(function(a) {
+            b.Form.submit(e, d).done(function() {
                 b.Net.reload()
+                var updateAvatar = function() {
+                	a('#global-menu-mymenu .icon-container img').attr('src', a('#sidebar-profile-body .icon').attr('src'));
+                	a(document).off("pjax:complete", updateAvatar);
+                }
+                a(document).on("pjax:complete", updateAvatar);
             }))
         }
         function g(c) {
@@ -3531,7 +3526,7 @@ mode_post = 0;
 				$("#drawing").remove();
 				$("input[name=painting]").attr("value", "");
 					}
-					$('#image-dimensions').text("PNG and JPEG are allowed.");
+						$('#image-dimensions').text(Olv.EntryForm.tempPollutionButImageFormAllowedText);
                     $('#upload-preview').hide();
                     $('#upload-preview-container').hide();
                     $('#upload-preview').attr("src", "");

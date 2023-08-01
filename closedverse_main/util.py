@@ -66,10 +66,8 @@ def get_mii(id):
 	screenname = mii_dec[0][3].text
 	nnid = mii_dec[0][6].text
 	del(mii_dec)
-	
 	# Also todo: Return the NNID based on what accountws returns, not the user's input!!!
 	return [miihash, screenname, nnid]
-
 
 def recaptcha_verify(request, key):
 	if not request.POST.get('g-recaptcha-response'):

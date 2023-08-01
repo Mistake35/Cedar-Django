@@ -9,12 +9,17 @@ def user_sidebar(request, user, profile, selection=0, general=False, fr=None):
 		user.is_following = user.is_following(request.user)
 		user.is_me = user.is_me(request)
 	availableads = Ads.ads_available()
+	if user.is_authenticated:
+	    has_authority = user.has_authority(request.user)
+	else:
+	    has_authority = False
 	if (availableads):
 		ad = Ads.get_one()
 	else:
 		ad = "no ads"
 	return {
 		'request': request,
+		'has_authority': has_authority,
 		'availableads': availableads,
 		'ad': ad,
 		'user': user,
