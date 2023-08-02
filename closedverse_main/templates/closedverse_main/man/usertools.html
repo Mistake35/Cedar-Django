@@ -59,9 +59,9 @@
 			<li class="setting">
 			<div class="center center-input">
 			<p class="settings-label">Metadata:</p>
-			<p class='red'>Each time you view someone's metadata, a log is created.</p>
 			{% if request.user.level >= min_lvl_metadata_perms %}
-			<a href="{% url "main:user-tools-meta" user.username %}">View metadata</a>
+			<p class='red'>Each time you view someone's private info, a log is created.</p>
+			<a href="{% url "main:user-tools-meta" user.username %}">View private info</a>
 			{% endif %}
 			</div>
 		{% if seen_by %}

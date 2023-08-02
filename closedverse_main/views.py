@@ -1794,9 +1794,10 @@ def user_tools_set(request, username):
 		return HttpResponse()
 	else:
 		raise Http404()
-		
-@login_required
+
 def invites(request):
+	if not request.user.is_authenticated:
+		raise Http404()
 	invites_list = Invites.objects.filter(creator=request.user, used=False, void=False)
 	return render(request, 'closedverse_main/invites.html', {
 		'title': 'Invites',
@@ -1822,7 +1823,6 @@ def create_invite(request):
 		return HttpResponse()
 	else:
 		raise Http404()
-
 
 @require_http_methods(['POST'])
 # Disabling login requirement since it's in signup now. Regret?
