@@ -1,6 +1,7 @@
-{% load closedverse_community %}<form id="post-form" method="post" action="{% url "main:messages-view" friend.username %}" class="folded">
-	{% csrf_token %}
+{% load closedverse_community %}
 {% if user.is_active %}
+<form id="post-form" method="post" action="{% url "main:messages-view" friend.username %}" class="folded">
+	{% csrf_token %}
     {% feeling_selector %}
 	<div class="textarea-with-menu active-text">
 		<menu class="textarea-menu">
@@ -37,5 +38,5 @@
 </form>
 {% endif %}
 {% if not user.is_active %}
-<p>Your account has been disabled.</p>
+<p class="center">Your account has been disabled.</p>
 {% endif %}

@@ -171,10 +171,25 @@ nnid_forbiddens = BASE_DIR + '/forbidden.json'
 
 # Client key to use for iphub.email, because we're using that
 # None for no IP checking (recommended since this is so slow)
-iphub_key = ""
+IPHUB_KEY = ""
 
 # If IP can be checked, then use this to disallow any proxies
 disallow_proxy = False
+
+# Setting this to True forces every user to log in/
+# sign up for the site to view any content.
+FORCE_LOGIN = False
+# A list of URLs that are always accessible
+# whether the above value is set or not.
+LOGIN_EXEMPT_URLS = {
+    r'^login/$',
+    r'^signup/$',
+    r'^logout/$',
+    r'^reset/$',
+    r'^help/rules$',
+    r'^help/contact$',
+    r'^help/login$',
+}
 
 # MD
 MARKDOWN_DEUX_STYLES = {
@@ -190,17 +205,17 @@ MARKDOWN_DEUX_STYLES = {
 allow_signups = True
 
 # Whatever the reason may be, you have the option to make your clone invite only.
-invite_only = True
+invite_only = False
 
 # Minimum level required to view IP addresses and user agents. (default: 10)
 # Mods under this level will still be able to manage users, however will not be able to view any sensitive data.
 min_lvl_metadata_perms = 100
 
 # if someone's level is equal or above this, they can edit most community on your clone.
-level_needed_to_man_communities = 10
+level_needed_to_man_communities = 5
 
 # if someone's level is equal or above this, they can edit any user with a lower level on your clone.
-level_needed_to_man_users = 10
+level_needed_to_man_users = 5
 
 # file size limits in megabytes! only applies when using the community tools.
 max_icon_size = .5

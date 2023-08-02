@@ -129,7 +129,6 @@
   <p>You must sign in to post a comment.<br><br>Sign in using a Cedar account to make posts and comments, as well as give Yeahs and follow users.</p>
   <a href="{% url "main:signup" %}" class="arrow-button"><span>Create an account</span></a>
   <a href="{% url "main:help-faq" %}" class="arrow-button"><span>FAQ/Frequently Asked Questions</span></a>
-  <a href="{% url "main:help-contact" %}" class="arrow-button"><span>Contact Us</span></a>
 </div>
 {% elif not post.can_comment %}
 <div class="cannot-reply"><div>

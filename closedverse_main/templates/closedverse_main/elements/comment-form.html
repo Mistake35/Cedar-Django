@@ -1,6 +1,7 @@
-{% load closedverse_community %}<form id="reply-form" class="for-identified-user" method="post" action="{% url "main:post-comments" post.id %}">
+{% load closedverse_community %}
+{% if user.is_active %}
+<form id="reply-form" class="for-identified-user" method="post" action="{% url "main:post-comments" post.id %}">
   {% csrf_token %}
- {% if user.is_active %} 
   	{% if not user.limit_remaining is False %}
 		<div class="post-count-container">
 			<span>Remaining posts for today</span>
@@ -40,8 +41,6 @@
       </label>
     </div>
   </div>
-  
-
 
 
   <div class="form-buttons">
@@ -51,5 +50,5 @@
 {% endif %}
 
 {% if not user.is_active %}
-<p>Your account has been disabled.</p>
+<p class="center">Your account has been disabled.</p>
 {% endif %}

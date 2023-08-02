@@ -30,14 +30,16 @@
       </a>
 	  {% endif %}
 	{% user_sidebar_info user profile %}
-{% if request.user.is_authenticated and not user.is_me %}
+{% if request.user.is_authenticated and not user.is_me and profile.can_friend or profile.can_follow or request.user.can_manage %}
       <div class="user-action-content">
 <div class="toggle-button">
+	{% if profile.can_follow and not user.is_me %}
     <button type="button" data-action="{% url "main:user-follow" user.username %}" class="follow-button button symbol{% if user.is_following %} none{% endif %}">Follow</button>
     <button type="button" data-action="{% url "main:user-unfollow" user.username %}" class="unfollow-button button symbol{% if not user.is_following %} none{% endif %}" data-screen-name="{{ user.nickname }}">Follow</button>
+  {% endif %}
 	{% if selection == 0 %}
 		{% if user.friend_state == 0 %}
-			{% if profile.can_friend %}
+			{% if profile.can_friend and not user.is_me %}
 				<button type="button" data-action="{% url "main:user-fr-create" user.username %}" class="friend-button create button symbol">Send friend request</button>
 			{% endif %}
 		{% elif user.friend_state == 1 %}
@@ -51,10 +53,11 @@
 	{% if not has_authority and request.user.can_manage %}
 	<button class="button" data-href="{% url "main:user-tools" user.username %}">User Settings</button>
 	{% endif %}
+	{% if not user.is_me and profile.can_block %}
+	<button type="button" class="button block-button">{% if profile.is_blocked %}Unblock{% else %}Block{% endif %}</button>
+	{% endif %}
 </div>
 
-
-	  
 {% if fr %}{% fr_accept fr %}{% endif %}
 {% if user.friend_state == 0 %}
 <div class="dialog none" data-modal-types="post-friend-request">
@@ -64,11 +67,7 @@
     <div class="window-body">
       <p class="description">Friend Request: <img width="36px" height="36px" src="{% avatar user %}">{{ user.nickname }}</p>
       <form method="post">
-	  
-	 
-
         <textarea name="body" class="textarea" maxlength="2200" data-placeholder="Write a friend request here." placeholder="Write a friend request here."></textarea>
-
         <div class="form-buttons">
           <input type="button" class="olv-modal-close-button gray-button" value="Cancel">
           <input type="submit" value="Send" class="post-button black-button">
@@ -80,8 +79,10 @@
 </div>
 {% endif %}
 
+{% block_modal user profile %}
+
       </div>
-		{% elif user.is_me and not general %}
+		{% endif %}{% if user.is_me and not general %}
 		<div id="edit-profile-settings"><a class="button symbol" href="{% url "main:profile-settings" %}">Profile Settings</a></div>
 		{% endif %}{% if user.is_me %}
 		<button class="button" onclick="Olv.Closed.lights()">Toggle Dark Mode</button>

@@ -1,4 +1,4 @@
-{% if not comment.is_rm %}{% load closedverse_tags %}<li id="{{ comment.unique_id }}" {% if comment.spoils or not comment.creator.is_active %}data-href-hidden{% else %}data-href{% endif %}="{% url "main:comment-view" comment.id %}" class="post {% if comment.owner_post %}my{% else %}other{% endif %}{% if comment.spoils or not comment.creator.is_active %} hidden{% endif %} trigger">
+{% if not comment.is_rm %}{% load closedverse_tags %}<li id="{{ comment.unique_id }}" {% if comment.spoils and not comment.is_mine or not comment.creator.is_active %}data-href-hidden{% else %}data-href{% endif %}="{% url "main:comment-view" comment.id %}" class="post {% if comment.owner_post %}my{% else %}other{% endif %}{% if comment.spoils and not comment.is_mine or not comment.creator.is_active %} hidden{% endif %} trigger">
   {% user_icon_container comment.creator comment.feeling %}
   <div class="body">
     <div class="header">
@@ -9,7 +9,7 @@
 	  <p class="timestamp-container">
         <a class="timestamp" {% if comment.spoils and not comment.is_mine %}data-href-hidden{% else %}href{% endif %}="{% url "main:comment-view" comment.id %}">{% time comment.created %}</a>
 				{% if comment.drawing %}
-				<span class="spoiler">(drawing)</span>
+				<span class="spoiler">(handwritten)</span>
 				{% endif %}
 		{% if comment.has_edit %}
 			<span class="spoiler">· Edited</span>
@@ -26,7 +26,7 @@
 	{% if comment.screenshot %}
 	<div class="screenshot-container still-image"><img src="{{ comment.screenshot }}"></div>
 	{% endif %}
-	{% if comment.spoils and comment.creator.is_active %}
+	{% if comment.spoils and not comment.is_mine and comment.creator.is_active %}
 		<div class="hidden-content"><p>This comment contains spoilers.</p>
       <button type="button" class="hidden-content-button">View Comment</button>
     </div>

@@ -19,7 +19,7 @@ class CommunitySerializer():
 				'platform': community.platform,
 				'allowed_users': json.loads(community.allowed_users) if community.allowed_users else None,
 				'creator': community.creator_id
-            }
+			}
 	@staticmethod
 	def many(queryset):
 		"""

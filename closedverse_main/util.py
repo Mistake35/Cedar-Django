@@ -1,4 +1,3 @@
-from lxml import html
 # Todo: move all requests to using requests instead of urllib3
 import urllib.request, urllib.error
 import requests
@@ -7,6 +6,7 @@ from random import choice
 import json
 import time
 import os.path
+import random
 from PIL import Image, ExifTags, ImageFile
 from datetime import datetime
 from binascii import crc32
@@ -21,22 +21,22 @@ import re
 from os import remove, rename
 
 def HumanTime(date, full=False):
-    now = time.time()
-    time_difference = now - date
-    time_units = {86400: 'day', 3600: 'hour', 60: 'minute'}
-    if time_difference >= 259200 or full:
-        return datetime.fromtimestamp(date).strftime('%m/%d/%Y %I:%M %p')
-    elif time_difference <= 59:
-        return 'Less than a minute ago'
-    else:
-        for unit, unit_name in time_units.items():
-            if time_difference < unit:
-                continue
-            else:
-                number_of_units = floor(time_difference / unit)
-                if number_of_units > 1:
-                    unit_name += 's'
-                return f'{number_of_units} {unit_name} ago'
+	now = time.time()
+	time_difference = now - date
+	time_units = {86400: 'day', 3600: 'hour', 60: 'minute'}
+	if time_difference >= 259200 or full:
+		return datetime.fromtimestamp(date).strftime('%m/%d/%Y %I:%M %p')
+	elif time_difference <= 59:
+		return 'Less than a minute ago'
+	else:
+		for unit, unit_name in time_units.items():
+			if time_difference < unit:
+				continue
+			else:
+				number_of_units = floor(time_difference / unit)
+				if number_of_units > 1:
+					unit_name += 's'
+				return f'{number_of_units} {unit_name} ago'
 
 def get_mii(id):
 	# Using AccountWS
@@ -79,13 +79,26 @@ def recaptcha_verify(request, key):
 	return True
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
-# This image upload code is fucked now thanks to pillow. I gotta go through it and refine it.
-def image_upload(img, stream=False, drawing=False):
-	# Decode the image
-	decodedimg = img.read() if stream else base64.b64decode(img)
-	# Open the image
-	im = Image.open(io.BytesIO(decodedimg))
-	# Check for EXIF data and rotate the image if necessary
+def image_upload(img, stream=False, drawing=False, avatar=False):
+	if stream:
+		decodedimg = img.read()
+	else:
+		try:
+			decodedimg = base64.b64decode(img)
+		except ValueError:
+			return 1
+	if stream:
+		if not 'image' in img.content_type:
+			return 1
+	# upload svg?
+	#if 'svg' in mime:
+	#	
+	try:
+		im = Image.open(io.BytesIO(decodedimg))
+	# OSError is probably from invalid images, SyntaxError probably from unsupported images
+	except (OSError, SyntaxError):
+		return 1
+	# Taken from https://coderwall.com/p/nax6gg/fix-jpeg-s-unexpectedly-rotating-when-saved-with-pil
 	if hasattr(im, '_getexif'):
 		orientation = 0x0112
 		exif = im._getexif()
@@ -98,29 +111,56 @@ def image_upload(img, stream=False, drawing=False):
 			}
 			if orientation in rotations:
 				im = im.transpose(rotations[orientation])
-	# Resize the image
-	im.thumbnail((800, 800))
-	# Check the aspect ratio if this is a drawing
+	if avatar:
+		# crop 1:1 
+		width, height = im.size
+		min_dimension = min(width, height)
+		crop_size = min_dimension
+		left = (width - crop_size) // 2
+		top = (height - crop_size) // 2
+		right = left + crop_size
+		bottom = top + crop_size
+		im = im.crop((left, top, right, bottom))
+		im.thumbnail((256, 256))
+	else:
+		im.thumbnail((1280, 1280))
+	
+	# Let's check the aspect ratio and see if it's crazy
+	# IF this is a drawing
 	if drawing and ((im.size[0] / im.size[1]) < 0.30):
 		return 1
-	# Generate a hash of the image
-	imhash = sha1(im.tobytes()).hexdigest()
-	# Set the file format and location
-	target = 'webp'
+	
+	# I know some people have aneurysms when they see people actually using SHA1 in the real world, for anything in general.
+	# Yes, we are really using it. Sorry if that offends you. It's just fast and I don't feel I need anything more random, since we are talking about IMAGES.
+	if stream:
+		hash = sha1()
+		for chunk in img.chunks():
+			hash.update(chunk)
+		imhash = hash.hexdigest()
+	else:
+		imhash = sha1(im.tobytes()).hexdigest()
+	# File saving target
+	target = 'png'
+	if stream:
+	# If we have a stream and either a JPEG or a WEBP, save them as those since those are a bit better than plain PNG
+		if 'jpeg' in img.content_type:
+			target = 'jpeg'
+			im = im.convert('RGB')
+		elif 'webp' in img.content_type:
+			target = 'webp'
 	floc = imhash + '.' + target
-	# Save the file if it doesn't already exist
+	# If the file exists, just use it, that's what hashes are for.
 	if not os.path.exists(settings.MEDIA_ROOT + floc):
-		im.save(settings.MEDIA_ROOT + floc, target, quality=80, method=6)
-	# Return the URL of the file
+		im.save(settings.MEDIA_ROOT + floc, target, optimize=True)
 	return settings.MEDIA_URL + floc
 
 # Todo: Put this into post/comment delete thingy method
 def image_rm(image_url):
-	if settings.image_delete_opt:
+	if settings.IMAGE_DELETE_SETTING:
 		if settings.MEDIA_URL in image_url:
 			sysfile = image_url.split(settings.MEDIA_URL)[1]
 			sysloc = settings.MEDIA_ROOT + sysfile
-			if settings.image_delete_opt > 1:
+			if settings.IMAGE_DELETE_SETTING > 1:
 				try:
 					remove(sysloc)
 				except:
@@ -155,12 +195,27 @@ def filterchars(str=""):
 	for char in forbid:
 		if char in str:
 			str = str.replace(char, " ")
+	if str.isspace():
+		return 'None'
 	return str
-
-# Check IP for proxy.
+	
+""" Not using getipintel anymore
+def getipintel(addr):
+	# My router's IP prefix is 192.168.1.*, so this works in debug
+	if settings.ipintel_email and not '192.168' in addr:
+		try:
+			site = urllib.request.urlopen('https://check.getipintel.net/check.php?ip={0}&contact={1}&flags=f'
+			.format(addr, settings.ipintel_email))
+		except:
+			return 0
+		return float(site.read().decode())
+	else:
+		return 0
+"""
+# Now using iphub
 def iphub(addr):
-	if settings.iphub_key and not '192.168' in addr:
-		get = requests.get('http://v2.api.iphub.info/ip/' + addr, headers={'X-Key': settings.iphub_key})
+	if settings.IPHUB_KEY and not '192.168' in addr:
+		get = requests.get('http://v2.api.iphub.info/ip/' + addr, headers={'X-Key': settings.IPHUB_KEY})
 		if get.json()['block'] == 1:
 			return True
 		else:

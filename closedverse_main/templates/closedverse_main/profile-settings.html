@@ -1,5 +1,5 @@
 {% extends "closedverse_main/layout.html" %}
-{% block main-body %}{% load closedverse_user %}{% load closedverse_tags %}
+{% block main-body %}{% load closedverse_user %}{% load closedverse_tags %}{% load closedverse_community %}
 {% user_sidebar request user profile 0 %}
 
 <div class="main-column"><div class="post-list-outline">
@@ -45,12 +45,13 @@
 		</div>
         <p class="note">Enter your region here. It'll appear on your profile.
 		<br>
+		<a class="get-ipinfo" href="#">If you want to use your location, you can get it automatically here (it will not be automatically saved).</a>
 		</p>
       </li>
       <li class="setting-email">
         <p class="settings-label">E-mail address</p>
         <div class="center center-input">
-			<input type="text" name="email" maxlength="255" placeholder="Email address" value="{{ user.email }}">
+			<input type="text" name="email" maxlength="255" placeholder="Email address" value="{{ user.email|default_if_none:"" }}">
 		</div>
         <p class="note">Please note that your email can be a fake one, however if you need to reset your password, this must be accessible. You can't share emails.</p>
 		{% if user.email %}
@@ -90,10 +91,10 @@
       <li class="setting-color">
         <p class="settings-label">Nickname color</p>
         <div class="center center-input">
-			<input type="hidden" name="color" maxlength="7" placeholder="Enter a hex color value here" value="{{ user.color }}">
+			<input type="hidden" name="color" maxlength="7" placeholder="Enter a hex color value here" value="{{ user.color|default_if_none:"" }}">
 			<button class="button color-thing">Open color picker</button>
 		</div>
-        <p class="note">This is the color your nickname will appear as. Leave it blank for the default. It will appear like so.</p>
+        <p class="note">This is the color your nickname will appear as. Set it to white (#ffffff) and it will return to the default. It will appear like so.</p>
 		{% user_sidebar_info user %}
       </li>
 	  	  {% if profile.origin_id %}
@@ -186,28 +187,33 @@
                 <div class="icon-container">
                     <img class="icon nnid-icon mii" src="{% miionly user.mh %}">
                 </div>
-                <input type="text" name="origin_id" minlength="6" maxlength="16" placeholder="Nintendo Network ID{% if not profile.origin_id %} (None){% endif %}" value="{% if profile.origin_id %}{{ profile.origin_id }}{% endif %}" data-mii-domain="{{ mii_domain }}" data-action="{{ mii_endpoint }}">
+                  <input type="text" name="origin_id" minlength="6" maxlength="16" placeholder="Nintendo Network ID{% if not profile.origin_id %} (None){% endif %}" value="{% if profile.origin_id %}{{ profile.origin_id }}{% endif %}" data-mii-domain="{{ mii_domain }}" data-action="{{ mii_endpoint }}">
 				  <input type="hidden" name="mh" value="{{ user.mh }}">
                 <p class="error"></p>
                 <p class="note">Enter your Nintendo Network ID here. It'll appear on your profile if you set it to be visible.</p>
               </li>
-		{% if not user.has_plain_avatar %}
               <li class="setting-avatar">
                 <div class="icon-container">
                     <img class="icon nnid-icon mii{% if not user.has_mh %} none{% endif %}" src="{% miionly user.mh %}">
-					<img class="icon nnid-icon gravatar{% if user.has_mh %} none{% endif %}" src="{{ user.gravatar }}">
+					<img class="icon nnid-icon gravatar{% if user.has_mh or user.has_plain_avatar %} none{% endif %}" src="{{ user.gravatar }}">
+					{% if user.has_freedom %}
+					<img class="icon nnid-icon custom{% if not user.has_plain_avatar %} none{% endif %}" src="{{ user.do_avatar }}">
+					{% endif %}
                   </div>
-                <p class="settings-label">Do you want the avatar shown beside your content to use the Mii from your Nintendo Network ID or a Gravatar?</p>
+                <p class="settings-label">Do you want the avatar shown beside your content to use the Mii from your Nintendo Network ID or a Gravatar or a custom avatar the way God intended?</p>
                 <label><input type="radio" name="avatar" value="0"{% if user.has_mh %} checked{% endif %}>Mii</label>
                 <label><input type="radio" name="avatar" value="1"{% if not user.has_mh %} checked{% endif %}>Gravatar</label>
-                <p class="note">Selecting the Gravatar option will cause your avatar to be pulled from the <a href="https://gravatar.com">Gravatar account</a> linked to your email address, and feelings won't be shown in your posts unless you choose to use a Mii instead.</p>
+                {% if user.has_freedom %}
+                <label><input type="radio" name="avatar" value="2"{% if user.has_plain_avatar%} checked{% endif %}>Custom</label>
+                <span id="upload-thing"{% if not user.has_plain_avatar %} class="none"{% endif %}>{% file_button %}</span>
+                <style>
+                	.setting-avatar div.file-button-container { display: none; }
+								</style>
+								{% else %}
+								<input type="hidden" name="avatar" value="2">
+								{% endif %}
+                <p class="note">Selecting the Gravatar option will cause your avatar to be pulled from the <a href="https://gravatar.com">Gravatar account</a> linked to your email address, and feelings won't be shown in your posts unless you choose to use a Mii instead. Same with the custom avatar option but who really cared anyway?</p>
          </li>
-		 {% else %}
-		 <p class="settings-label">It appears that you somehow have a plain URL avatar, change it here (<strong>if you change it to nothing then it will reset to being selectable !!</strong>)</p>
-		 <div class="center center-input">
-			<input type="text" name="avatar" maxlength="255" placeholder="Avatar url" value="{{ user.avatar }}">
-		</div>
-		 {% endif %}
 
 	{% csrf_token %}
 	<div class="form-buttons">
