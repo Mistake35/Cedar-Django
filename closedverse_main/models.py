@@ -19,6 +19,7 @@ from django.urls import reverse
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 import re
+import unicodedata
 import random
 
 feelings = ((0, 'normal'), (1, 'happy'), (2, 'wink'), (3, 'surprised'), (4, 'frustrated'), (5, 'confused'), (38, 'japan'), (39, 'lol i lied'), (69, 'adam is gay'), (70, 'I am a faggot!'), (71, 'Juice'), (72, "Commit Suicide"), (73, "Fresh!"))
@@ -769,6 +770,9 @@ class Community(models.Model):
 		upload = None
 		drawing = None
 		body = request.POST.get('body')
+		for c in body:
+			if unicodedata.combining(c):
+				return 11
 		if request.FILES.get('screen'):
 			upload = util.image_upload(request.FILES['screen'], True)
 			if upload == 1:
@@ -956,6 +960,9 @@ class Post(models.Model):
 			return 3
 		if not request.user.has_freedom() and (request.POST.get('url') or request.FILES.get('screen')):
 			return 6
+		for c in request.POST['body']:
+			if unicodedata.combining(c):
+				return 11
 		if not request.user.is_active():
 			return 6
 		if len(request.POST['body']) > 2200 or (len(request.POST['body']) < 1 and not request.POST.get('_post_type') == 'painting'):

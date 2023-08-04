@@ -1065,8 +1065,8 @@ def community_create_action(request):
 		get = request.POST.get
 		user.c_tokens -= 1
 		user.save()
-		Community.objects.create(name=get('community_name'), description=get('community_description'), type=3, platform=get('community_platform'), creator=user)
-		return json_response('Done.')
+		community = Community.objects.create(name=get('community_name'), description=get('community_description'), type=3, platform=get('community_platform'), creator=user)
+		return json_response('Community has been created', 'Done')
 @login_required
 def post_create(request, community):
 	if request.method == 'POST':
@@ -1098,6 +1098,7 @@ def post_create(request, community):
 			7: "Please don't spam.",
 			9: "You're very funny. Unfortunately your funniness blah blah blah fuck off.",
 			10: "No mr white, you can't make a post entirely consistant of spaces",
+			11: "Please don't post Zalgo text.",
 			}.get(new_post))
 		# Render correctly whether we're posting to Activity Feed
 		if community.is_activity():
@@ -1225,6 +1226,7 @@ def post_comments(request, post):
 			2: "The image you've uploaded is invalid.",
 			3: "You're making comments too fast, wait a few seconds and try again.",
 			6: "Not allowed.",
+			11: "Please don't post Zalgo text.",
 			}.get(new_post))
 		# Give the notification!
 		if post.is_mine(request.user):
@@ -1754,6 +1756,8 @@ def user_tools_set(request, username):
 			return json_response('Username Invalid')
 		if not re.compile(r'^[A-Za-z0-9-._]{1,32}$').match(request.POST['username']) or not re.compile(r'[A-Za-z0-9]').match(request.POST['username']):
 			return json_response("The username either contains invalid characters or is too long (only letters + numbers, dashes, dots and underscores are allowed")
+		if User.objects.filter(username=request.POST['username']).exists() and not request.POST['username'] == user.username:
+			return json_response("Username is taken, please pick a new name.")
 		if request.POST.get('nickname') == "" or None:
 			return json_response('Nickname Invalid')
 		if request.POST.get('post_limit') == "" or None:
