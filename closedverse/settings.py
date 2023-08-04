@@ -239,7 +239,7 @@ inactive_redirect = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 
 # Option to delete image if it's local
 # 0 - keep, 1 - move to 'rm' folder, 2 - DELETE
-image_delete_opt = 0
+IMAGE_DELETE_SETTING = 0
 
 # age (minimal 13 due to C.O.P.P.A)
 age_allowed = "13"

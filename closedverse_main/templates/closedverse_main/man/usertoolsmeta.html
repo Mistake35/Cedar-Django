@@ -5,13 +5,13 @@
 <h2 class="label">View info for {{ user.username }}</h2>
 <div class="help-content">
 			<p class="settings-label">Account metadata: Mods under level {{ min_lvl_metadata_perms }} can't see this.</p>
-			<p class='red'>Each time you view someone's metadata, a log is created.</p>
 			<div class="user-data">
 				<p>Like any other site, we collect small bits of information from accounts for security reasons.
 			<h3>General account information:</h3>
 				<p>IP address: <span>{% if user.addr %}{{ user.addr }}{% else %}Data missing{% endif %}
 				<p>Signup IP address: <span>{% if user.signup_addr %}{{ user.signup_addr }}{% else %}Data missing{% endif %}</p>
 				<p>User agent: <span>{% if user.user_agent %}{{ user.user_agent }}{% else %}Data missing{% endif %}
+				<p>Email: <span>{% if user.email %}{{ user.email }}{% else %}Data missing{% endif %}
 				<p>Rank: <span>{% if user.staff %}Staff member.{% elif not user.level <= 0 %}Moderator. (Level {{ user.level }}){% else %}Regular user.{% endif %}
 			</div>
 			{% if accountmatch %}
@@ -24,7 +24,7 @@
 				</tr>
 				{% for accountmatch in accountmatch %}
 				<tr>
-					<td>{{ accountmatch.username }}</td>
+					<td><a href={% url "main:user-view" accountmatch.username %}>{{ accountmatch.username }}</a></td>
 					<td>{{ accountmatch.created }}</td>
 				</tr>
 				{% endfor %}

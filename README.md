@@ -1,5 +1,4 @@
 # About
-
 Cedar-Django is a fork of Closedverse with custom features added to it.
 
 ### Theme changing
@@ -14,8 +13,12 @@ You can have your users make communities. Each user by default can make one comm
 ### Password resetting within the settings page
 **This should've been a thing since day one.** Instead of being forced to reset your password through your email, you can now change it via settings.
 
+### Invite only features
+**You can set `invite_only` to `True` if you want your site to be invite only** If you choose to make your website invite only, users can create invite codes and send them to others as a means of inviting new people to the website.  Upon signing up, users are required to input a valid invite code in order to create an account. This can be useful for closed off communities or as a ditch effort to stop raids or whatever.
+Moderators and staff will be able to revoke a user's ability to add new users if need be.
+
 ### Announcements appear on the side of the main page.
-If you have an announcements community, each post will appear there.
+If you have an announcement community, each post will appear there.
 
 `welcomemsgs` are visible on the front page when you aren't signed in.
 
@@ -36,6 +39,9 @@ Can you rewrite this?
 - Python 3
 
 # Install time
+
+Should probably say that this is a lazy way to do it. You should use a reverse proxy to deploy the server up for prod.
+
 1.
 SSH into your server.
 
@@ -49,7 +55,7 @@ You need Pip
 
 4.
 Get everything else you need.
-`pip3 install Django==3.2.2 urllib3 lxml passlib bcrypt pillow django-markdown-deux django-markdown2 whitenoise django-colorfield django-admin-interface`
+`pip3 install Django==3.2.2 urllib3 lxml passlib bcrypt pillow django-markdown-deux django-markdown2 whitenoise`
 
 5.
 Clone the clone!

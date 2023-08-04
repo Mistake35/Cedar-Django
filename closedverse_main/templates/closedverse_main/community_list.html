@@ -84,12 +84,16 @@
 		<div id="guide-menu">
 			<a class="arrow-button" href="{% url "main:help-why" %}"><span>Why join?</span></a>
 			<a class="arrow-button" href="{% url "main:help-rules" %}"><span>{{ brand_name }} Rules</span></a>
+			{% if request.user.is_authenticated %}
+			<a class="arrow-button" href="{% url "main:my-data" %}"><span>My Data</span></a>
+			{% endif %}
 			<a class="arrow-button" href="{% url "main:help-faq" %}"><span>Frequently Asked Questions (FAQ)</span></a>
 			<a class="arrow-button" href="{% url "main:what-ads" %}"><span>What are user-generated ads?</span></a>
 			{% if settings.CLOSEDVERSE_PROD %}
 			<a class="arrow-button" href="{% url "main:help-contact" %}"><span>Contact information</span></a>
 			{% endif %}
-			<a class="arrow-button" href="https://pf2m.com/openverse/"><span>Info about Openverse</span></a>
+			<a class="arrow-button" href="https://github.com/ariankordi/closedverse"><span>Closedverse Github</span></a>
+			<a class="arrow-button" href="https://github.com/Mistake35/Cedar-Django"><span>Cedar-Django Github</span></a>
 		</div>
 	</div>
 {% endblock %}

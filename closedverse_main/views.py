@@ -1680,11 +1680,9 @@ def user_tools(request, username):
 	seen_by = MetaViews.objects.filter(target_user=user).distinct().order_by('-id')[:10]
 	has_seen = MetaViews.objects.filter(from_user=user).distinct().order_by('-id')[:10]
 	
-	'''
-		findattempt = LoginAttempt.objects.filter(user=user).order_by('-id')[:1]
-	for findattempt in findattempt:
-		accountmatch = LoginAttempt.objects.filter(addr__in=[findattempt.addr])
-	'''
+	accountmatch = User.objects.filter(
+	Q(addr=user.addr) | Q(addr=user.signup_addr)
+	).exclude(username=user.username)
 	
 	return render(request, 'closedverse_main/man/usertools.html', {
 	'title': 'Admin tools',
@@ -1692,6 +1690,7 @@ def user_tools(request, username):
 	'seen_by': seen_by,
 	'has_seen': has_seen,
 	'profile': profile,
+	'accountmatch': accountmatch,
 	'min_lvl_metadata_perms': settings.min_lvl_metadata_perms,
 	})
 	
@@ -1772,6 +1771,7 @@ def user_tools_set(request, username):
 		user.warned = False if request.POST.get('warned') is None else True
 		profile.let_freedom = True if request.POST.get('let_freedom') is None else False
 		profile.cannot_edit = False if request.POST.get('cannot_edit') is None else True
+		user.can_invite = True if request.POST.get('can_invite') is None else False
 		
 		purge_posts = False if request.POST.get('purge_posts') is None else True
 		purge_comments = False if request.POST.get('purge_comments') is None else True
@@ -1796,6 +1796,8 @@ def user_tools_set(request, username):
 		raise Http404()
 
 def invites(request):
+	if not settings.invite_only:
+		raise Http404()
 	if not request.user.is_authenticated:
 		raise Http404()
 	invites_list = Invites.objects.filter(creator=request.user, used=False, void=False)

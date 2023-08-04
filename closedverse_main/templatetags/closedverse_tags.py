@@ -11,7 +11,7 @@ register = template.Library()
 def avatar(user, feeling=0):
 	return user.do_avatar(feeling)
 @register.simple_tag
-def invite_only(settings):
+def invite_only(request):
     if settings.invite_only:
         return True
     else:

@@ -82,13 +82,14 @@ button {
   width: 175px;
 }
 .Announcement-content {
-  background: var(--theme-dark, #202030);
-  border: 1px solid black;
+  border: 1px solid #00000045;
   border-radius: 6px;
   padding: 6px;
+  padding-bottom: 6px;
   margin-bottom: 12px;
   text-align: left;
   padding-bottom: 22px;
+  background: white;
 }
 .Announcement-content .Announcement-image {
   padding-top: 6px;

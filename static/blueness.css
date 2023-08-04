@@ -414,6 +414,10 @@ form.search {
     background: #fff;
     border: 2px solid #000;
 }
+.Announcement-content {
+  background: var(--theme-dark, #202030);
+  border: #000 solid 1px;
+}
 .sidebar-setting a {
     color: #ccc;
     border-top: 1px solid #000;

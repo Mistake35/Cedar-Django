@@ -104,6 +104,7 @@
         <menu id="global-menu">
           <li id="global-menu-logo"><h1><a href="/"><img src="{% static "img/menu-logo.svg" %}" alt="Cedar"></a></h1></li>
 		  {% if request.user.unique_id %}
+		  {% invite_only request as inv %}
           <li id="global-menu-list">
             <ul>
               <li id="global-menu-mymenu"><a href="{% url "main:user-view" request.user.username %}"><span class="icon-container {% user_class request.user %}"><img src="{% avatar request.user %}" alt="My Profile"></span><span>My Profile</span></a></li>
@@ -115,7 +116,7 @@
                 <menu id="global-my-menu" class="invisible none">
                   <li><a href="{% url "main:profile-settings" %}" class="symbol my-menu-profile-setting"><span>Profile settings</span></a></li>
                   <li><a href="#" class="symbol my-menu-account-setting"><span>Account preferences</span></a></li>
-                  <li><a href="{% url "main:invites" %}" class="symbol my-menu-guide"><span>Invites</span></a></li>
+                  {% if inv %}<li><a href="{% url "main:invites" %}" class="symbol my-menu-guide"><span>Invites</span></a></li>{% endif %}
                   <li><a href="{% url "main:special-community-tag" "announcements" %}" class="symbol my-menu-openman"><span>Cedar Announcements</span></a></li>
                   <li><a href="{% url "main:help-faq" %}" class="symbol my-menu-guide"><span>Frequently Asked Questions (FAQ)</span></a></li>
 				  <li><a href="{% url "main:help-rules" %}" class="symbol my-menu-guide"><span>Cedar Rules</span></a></li>
