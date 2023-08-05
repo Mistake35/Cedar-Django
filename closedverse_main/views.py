@@ -65,7 +65,10 @@ def community_list(request):
 	
 	WelcomeMSG = welcomemsg.objects.filter(show=True).order_by('-order', '-id')
 	announcements = Post.objects.filter(community__tags='announcements').order_by('-id')[:6]
-	
+	if request.user.is_authenticated:
+		my_communities = obj.filter(type=3, creator=request.user).order_by('-created')[0:8]
+	else:
+		my_communities = None
 	return render(request, 'closedverse_main/community_list.html', {
 		'title': 'Communities',
 		'ad': ad,
@@ -76,7 +79,8 @@ def community_list(request):
 		'general': obj.filter(type=0).order_by('-created')[0:8],
 		'game': obj.filter(type=1).order_by('-created')[0:8],
 		'special': obj.filter(type=2).order_by('-created')[0:8],
-		'user_communities': obj.filter(type=3).order_by('-created')[0:8],
+		'user_communities': sorted(obj.filter(type=3), key=lambda x: x.popularity(), reverse=True)[0:8],	
+		'my_communities': my_communities,
 		'feature': obj.filter(is_feature=True).order_by('-created'),
 		'favorites': favorites,
 		'settings': settings,
@@ -1059,14 +1063,14 @@ def community_create_action(request):
 		if user.c_tokens < 1:
 			return json_response("You don't have any tokens left")
 		if len(request.POST.get('community_name')) == 0 or len(request.POST.get('community_name')) >= 100:
-			return json_response('bad name')
+			return json_response('Your community name is either too short or too long.')
 		if len(request.POST.get('community_description')) >= 1024:
-			return json_response('bad description')
+			return json_response('Your community description is too long.')
 		get = request.POST.get
 		user.c_tokens -= 1
 		user.save()
 		community = Community.objects.create(name=get('community_name'), description=get('community_description'), type=3, platform=get('community_platform'), creator=user)
-		return json_response('Community has been created', 'Done')
+		return json_response('Community has been created, check the front page!', 'Done')
 @login_required
 def post_create(request, community):
 	if request.method == 'POST':
