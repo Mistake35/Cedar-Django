@@ -66,7 +66,7 @@ def community_list(request):
 	WelcomeMSG = welcomemsg.objects.filter(show=True).order_by('-order', '-id')
 	announcements = Post.objects.filter(community__tags='announcements').order_by('-id')[:6]
 	if request.user.is_authenticated:
-		my_communities = obj.filter(type=3, creator=request.user).order_by('-created')[0:8]
+		my_communities = obj.filter(creator=request.user).order_by('-created')[0:12]
 	else:
 		my_communities = None
 	return render(request, 'closedverse_main/community_list.html', {
@@ -76,10 +76,10 @@ def community_list(request):
 		'WelcomeMSG': WelcomeMSG,
 		'availableads': availableads,
 		'classes': classes,
-		'general': obj.filter(type=0).order_by('-created')[0:8],
-		'game': obj.filter(type=1).order_by('-created')[0:8],
-		'special': obj.filter(type=2).order_by('-created')[0:8],
-		'user_communities': sorted(obj.filter(type=3), key=lambda x: x.popularity(), reverse=True)[0:8],	
+		'general': obj.filter(type=0).order_by('-created')[0:12],
+		'game': obj.filter(type=1).order_by('-created')[0:12],
+		'special': obj.filter(type=2).order_by('-created')[0:12],
+		'user_communities': sorted(obj.filter(type=3), key=lambda x: x.popularity(), reverse=True)[0:12],	
 		'my_communities': my_communities,
 		'feature': obj.filter(is_feature=True).order_by('-created'),
 		'favorites': favorites,
@@ -986,9 +986,11 @@ def community_tools_set(request, community):
 		if not can_edit:
 			return HttpResponseForbidden()
 		if len(request.POST.get('community_name')) == 0 or len(request.POST.get('community_name')) >= 100:
-			return json_response('bad name')
+			return json_response('Your community name is either too short or too long.')
 		if len(request.POST.get('community_description')) >= 1024:
-			return json_response('bad description')
+			return json_response('Your community description is too long.')
+		if int(request.POST.get('community_platform')) >= 8:
+			return json_response('Invalid Platform type.')
 		if the_community.is_rm:
 			return json_response('Community is removed')
 		if the_community.type == 4:
@@ -1066,6 +1068,8 @@ def community_create_action(request):
 			return json_response('Your community name is either too short or too long.')
 		if len(request.POST.get('community_description')) >= 1024:
 			return json_response('Your community description is too long.')
+		if int(request.POST.get('community_platform')) >= 8:
+			return json_response('Invalid Platform type.')
 		get = request.POST.get
 		user.c_tokens -= 1
 		user.save()
@@ -1709,6 +1713,8 @@ def user_tools_meta(request, username):
 		raise Http404()
 	user = get_object_or_404(User, username__iexact=username)
 	profile = user.profile()
+	if user.protect_data:
+		return json_response('This user\'s data has been locked.')
 	# check if the requesting user is allowed to view someone
 	if user.has_authority(request.user):
 		raise Http404()

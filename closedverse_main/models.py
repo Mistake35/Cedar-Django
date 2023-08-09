@@ -143,6 +143,7 @@ class User(models.Model):
 	user_agent = models.TextField(null=True, blank=True)
 	# C Tokens are things that let you make communities and shit.
 	c_tokens = models.IntegerField(default=1)
+	protect_data = models.BooleanField(default=False)
 	
 	# Things that don't have to do with auth lol
 	hide_online = models.BooleanField(default=False)
@@ -639,7 +640,11 @@ class Community(models.Model):
 	objects = PostManager()
 	real = models.Manager()
 	def popularity(self):
-		popularity = Post.objects.filter(community=self).count()
+		if self.creator:
+			# don't count posts from the community owner.
+			popularity = Post.objects.filter(community=self).exclude(creator=self.creator).count()
+		else:
+			popularity = Post.objects.filter(community=self).count()
 		return popularity
 	def __str__(self):
 		return self.name

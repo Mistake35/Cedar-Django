@@ -87,7 +87,7 @@ class CommentAdmin(admin.ModelAdmin):
 
 class CommunityAdmin(admin.ModelAdmin):
 	raw_id_fields = ('creator', )
-	list_display = ('id', 'name', 'description', 'type', 'creator', 'is_rm', 'is_feature', 'require_auth')
+	list_display = ('id', 'name', 'description', 'type', 'creator', 'popularity', 'is_rm', 'is_feature', 'require_auth')
 	search_fields = ('id', 'unique_id', 'name', 'description', )
 	actions = [Hide_content, Show_content, Feature_community, Unfeature_community, force_login, unforce_login]
 	def get_queryset(self, request):

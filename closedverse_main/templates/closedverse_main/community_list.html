@@ -74,11 +74,11 @@
 		{% if feature %}
 			{% community_page_element feature "Featured Communities" True %}
 		{% endif %}
-			{% community_page_element general "General Communities" %}
-			{% community_page_element game "Game Communities" %}
-			{% community_page_element special "Special Communities" %}
-			{% community_page_element user_communities "Popular User-Created communities" %}
-			{% if my_communities %}{% community_page_element my_communities "My communities" %}{% endif %}
+			{% if general %}{% community_page_element general "General Communities" %}{% endif %}
+			{% if game %}{% community_page_element game "Game Communities" %}{% endif %}
+			{% if special %}{% community_page_element special "Special Communities" %}{% endif %}
+			{% if user_communities %}{% community_page_element user_communities "Popular User-Created Communities" %}{% endif %}
+			{% if my_communities %}{% community_page_element my_communities "My Communities" %}{% endif %}
 			<a href="{% url "main:community-viewall" "gen" %}" class="big-button">Show more</a>
 	</div>
 	<div id="community-guide-footer">
