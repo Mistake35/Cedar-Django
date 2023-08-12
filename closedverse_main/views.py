@@ -1954,7 +1954,6 @@ def change_password_set(request):
 	
 def whatads(request):
 	return render(request, 'closedverse_main/help/whatads.html', {'title': 'What are user-generated ads?'})
-@login_required
 def help_rules(request):
 	return render(request, 'closedverse_main/help/rules.html', {'title': 'Rules', 'age': settings.age_allowed})
 def help_faq(request):
