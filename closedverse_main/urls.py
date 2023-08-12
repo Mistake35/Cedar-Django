@@ -61,7 +61,7 @@ urlpatterns = [
 	url(r'posts/'+ post +'/yeah$', views.post_add_yeah, name='post-add-yeah'),
 	url(r'posts/'+ post +'/yeahu$', views.post_delete_yeah, name='post-delete-yeah'),
 	url(r'posts/'+ post +'/comments$', views.post_comments, name='post-comments'),
-	url(r'posts/'+ post +'/comments$', views.post_comments, name='post-comments'),
+	url(r'posts/'+ post +'/lock-comments$', views.lock_the_comments, name='lock-the-comments'),
 	url(r'posts/'+ post +'/change$', views.post_change, name='post-change'),
 	url(r'posts/'+ post +'/profile$', views.post_setprofile, name='post-set-profile'),
 	url(r'posts/'+ post +'/profile_rm', views.post_unsetprofile, name='post-unset-profile'),
@@ -115,4 +115,6 @@ urlpatterns = [
 	#url(r'openverse.png', views.openverse_logo, name='openverse-logo'),
 
 ]
+# + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# serve static and media i think???? mighTTT???????
 urlpatterns += [re_path(r'^i/(?P<path>.*)$', serve, {'document_root': MEDIA_ROOT, }), ]

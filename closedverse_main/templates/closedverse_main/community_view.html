@@ -1,18 +1,8 @@
 {% extends "closedverse_main/layout.html" %}{% block main-body %}{% load closedverse_community %}
 {% community_sidebar community request %}
 	<div class="main-column">
-		{% if user.is_warned %}
-		<div class="notice" style="background-color: #ffc783;border: 1px solid #ffb358;">
-		<p><b>WARNING</b>: You have been issued a warning by an administrator.
-		<div> 
-		{% if user.get_warned_reason %}
-		<p>Reason: "{{ user.get_warned_reason }}"</p>
-		{% endif %}
-		</div>
-		</div>
-		{% endif %}
 		<div class="post-list-outline">
-		<h2 class="label">{{ community.name }}:</h2>
+		<h2 class="label">{{ community.name }}</h2>
 		{% if request.user.is_authenticated and community.post_perm %}
 		{% post_form request.user community %}
 		{% endif %}

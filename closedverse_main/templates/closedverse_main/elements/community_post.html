@@ -44,7 +44,8 @@
 				{% endif %}
 			{% endif %}
 			{% if post.screenshot %}<a class="screenshot-container still-image" href="{% if post.is_reply %}{% url "main:comment-view" post.id %}{% else %}{% url "main:post-view" post.id %}{% endif %}"><img src="{{ post.screenshot }}"></a>{% endif %}
-		{% if post.spoils and post.creator.is_active %}
+			{% if post.video %}<div class="screenshot-container still-image"><video class="vidya" controls src="{{ post.video }}" style="max-width:100%;max-height: 450px;"></video></div>{% endif %}
+		{% if post.spoils and not post.is_mine and post.creator.is_active %}
 		<div class="hidden-content"><p>This post contains spoilers.</p>
               <button type="button" class="hidden-content-button">View Post</button>
         </div>

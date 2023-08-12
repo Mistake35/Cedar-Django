@@ -21,11 +21,16 @@
 				<li>My notifications: <span> {{ notifications }}
 				</ul>
 			<h3>Restrictions:</h3>
+				{% if request.user.active %}
 				<ul>
 				<li>Sending images and creating new accounts: <span> {% if user.has_freedom %}Good standing{% else %}Restricted{% endif %}
 				<li>Post limit: <span> {% if request.user.profile.limit_post == 0 %}Good standing{% else %}{{ user.profile.limit_post }}{% endif %}
 				<li>Editing your profile: <span> {% if not user.profile.cannot_edit %}Good standing{% else %}Restricted{% endif %}
+				<li>Creating invites: <span> {% if user.can_invite %}Good standing{% else %}Restricted{% endif %}
 				</ul>
+				{% else %}
+				<p class='center'>You've been fucking banned lmao</p>
+				{% endif %}
 			<h3>Collected data:</h3>
 			<div class="user-data">
 				<p class="label">Account login history:</p>

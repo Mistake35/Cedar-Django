@@ -22,7 +22,8 @@
       <li class="setting-profile-comment">
         <p class="settings-label">Profile comment</p>
         <textarea class="textarea" name="profile_comment" maxlength="2200" placeholder="Write about yourself here.">{{ profile.comment }}</textarea>
-        <p class="note">Anything you write here will appear on your profile. Remember to keep it brief. Please don't write anything that'll violate <a href="{% url "main:help-rules" %}">Cedar's rules</a>.</p>
+
+        <p class="note">Anything you write here will appear on your profile. Remember to keep it brief. Please don't write anything that'll violate <a href="{% url "main:help-rules" %}">{{ brand_name }}'s rules</a>.</p>
       </li>
 	  <!--
       <li>
@@ -128,12 +129,12 @@
         <div class="select-content">
           <div class="select-button">
             <select name="pronoun_dot_is" id="pronoun_dot_is">
-              <option value="0"{% if profile.pronoun_is == 0 %} selected{% endif %}>I don't know</option>
-              <option value="1"{% if profile.pronoun_is == 1 %} selected{% endif %}>He/him</option>
-              <option value="2"{% if profile.pronoun_is == 2 %} selected{% endif %}>She/her</option>
-			  <option value="3"{% if profile.pronoun_is == 3 %} selected{% endif %}>He/she</option>
-			  <option value="4"{% if profile.pronoun_is == 4 %} selected{% endif %}>It</option>
-			  <option value="5"{% if profile.pronoun_is == 5 %} selected{% endif %}>They/Them</option>
+		<option value="0"{% if profile.pronoun_is == 0 %} selected{% endif %}>I don't know</option>
+		<option value="1"{% if profile.pronoun_is == 1 %} selected{% endif %}>He/him</option>
+		<option value="2"{% if profile.pronoun_is == 2 %} selected{% endif %}>She/her</option>
+		<option value="3"{% if profile.pronoun_is == 3 %} selected{% endif %}>He/she</option>
+		<option value="4"{% if profile.pronoun_is == 4 %} selected{% endif %}>It</option>
+		<option value="5"{% if profile.pronoun_is == 5 %} selected{% endif %}>They/Them</option>
             </select>
           </div>
         </div>

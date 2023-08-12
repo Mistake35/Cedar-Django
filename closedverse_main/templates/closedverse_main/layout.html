@@ -4,14 +4,14 @@
   <head>
     <meta charset="utf-8">
 	{% endif %}
-    <title>{% if title %}{{ title }} - Cedar{% else %}Cedar{% endif %}</title>
+    <title>{% if title %}{{ title }} - {{ brand_name }} {% else %}{{ brand_name }}{% endif %}</title>
     {% if not request.META.HTTP_X_PJAX %}
 	<meta http-equiv="content-style-type" content="text/css">
     <meta http-equiv="content-script-type" content="text/javascript">
     <meta name="format-detection" content="telephone=no">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-title" content="Cedar">
-    <meta name="description" content="It's Closedverse but Cedar!">
+    <meta name="apple-mobile-web-app-title" content="{{ brand_name }}">
+    <meta name="description" content="{{ brand_name }} is a social network: designed by PF2M, programmed by Arian Kordi. With Miiverse DNA, style and familiar assets such as Miiverse's interface and Miis, you're sure to have fun here!">
 	<meta property="og:locale" content="en_US">
 	{% if ogdata %}
 		<meta property="og:title" content="{{ ogdata.title }}">
@@ -19,7 +19,7 @@
 		<meta property="og:url" content="{{ request.build_absolute_uri }}">
 		<meta property="og:image" content="{{ ogdata.image }}">
 		<meta property="og:description" content="{{ ogdata.description|truncatechars:150 }}">
-		<meta property="og:site_name" content="Cedar">
+		<meta property="og:site_name" content="{{ brand_name }}">
 		<meta property="article:published_time" content="{{ ogdata.date }}">
 	{% endif %}
 	<link rel="shortcut icon" type="image/png" href="{% static "img/favicon.png" %}">
@@ -62,6 +62,7 @@
     document.documentElement.style.setProperty("--theme-slightly-dark", slightlyDarkColor);
     document.documentElement.style.setProperty("--theme-darker", darkerColor);
     document.documentElement.style.setProperty("--theme-light", lightColor);
+	{% if not request.user.bg_url %}document.documentElement.style.setProperty("--background", "url('img/indigo-pattern.png')");{% endif %}
   }
 
   // hex -> rgb
@@ -80,18 +81,19 @@
   }
 
   function toDefault() {
-    document.documentElement.style.setProperty("--theme", "initial");
+    document.documentElement.style.setProperty("--theme", "");
     document.documentElement.style.setProperty("--theme-dark", "initial");
     document.documentElement.style.setProperty("--theme-slightly-dark", "initial");
     document.documentElement.style.setProperty("--theme-darker", "initial");
     document.documentElement.style.setProperty("--theme-light", "initial");
+    document.documentElement.style.setProperty("--background", "");
   }
 
   changeThemeColor();
         </script>{% endif %}
 		<style>
 			:root {
-			{% if request.user.bg_url %}--background: url({{ request.user.bg_url }});{% elif not theme %}--background: url({% static 'img/Background.png' %}){% endif %}
+			{% if request.user.bg_url %}--background: url({{ request.user.bg_url }});{% endif %}
 			}
 		</style>
   </head>
@@ -102,12 +104,12 @@
     <div id="wrapper"{% if not request.user.is_authenticated %} class="guest"{% endif %}>
       <div id="sub-body">
         <menu id="global-menu">
-          <li id="global-menu-logo"><h1><a href="/"><img src="{% static "img/menu-logo.svg" %}" alt="Cedar"></a></h1></li>
+          <li id="global-menu-logo"><h1><a href="/"><img src="{% static "img/menu-logo.svg" %}" alt="{{ brand_name }}"></a></h1></li>
 		  {% if request.user.unique_id %}
 		  {% invite_only request as inv %}
           <li id="global-menu-list">
             <ul>
-              <li id="global-menu-mymenu"><a href="{% url "main:user-view" request.user.username %}"><span class="icon-container {% user_class request.user %}"><img src="{% avatar request.user %}" alt="My Profile"></span><span>My Profile</span></a></li>
+              <li id="global-menu-mymenu"><a href="{% url "main:user-view" request.user.username %}"><span class="icon-container {% user_class request.user %}"><img src="{% avatar request.user %}" alt="User Page"></span><span>User Page</span></a></li>
 			  <li id="global-menu-feed"><a href="{% url "main:activity" %}" class="symbol"><span>Activity Feed</span></a></li>
               <li id="global-menu-community"><a href="/" class="symbol"><span>Communities</span></a></li>
 			  <li id="global-menu-message"><a href="{% url "main:messages" %}" class="symbol"><span>Messages</span></a></li>
@@ -117,9 +119,10 @@
                   <li><a href="{% url "main:profile-settings" %}" class="symbol my-menu-profile-setting"><span>Profile settings</span></a></li>
                   <li><a href="#" class="symbol my-menu-account-setting"><span>Account preferences</span></a></li>
                   {% if inv %}<li><a href="{% url "main:invites" %}" class="symbol my-menu-guide"><span>Invites</span></a></li>{% endif %}
-                  <li><a href="{% url "main:special-community-tag" "announcements" %}" class="symbol my-menu-openman"><span>Cedar Announcements</span></a></li>
+                  <li><a href="{% url "main:special-community-tag" "announcements" %}" class="symbol my-menu-openman"><span>{{ brand_name }} Announcements</span></a></li>
+                  <li><a href="{% url "main:special-community-tag" "changelog" %}" class="symbol my-menu-openman"><span>{{ brand_name }} Changelog</span></a></li>
                   <li><a href="{% url "main:help-faq" %}" class="symbol my-menu-guide"><span>Frequently Asked Questions (FAQ)</span></a></li>
-				  <li><a href="{% url "main:help-rules" %}" class="symbol my-menu-guide"><span>Cedar Rules</span></a></li>
+				  <li><a href="{% url "main:help-rules" %}" class="symbol my-menu-guide"><span>{{ brand_name }} Rules</span></a></li>
 				    <li><a href="#" class="symbol my-menu-white-power"><span>Feedback/bug report</span></a></li>
                   <li><a href="{% url "main:server-stat" %}" class="symbol my-menu-openman"><span>Server Statistics</span></a></li>
 				  <li>

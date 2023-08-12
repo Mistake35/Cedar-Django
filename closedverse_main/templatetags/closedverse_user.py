@@ -69,9 +69,10 @@ def u_post_list(posts, next_offset=None, type=2, nf_text='', time=None):
 		'type': type,
 	}
 @register.inclusion_tag('closedverse_main/elements/profile-post.html')
-def profile_post(post):
+def profile_post(post, for_announcements=False):
 	return {
 		'post': post,
+		'for_announcements': for_announcements,
 	}
 @register.inclusion_tag('closedverse_main/elements/profile-user-list.html')
 def profile_user_list(users, next_offset=None, request=None):

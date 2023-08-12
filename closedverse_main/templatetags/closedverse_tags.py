@@ -97,8 +97,8 @@ def print_names(names):
 		'nameallmn': len(names) - 4,
 		'names': names,
 	}
-@register.inclusion_tag('closedverse_main/elements/discordapp-spinner.html')
-def discordapp_spinner():
+@register.inclusion_tag('closedverse_main/elements/loading-spinner.html')
+def loading_spinner():
 	return {
 		
 	}

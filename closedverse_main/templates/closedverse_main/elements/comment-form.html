@@ -1,5 +1,4 @@
 {% load closedverse_community %}
-{% if user.is_active %}
 <form id="reply-form" class="for-identified-user" method="post" action="{% url "main:post-comments" post.id %}">
   {% csrf_token %}
   	{% if not user.limit_remaining is False %}
@@ -31,6 +30,8 @@
   </div>
 	  {% if user.has_freedom %}
   	  {% file_button %}
+  	  <!-- hack to temporarily hide video input, for now... -->
+			<style>div.file-button-container{display:none;}</style>
 	  {% endif %}
 
   <div class="post-form-footer-options">
@@ -47,8 +48,3 @@
     <input type="submit" class="black-button reply-button disabled" value="Send" data-community-id="{{ post.community.unique_id }}" data-url-id="{{ post.id }}" data-post-content-type="text" data-post-with-screenshot="nodata" disabled="">
   </div>
 </form>
-{% endif %}
-
-{% if not user.is_active %}
-<p class="center">Your account has been disabled.</p>
-{% endif %}

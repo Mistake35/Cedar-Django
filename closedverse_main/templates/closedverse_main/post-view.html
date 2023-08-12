@@ -10,7 +10,6 @@
     </h1>
   </header>
   {% if post.is_mine or post.can_rm %}
-  {% if user.is_active %}
 	<div class="edit-buttons-content">
 	  <button type="button" class="symbol button edit-button rm-post-button" data-action="{% url "main:post-rm" post.id %}"><span class="symbol-label">Delete</span></button>
 	  {% if post.is_mine and not post.has_edit %}
@@ -19,8 +18,10 @@
 	  {% if post.is_mine and post.screenshot %}
 	  <button type="button" class="symbol button edit-button profile-post-button{% if post.is_favorite %} done {% endif %}" data-action="{% if post.is_favorite %}{% url "main:post-unset-profile" post.id %}{% else %}{% url "main:post-set-profile" post.id %}{% endif %}"><span class="symbol-label">Set as profile post</span></button>
 	  {% endif %}
+	  {% if post.can_lock_comments %}
+	  <button type="button" class="symbol button edit-button lock-comments-button" data-action="{% url "main:lock-the-comments" post.id %}"><span class="symbol-label">Lock comments</span></button>
+	  {% endif %}
     </div>
-	{% endif %}
 {% endif %}
 
   <div class="user-content">
@@ -83,12 +84,14 @@
 		  {% elif post.screenshot %}<div class="screenshot-container still-image"><img src="{{ post.screenshot }}"></div>{% endif %}
 
 			{% if post.yt_vid %}
-			<div class="screenshot-container video"><iframe class="youtube-player" type="text/html" width="490" height="276" src="https://www.youtube.com/embed/{{ post.yt_vid }}?rel=0&modestbranding=1&iv_load_policy=3" frameborder="0"></iframe></div>
-      {% elif post.discord_vid %}
-      <div class="DiscordCDN-container video">
-      <video class="discord-player" src="{{ post.url }}" style='max-width:100%;' controls></video>
-      </div>
-      <a>Discord embedded video</a>
+			<div class="screenshot-container video"><iframe class="youtube-player" type="text/html" style="max-width:100%;max-height: 450px;" src="https://www.youtube.com/embed/{{ post.yt_vid }}?rel=0&modestbranding=1&iv_load_policy=3" frameborder="0"></iframe></div>
+			{% elif post.video %}
+			<div class="screenshot-container video"><video class="vidya" controls src="{{ post.video }}" style="max-width:100%;max-height: 450px;"></video></div>
+			{% elif post.discord_vid %}
+     		<div class="DiscordCDN-container video">
+     		<video class="discord-player" src="{{ post.url }}" style="max-width:100%;max-height: 450px;" controls></video>
+     		</div>
+     		<a>Discord embedded video</a>
 			{% elif post.url %}
 			<p class="url-link"><a class="link-confirm" href="{{ post.url }}" target="_blank">{{ post.url }}</a></p>
 			{% endif %}
@@ -126,13 +129,19 @@
 <h2 class="reply-label">Add a Comment</h2>
 {% if not request.user.is_authenticated %}
 <div class="guest-message">
-  <p>You must sign in to post a comment.<br><br>Sign in using a Cedar account to make posts and comments, as well as give Yeahs and follow users.</p>
+  <p>You must sign in to post a comment.<br><br>Sign in using a {{ brand_name }} account to make posts and comments, as well as give Yeahs and follow users.</p>
   <a href="{% url "main:signup" %}" class="arrow-button"><span>Create an account</span></a>
   <a href="{% url "main:help-faq" %}" class="arrow-button"><span>FAQ/Frequently Asked Questions</span></a>
 </div>
 {% elif not post.can_comment %}
 <div class="cannot-reply"><div>
+  {% if post.lock_comments == 1 %}
+  <p>{{ post.creator.nickname }} has locked the comments.</p>
+  {% elif post.lock_comments == 2 %}
+  <p>The comments have been locked up tight.</p>
+  {% else %}
   <p>You cannot comment on this post.</p>
+  {% endif %}
 </div></div>
 {% else %}
 {% comment_form post request.user %}

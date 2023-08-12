@@ -1,4 +1,9 @@
 <div id="sidebar">
+{% if Community_block %}
+	<div class="notice" style="background-color: #ff9797;border: 1px solid #ff5252;">
+	<p><b>Oops</b>: You're either blocked by, or blocking {{ community.creator }}, who owns this community. You cannot Yeah, Reply, or Post here.
+	</div>
+{% endif %}
   <section class="sidebar-container" id="sidebar-community">
       {% if community.banner %}
 	  <span id="sidebar-cover">
@@ -22,8 +27,6 @@
 	  <span class="news-community-badge">Announcement Community</span>
 	  {% elif community.tags == 'changelog' %}
 	  <span class="news-community-badge">Changelog Community</span>
-	  {% elif community.tags == 'general' %}
-	  <span class="news-community-badge">General</span>
 	  {% endif %}
       <h1 class="community-name">
         <a href="{% url "main:community-view" community.id %}">{{ community.name }}

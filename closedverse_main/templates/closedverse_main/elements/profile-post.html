@@ -1,8 +1,8 @@
-{% load closedverse_tags %}<div id="{{ post.unique_id }}" {% if post.spoils and not post.is_mine or not post.creator.is_active %}data-href-hidden{% else %}data-href{% endif %}="{% url "main:post-view" post.id %}" class="post trigger{% if post.screenshot %} with-image{% endif %}{% if post.spoils and not post.is_mine or not post.creator.is_active %} hidden test-hidden{% endif %}" tabindex="0">
+{% load closedverse_tags %}<div {% if post.spoils and not post.is_mine or not post.creator.is_active %}data-href-hidden{% else %}data-href{% endif %}="{% url "main:post-view" post.id %}" class="post trigger{% if post.screenshot and not for_announcements %} with-image{% endif %}{% if post.spoils and not post.is_mine or not post.creator.is_active %} hidden test-hidden{% endif %}" tabindex="0">
   
     <p class="community-container"><a {% if post.community.clickable %}href="{% url "main:community-view" post.community_id %}"{% endif %}><img src="{{ post.community.icon }}" class="community-icon">{{ post.community.name }}</a></p>
 
-  <div class="body">
+  <div {% if not for_announcements %}class="body"{% endif %}>
     <div class="post-content">
 		  {% user_icon_container post.creator post.feeling %}
           
@@ -26,7 +26,10 @@
       <div class="screenshot-container video"><video src="{{ post.url }}" width="50" height="48"></video></div>
 			{% endif %}
 			{% if post.screenshot %}
-			<a href="{% url "main:post-view" post.id %}" class="screenshot-container still-image"><img src="{{ post.screenshot }}"></a>
+			<a href="{% url "main:post-view" post.id %}" class="{% if not for_announcements %}screenshot-container {% endif %}still-image"><img src="{{ post.screenshot }}"></a>
+			{% endif %}
+			{% if post.video %}
+			<div class="screenshot-container video"><video src="{{ post.video }}" width="50" height="48"></video></div>
 			{% endif %}
 			{% if post.drawing %}
 			<p class="post-content-memo"><img src="{{ post.drawing }}" class="post-memo"></p>
@@ -50,6 +53,7 @@
                 <button type="button" class="hidden-content-button">View Anyway</button>
           </p></div>
 			{% endif %}
+			{% if not for_announcements %}
         <div class="post-meta">
 		  <button type="button"{% if not post.can_yeah %} disabled{% endif %} class="symbol submit yeah-button
 		  {% if post.has_yeah %}empathy-added{% endif %}
@@ -60,6 +64,7 @@
 		  <div class="empathy symbol"><span class="symbol-label">Yeahs</span><span class="empathy-count">{{ post.number_yeahs }}</span></div>
           <div class="reply symbol"><span class="symbol-label">Comments</span><span class="reply-count">{{ post.number_comments }}</span></div>
         </div>
+        {% endif %}
 
     </div>
   </div>

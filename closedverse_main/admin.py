@@ -33,6 +33,12 @@ def Hide_content(modeladmin, request, queryset):
 @admin.action(description='Show selected items')
 def Show_content(modeladmin, request, queryset):
 	queryset.update(is_rm = False)
+@admin.action(description='Disable comments')
+def Disable_comments(modeladmin, request, queryset):
+	queryset.update(lock_comments = 2)
+@admin.action(description='Enable comments')
+def Enable_comments(modeladmin, request, queryset):
+	queryset.update(lock_comments = 0)
 @admin.action(description='Feature selected communities')
 def Feature_community(modeladmin, request, queryset):
 	queryset.update(is_feature = True)
@@ -48,12 +54,16 @@ def unforce_login(modeladmin, request, queryset):
 @admin.action(description='Disable user')
 def Disable_user(modeladmin, request, queryset):
 	queryset.update(active = False)
+@admin.action(description='Enable user')
+def Enable_user(modeladmin, request, queryset):
+	queryset.update(active = True)
+
 
 class UserAdmin(admin.ModelAdmin):
 	search_fields = ('id', 'unique_id', 'username', 'nickname', 'email', )
 	list_display = ('id', 'username', 'nickname', 'warned', 'level', 'staff', 'active', )
 	exclude = ('addr', 'signup_addr', 'password', )
-	actions = [Disable_user]
+	actions = [Disable_user, Enable_user]
 	#exclude = ('staff', )
 	# Not yet
 	#form = UserForm
@@ -73,7 +83,7 @@ class PostAdmin(admin.ModelAdmin):
 	raw_id_fields = ('creator', 'poll', )
 	search_fields = ('id', 'unique_id', 'body', 'creator__username', )
 	list_display = ('id', 'creator', 'body', 'is_rm', )
-	actions = [Hide_content, Show_content]
+	actions = [Hide_content, Show_content, Disable_comments, Enable_comments]
 	def get_queryset(self, request):
 		return models.Post.real.get_queryset()
 

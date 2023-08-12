@@ -835,14 +835,15 @@ var Olv = Olv || {};
         },
         submit: function(b, c) {
             b.trigger("olv:form:submit", [c || a()]);
-				if(a('input[type=file]').length) {
+            var d = new FormData(b[0]);
+				/*if(a('input[type=file]').length) {
 					var d = new FormData(b[0])
 					d.append('screen', $('input[type=file]')[0].files[0])
 					sucky = true
 				} else {
 					var d = b.serializeArray()
 					sucky = false
-				}
+				}*/
 			var e = c && c.is("input, button") && c.prop("name");
             e && d.push({
                 name: e,
@@ -853,10 +854,10 @@ var Olv = Olv || {};
                 url: b.attr("action"),
                 data: d
             };
-			if(sucky) {
+			//if(sucky) {
 				f.processData = false;
 				f.contentType = false;
-			}
+			//}
             return this.send(f, c)
         },
         get: function(a, b, c) {
@@ -947,7 +948,7 @@ var Olv = Olv || {};
     b.router.connect("", b.Form.setupForPage),
     b.Guest = {
         isGuest: function() {
-            return a("main-body").hasClass("guest")
+            return a("#main-body").hasClass("guest")
         }
     },
     b.DecreasingTimer = function(a, b, c) {
@@ -1855,7 +1856,8 @@ var Olv = Olv || {};
             }),
             e()
         }*/
-        function h() {
+        // original function source is lost media
+        /*function h() {
             /*var e = a(d.target).siblings().filter("input")
               , f = d.target.files[0];
             if (!f)
@@ -1869,7 +1871,7 @@ var Olv = Olv || {};
             }
             ,*/
             /*b.Form.toggleDisabled(j, !0),
-            g.readAsDataURL(f)*/
+            g.readAsDataURL(f)
                var e = $("#upload-file"),
                     h = $("#upload-input"),
                     f = $("#upload-preview"),
@@ -1879,7 +1881,7 @@ var Olv = Olv || {};
                 var n = function(a) {
                         /*window.anus = a
                         console.log(a)
-                        */switch (!0) {
+                        switch (!0) {
                             case void 0 !== a.target.files:
                                 var c = a.target.files;
                                 break;
@@ -1901,6 +1903,7 @@ var Olv = Olv || {};
                             h.val("");
                             f.attr("src", "");
                             m.text("...");
+                            window.ass = e
                             var e = new FileReader,
                                 n = function() {
                                     f.attr("src", e.result);
@@ -1913,6 +1916,7 @@ var Olv = Olv || {};
                                     };
                                     a.addEventListener("load", c);
                                     l.show();
+                                    console.log('...now!')
                                     h.val(e.result.split(";base64,")[1]);
                                     e.removeEventListener("load", n)
                                 };
@@ -1933,6 +1937,100 @@ var Olv = Olv || {};
                     h.val("")
                     Olv.fuUUckFiles = null;
                 })
+        }*/
+        function h() {
+					var uploadFile = $("#upload-file"),
+					uploadInput = $("#upload-input"),
+					uploadPreview = $("#upload-preview"),
+					uploadPreviewContainer = $("#upload-preview-container"),
+					imageDimensions = $("#image-dimensions");
+
+					b.EntryForm.tempPollutionButImageFormAllowedText = imageDimensions.text();
+
+					var handleFileChange = function(event) {
+							//var fileList;
+							console.log('handleFileChange: files is being assigned...');
+							switch(true) {
+									case event.target.files !== undefined:
+										  uploadFile[0].files = event.target.files;
+										  break;
+									case event.originalEvent.dataTransfer !== undefined:
+										  uploadFile[0].files = event.originalEvent.dataTransfer.files;
+										  break;
+									case event.originalEvent.clipboardData !== undefined:
+										  uploadFile[0].files = event.originalEvent.clipboardData.files;
+										  break;
+									default:
+										  return;
+							}
+							
+							if (!(null === uploadFile[0].files || uploadFile[0].files.length < 1 || void 0 === uploadFile[0].files[0] || uploadFile[0].files[0].type.indexOf("image") < 0)) {
+									event.preventDefault();
+									Olv.Form.toggleDisabled($("input.black-button"), false);
+									uploadPreview.hide();
+									uploadPreviewContainer.hide();
+									uploadInput.val("");
+									uploadPreview.attr("src", "");
+									imageDimensions.text("...");
+									
+									/*window.ass = uploadFile[0].files;window.uploadFile = uploadFile
+									console.log('here is your fileList, and uploadFile')
+									*/
+									var blobURL = URL.createObjectURL(uploadFile[0].files[0]);
+									console.log(uploadFile[0].files[0])
+									uploadPreview.attr("src", blobURL);
+									uploadPreview.show();
+									
+									var handleImageLoad = function() {
+									    imageDimensions.text(uploadPreview[0].width + " x " + uploadPreview[0].height);
+									    uploadPreview[0].removeEventListener("load", handleImageLoad);
+									};
+									
+									uploadPreview[0].addEventListener("load", handleImageLoad);
+									uploadPreviewContainer.show();
+									
+									
+									/*var fileReader = new FileReader();
+									var handleReaderLoad = function() {
+										  uploadPreview.attr("src", fileReader.result);
+										  uploadPreview.show();
+										  
+										  var image = new Image();
+										  image.src = fileReader.result;
+										  
+										  var handleImageLoad = function() {
+										      imageDimensions.text(image.width + " x " + image.height);
+										      image.removeEventListener("load", handleImageLoad);
+										  };
+										  
+										  image.addEventListener("load", handleImageLoad);
+										  uploadPreviewContainer.show();
+										  console.log('...now!')
+										  uploadInput.val(fileReader.result.split(";base64,")[1]);
+										  fileReader.removeEventListener("load", handleReaderLoad);
+									};
+									
+									fileReader.addEventListener("load", handleReaderLoad);
+									fileReader.readAsDataURL(fileList[0]);
+									*/
+							}
+					};
+
+					uploadFile.change(handleFileChange);
+					c.on("dragover dragenter", function(event) {
+							event.preventDefault();
+					});
+
+					c.on("drop paste", handleFileChange);
+
+					c.on("olv:entryform:post:done", function() {
+							imageDimensions.text(b.EntryForm.tempPollutionButImageFormAllowedText);
+							uploadPreview.hide();
+							uploadPreviewContainer.hide();
+							uploadPreview.attr("src", "");
+							uploadInput.val("");
+					});
+
         }
         function i(a) {
             k.siblings().filter("input[type=hidden]").val(""),
@@ -2263,7 +2361,9 @@ var Olv = Olv || {};
         b.Global.setupMyMenu()
 	}),
     b.init.done(function(a) {
-        if (a("#global-menu-news").length) {
+    		// don't check notifications if there's no news icon
+    		// why didn't this always use isGuest but now it does
+        if (a("#global-menu-news").length && !Olv.Guest.isGuest()) {
             a("#global-menu-news > a").on("click", function(b) {
                 a(b.currentTarget).find(".badge").hide()
             });
@@ -2840,6 +2940,15 @@ $('.post-poll .poll-votes').on('click', function() {
 				})
 		})
 	}
+	lock_comments_button = $('.lock-comments-button')
+	if(lock_comments_button.length) {
+		lock_comments_button.on('click',function(){
+			b.showConfirm("Lock comments", "Really lock up the comments? This cannot be undone.")
+				$('.ok-button').on('click',function(){
+					b.Form.post(lock_comments_button.attr('data-action')).done
+				})
+		})
+	}
 	fav_btn = $('.profile-post-button')
 	if(fav_btn.length) {
 			if(fav_btn.hasClass('done')) {
@@ -3355,9 +3464,6 @@ mode_post = 0;
 								$('input[name=color]').val(color);
 							}
 						});
-					$('div.form-buttons > input').click(function(a) {
-						$('.color-thing').spectrum('destroy');
-					});
 				});
 				$('.color-thing2').click(function(a) {
 					a.preventDefault();
@@ -3365,15 +3471,17 @@ mode_post = 0;
 							color: $('input[name=theme]'),
 							preferredFormat: "hex",
 							showInput: true,
+							//clickoutFiresChange: false,
 							flat: true,
 							change: function(color) {
-								$('.current-theme').attr('style', 'color:' + color);
-								$('input[name=theme]').val(color);
+								if(!$('.color-thing2').is(':visible')) {
+									$('.current-theme').attr('style', 'color:' + color);
+									$('input[name=theme]').val(color);
+									window.mainColor = color.toString().substring(1);
+									changeThemeColor();
+								}
 							}
 						});
-					$('div.form-buttons > input').click(function(a) {
-						$('.color-thing2').spectrum('destroy');
-					});
 				});
 //			}
 	}
@@ -3383,9 +3491,18 @@ mode_post = 0;
               , e = d.closest("form");
             b.Form.isDisabled(d) || c.isDefaultPrevented() || (c.preventDefault(),
             b.Form.submit(e, d).done(function() {
-                b.Net.reload()
+            		$('.color-thing').spectrum();
+            		$('.color-thing2').spectrum();
+                b.Net.reload();
                 var updateAvatar = function() {
                 	a('#global-menu-mymenu .icon-container img').attr('src', a('#sidebar-profile-body .icon').attr('src'));
+                	var them = a('[name=theme]').val();
+		              if(them === 'None') {
+		              	toDefault();
+		 							} else {
+		 								window.mainColor = them.substring(1);
+		 								changeThemeColor();
+		 							}
                 	a(document).off("pjax:complete", updateAvatar);
                 }
                 a(document).on("pjax:complete", updateAvatar);

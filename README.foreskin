@@ -1,0 +1,16 @@
+Stuff that is done:
+- Disable comments button
+- merge with closedverse-video-support (mostly)
+- Prevent users from posting in communities created by blocked users.
+
+Stuff that is in progress
+- Removing shitty code.
+- Finding and killing bugs!
+
+Stuff that I want
+- Image and video file boxes in one.
+- Pinning posts????
+	Not needed at all if I'm being honest.
+- Ways for mods to view who invited who.
+- Hide email password reset form if no SMTP server is set up.
+- Fix icon and banner uploads. Make that shit work with image_upload

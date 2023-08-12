@@ -1,5 +1,4 @@
 {% load closedverse_community %}
-{% if user.is_active %}
 <form id="post-form" method="post" action="{% url "main:post-create" community.id %}" class="folded for-identified-user" data-post-subtype="default" name="test-post-default-form">
 	{% csrf_token %}
 	<input type="hidden" name="community" value="{{ community.unique_id }}">
@@ -63,8 +62,3 @@
     <input type="submit" class="black-button post-button disabled" value="Send" data-community-id="{{ community.unique_id }}" data-post-content-type="text" data-post-with-screenshot="nodata" disabled="">
   </div>
 </form>
-{% endif %}
-
-{% if not user.is_active %}
-<p class="center">Your account has been disabled.</p>
-{% endif %}

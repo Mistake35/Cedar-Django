@@ -10,6 +10,7 @@ from django.core.exceptions import ValidationError
 from datetime import timedelta, datetime, date, time
 from passlib.hash import bcrypt_sha256
 from closedverse import settings
+from closedverse_main.context_processors import brand_name
 from . import util
 from random import getrandbits
 import uuid, json, base64
@@ -98,6 +99,8 @@ class UserManager(BaseUserManager):
 			return (user, 2)
 		else:
 			if not passwd:
+				#if user.can_manage():
+				#	return None
 				return (user, False)
 		return (user, True)
 
@@ -117,7 +120,6 @@ class ColorField(models.CharField):
 	def __init__(self, *args, **kwargs):
 		kwargs['max_length'] = 18
 		super(ColorField, self).__init__(*args, **kwargs)
-
 #mii_domain = 'https://mii-secure.cdn.nintendo.net'
 # as of writing, mii-secure is unstable, nintendo please do not f*ck me for this
 mii_domain = 'https://s3.us-east-1.amazonaws.com/mii-images.account.nintendo.net/'
@@ -137,7 +139,7 @@ class User(models.Model):
 	# LEVEL: 0-1 is default, everything else is just levels
 	level = models.SmallIntegerField(default=0)
 	# ROLE: This doesn't have anything
-	role = models.SmallIntegerField(default=0, choices=((0, 'normal'), (1, 'Bot'), (2, 'Administrator'), (3, 'Moderator'), (4, 'NO'), (5, 'Donator'), (6, 'Tester'), (7, 'Cools'), (8, 'Developer'), (9, 'SMF9-Django'), (10, 'Staff'), (11, 'GAY DOGWATER' ), ( 12, 'DUMB SNAIL' ), (13, 'Russian ADRIAN'), (14, 'Contest'), (15, 'Gamecon'), (16, 'Cedar'), ))
+	role = models.SmallIntegerField(default=0, choices=((0, 'normal'), (1, 'bot'), (2, 'administrator'), (3, 'moderator'), (4, 'openverse'), (5, 'donator'), (6, 'cool'), (7, 'urapp'), (8, 'owner'), (9, 'badgedes'), (10, 'jack'), (11, 'verified'),))
 	addr = models.CharField(max_length=64, null=True, blank=True)
 	signup_addr = models.CharField(max_length=64, null=True, blank=True)
 	user_agent = models.TextField(null=True, blank=True)
@@ -150,7 +152,6 @@ class User(models.Model):
 	color = ColorField(default='', null=True, blank=True)
 	
 	staff = models.BooleanField(default=False)
-	#active = models.SmallIntegerField(default=1, choices=((0, 'Redirect'), (1, 'Good'), (2, 'Disabled')))
 	active = models.BooleanField(default=True)
 	can_invite = models.BooleanField(default=True)
 	warned = models.BooleanField(default=False)
@@ -238,40 +239,30 @@ class User(models.Model):
 		
 	def get_class(self):
 			first = {
-			1: 'tester',
+			1: 'cool',
 			2: 'administrator',
 			3: 'moderator',
 			4: 'openverse',
 			5: 'donator',
-			6: 'tester',
+			6: 'cool',
 			7: 'urapp',
 			8: 'developer',
-			9: 'pipinstalldjango',
-			10: 'staff',
-			11: 'kanna',
-			12: 'verified',
-			13: 'artcon',
-			14: 'contest',
-			15: 'gamecom',
-			16: 'mp',
+			9: 'badgedes',
+			10: 'jack',
+			11: 'verifiedd',
 			}.get(self.role, '')
 			second = {
 			1: "Bot",
 			2: "Administrator",
 			3: "Moderator",
-			4: "No",
+			4: "O-PHP-enverse Man",
 			5: "Donator",
-			6: "Tester",
-			7: "Cool Dude",
-			8: "Wii U still best console.",
-			9: "Rixy Installed Django!",
-			10: "Staff",
-			11: "GAY DOGWATER ETC",
-			12: "THE STUPIDEST ROLE IN THE WORLD",
-			13: "A   D   R   I   A   N",
-			14: "Contest Winner",
-			15: "Game Contest Winner",
-			16: "Cedar Inc.",
+			6: "Cool Person",
+			7: "cave story is okay",
+			8: "owner guy",
+			9: "Badge Designer",
+			10: "stupid man",
+			11: "Verified",
 			}.get(self.role, '')
 			if first:
 				first = 'official ' + first
@@ -555,15 +546,14 @@ class User(models.Model):
 	def password_reset_email(self, request):
 		htmlmsg = render_to_string('closedverse_main/help/email.html', {
 			'menulogo': request.build_absolute_uri(settings.STATIC_URL + 'img/menu-logo.png'),
-			'contact': 'something',
+			'contact': request.build_absolute_uri(reverse('main:help-contact')),
 			'link': request.build_absolute_uri(reverse('main:forgot-passwd')) + "?token=" + base64.urlsafe_b64encode(bytes(self.password, 'utf-8')).decode(),
 		})
-		subj = 'Closedverse password reset for "{0}"'.format(self.username)
+		subj = '{1} password reset for "{0}"'.format(self.username, brand_name)
 		return send_mail(
-		subject='Reset password',
+		subject=subj, 
 		html_message=htmlmsg,
-		message=htmlmsg,
-		from_email="noreply@" + settings.YOUR_DOMAIN,
+		from_email="{1} <{0}>".format(settings.DEFAULT_FROM_EMAIL, brand_name),
 		recipient_list=[self.email],
 		fail_silently=False)
 	def find_related(self):
@@ -711,7 +701,19 @@ class Community(models.Model):
 					#print(str(post) + ' to ' + str(self.creator) + ':' + str(post.user_is_blocked))
 				post.recent_comment = post.recent_comment()
 		return posts
+
+	def Community_block(self, request):
+		# This goes both ways.
+		if request.user.is_authenticated and not request.user.can_manage():
+			if UserBlock.find_block(self.creator, request.user):
+				return True
+		return False
+
 	def post_perm(self, request):
+		if not request.user.active:
+			return False
+		if self.Community_block(request):
+			return False
 		if request.user.level >= self.rank_needed_to_post:
 			return True
 		elif request.user.staff == True:
@@ -766,7 +768,7 @@ class Community(models.Model):
 				URLValidator()(value=request.POST['url'])
 			except ValidationError:
 				return 5
-		if not request.user.has_freedom() and (request.POST.get('url') or request.FILES.get('screen')):
+		if not request.user.has_freedom() and (request.POST.get('url') or request.FILES.get('screen') or request.FILES.get('video')):
 			return 6
 		if not request.user.is_active():
 			return 6
@@ -774,14 +776,19 @@ class Community(models.Model):
 			return 1
 		upload = None
 		drawing = None
+		video = None
 		body = request.POST.get('body')
 		for c in body:
 			if unicodedata.combining(c):
-				return 11
+				return 12
 		if request.FILES.get('screen'):
 			upload = util.image_upload(request.FILES['screen'], True)
 			if upload == 1:
 				return 2
+		if request.FILES.get('video'):
+			video = util.video_upload(request.FILES['video'])
+			if video == 1:
+				return 11
 		if request.POST.get('_post_type') == 'painting':
 			if not request.POST.get('painting'):
 				return 2
@@ -796,7 +803,7 @@ class Community(models.Model):
 				return 9
 		if body.isspace() and not drawing:
 			return 10
-		new_post = self.post_set.create(body=body, creator=request.user, community=self, feeling=int(request.POST.get('feeling_id', 0)), spoils=bool(request.POST.get('is_spoiler')), screenshot=upload, drawing=drawing, url=request.POST.get('url'))
+		new_post = self.post_set.create(body=body, creator=request.user, community=self, feeling=int(request.POST.get('feeling_id', 0)), spoils=bool(request.POST.get('is_spoiler')), screenshot=upload, drawing=drawing, url=request.POST.get('url'), video=video)
 		new_post.is_mine = True
 		return new_post
 
@@ -826,9 +833,11 @@ class Post(models.Model):
 	body = models.TextField(null=True)
 	drawing = models.CharField(max_length=200, null=True, blank=True)
 	screenshot = models.CharField(max_length=1200, null=True, blank=True, default='')
+	video = models.CharField(max_length=256, null=True, blank=True, default='')
 	url = models.URLField(max_length=1200, null=True, blank=True, default='')
 	spoils = models.BooleanField(default=False)
 	disable_yeah = models.BooleanField(default=False)
+	lock_comments = models.SmallIntegerField(default=0, choices=((0, 'Not locked'), (1, 'Locked by user'), (2, 'Locked by mod')))
 	created = models.DateTimeField(auto_now_add=True)
 	edited = models.DateTimeField(auto_now=True)
 	befores = models.TextField(null=True, blank=True)
@@ -892,10 +901,12 @@ class Post(models.Model):
 		else:
 			return False
 	def can_yeah(self, request):
-		if not request.user.is_authenticated or not request.user.is_active():
+		if not request.user.is_authenticated:
 			return False
-		# why did cedar-django do this? god knows
-		#return True
+		if not request.user.is_active():
+			return False
+		if self.community.Community_block(request):
+			return False
 		if self.is_mine(request.user) or UserBlock.find_block(self.creator, request.user):
 			return False
 		return True
@@ -923,12 +934,44 @@ class Post(models.Model):
 	def get_yeahs(self, request):
 		return Yeah.objects.filter(type=0, post=self).order_by('-created')[0:30]
 	def can_comment(self, request):
-		# TODO: Make this so that if a post's comments exceeds 100, make the user able to close the comments section
 		if self.number_comments() > 500:
+			return False
+		if not request.user.active:
+			return False
+		# yeah this is fucking nuts. It's basically a ban from an entire community.
+		if self.community.Community_block(request):
+			return False
+		if self.lock_comments != 0:
 			return False
 		if UserBlock.find_block(self.creator, request.user):
 			return False
 		return True
+
+	def can_lock_comments(self, request):
+		if self.lock_comments != 0:
+			return False
+		# If you are a mod, you can bypass the timer
+		# The timer is a personal choice of mine, I don't want users to pussy out of a fight too early or whatever.
+		# Always annoys me when someone has a dumb ass take only for them to turn off the comments immediately.
+		if self.created < timezone.now() - timedelta(hours=24) or request.user.can_manage():
+			if self.creator == request.user:
+				return True
+		if not self.creator.has_authority(request.user) and request.user.can_manage():
+			return True
+		return False
+		
+	def lock_the_comments_up(self, request):
+		if request and self.can_lock_comments(request):
+			if self.is_mine(request.user):
+				self.lock_comments = 1
+			else:
+				self.lock_comments = 2
+				AuditLog.objects.create(type=3, post=self, user=self.creator, by=request.user)
+			self.save()
+			return True
+		else:
+			return False
+			
 	def get_comments(self, request=None, limit=0, offset=0):
 		if request.user.is_authenticated:
 			blocked_me = request.user.block_target.filter().values('source')
@@ -967,7 +1010,7 @@ class Post(models.Model):
 			return 6
 		for c in request.POST['body']:
 			if unicodedata.combining(c):
-				return 11
+				return 12
 		if not request.user.is_active():
 			return 6
 		if len(request.POST['body']) > 2200 or (len(request.POST['body']) < 1 and not request.POST.get('_post_type') == 'painting'):
@@ -1269,7 +1312,7 @@ class Profile(models.Model):
 		if self.let_friendrequest == 2:
 			return False
 		#if user.is_authenticated and UserBlock.find_block(self.user, user):
-		#   return False
+		#	return False
 		elif self.let_friendrequest == 1:
 			if not user.is_following(self.user):
 				return False
@@ -1709,7 +1752,7 @@ class UserBlock(models.Model):
 class AuditLog(models.Model):
 	id = models.AutoField(primary_key=True)
 	created = models.DateTimeField(auto_now_add=True)
-	type = models.SmallIntegerField(choices=((0, "Post delete"), (1, "Comment delete"), (2, "User edit"), (3, "Generate passwd reset"), (4, "User delete"), (5, "Image delete"), (6, "Purge 1"), (7, "Purge 2"), (8, "Purge 3"), (9, "Purge 4"), (10, "Purge 5"), (11, "Un-purge 1"), (12, 'Changed server settings'), ))
+	type = models.SmallIntegerField(choices=((0, "Post delete"), (1, "Comment delete"), (2, "User edit"), (3, "Disable comments"), (4, "User delete"), (5, "Image delete"), (6, "Purge 1"), (7, "Purge 2"), (8, "Purge 3"), (9, "Purge 4"), (10, "Purge 5"), (11, "Un-purge 1"), (12, 'Changed server settings'), ))
 	post = models.ForeignKey(Post, related_name='audit_post', null=True, on_delete=models.CASCADE)
 	comment = models.ForeignKey(Comment, related_name='audit_comment', null=True, on_delete=models.CASCADE)
 	user = models.ForeignKey(User, related_name='audit_user', null=True, on_delete=models.CASCADE)
@@ -1762,6 +1805,9 @@ class Ads(models.Model):
 			adsavailable = False
 		return adsavailable
 
+	class Meta:
+		verbose_name_plural = "ads"
+
 	def __str__(self):
 		return "Ad with id " + str(self.id) + ", created at " + str(self.created) + ", with url " + str(self.url) + ", and imageurl " + str(self.imageurl)
 
@@ -1786,6 +1832,9 @@ class ProfileHistory(models.Model):
 	
 	def __str__(self):
 		return str(self.user) + ' changed profile details'
+
+	class Meta:
+		verbose_name_plural = "profile histories"
 	
 # blah blah blah
 # this method will be executed when...

@@ -1,5 +1,5 @@
 {% extends "closedverse_main/layout.html" %}
-{% load closedverse_tags %}{% load closedverse_community %}{% block main-body %}
+{% load closedverse_tags %}{% load closedverse_community %}{% load closedverse_user %}{% block main-body %}
 <div class="community-main">
 		<div id="community-eyecatch"></div>
 	</div>
@@ -7,8 +7,13 @@
 		<form action="{% url "main:community-search" %}" class="search">
 			<input maxlength="32" name="query" placeholder="Search all communities" type="text"><input title="Search" type="submit" value="q">
 		</form>
+		<!--<div class="close-announce-container">
+			<div class="close-announce-link">
+				<a class="title" id="close-text-ann" href="/posts/1186"><b>Closedverse is still in indefinite maintenance.</b></a>
+			</div>
+		</div>-->
 		
-		{% if user.is_warned %}
+		{% if user.is_warned and user.is_active %}
 		<div class="notice" style="background-color: #ffc783;border: 1px solid #ffb358;">
 		<p><b>WARNING</b>: You have been issued a warning by an administrator.
 		<div> 
@@ -18,23 +23,35 @@
 		</div>
 		</div>
 		{% endif %}
+		{% if not user.is_active and user.is_authenticated %}
+		<div class="notice" style="background-color: #ff9797;border: 1px solid #ff5252;">
+		<p><b>Oops</b>: You've been smacked by an admin. Better luck next time.
+		<div> 
+		{% if user.get_warned_reason %}
+		<p>Reason: "{{ user.get_warned_reason }}"</p>
+		{% endif %}
+		</div>
+		</div>
+		{% endif %}
 		
 	{% if announcements and request.user.is_authenticated %}
-	<div class="Announcements">
-		{% for announcements in announcements %}
-		<div class='Announcement-content'>
-		{% user_icon_container announcements.creator announcements.feeling %}
-		<a class='user-name' href={% url "main:user-view" announcements.creator.username %} {% if announcements.creator.color %}style=color:{{ announcements.creator.color }}{% endif %}>{{ announcements.creator }}</a><a class='timestamp"'> - {{ announcements.created }}</a>
-		<p>{{ announcements.body|linebreaksbr|urlize }}</p>
-		{% if announcements.screenshot %}<image class='Announcement-image' src={{ announcements.screenshot }}></image>{% endif %}
-		</div>
-		{% endfor %}
-	</div>
+	<div class="tleft">
+  	<div class="post-list-outline">
+      <h2 class="label">Latest Announcements</h2>
+			<div class="post-body">
+	        <div class="list multi-timeline-post-list">
+					{% for announcement in announcements %}
+						{% profile_post announcement True %}
+					{% endfor %}
+	        </div>
+	  	</div>
+  </div>
+  </div>
 	{% endif %}
 		
 	{% if WelcomeMSG and not request.user.is_authenticated %}
 	<div class="post-list-outline index-memo">
-		<h2 class="label">Welcome to Cedar!</h2>
+		<h2 class="label">Welcome to {{ brand_name }}!</h2>
 		{% for WelcomeMSG in WelcomeMSG %}
 		<h2>{{ WelcomeMSG.Title }}</h2>
 		<p>{{ WelcomeMSG.message|linebreaksbr|urlize }}</p>
@@ -51,7 +68,7 @@
 			</div>
 		{% endif %}
 	</div>
-	<div class="community-main">
+	<div class="community-main" id="communities">
 	{% if favorites %}
 		<h3 class="community-title symbol community-favorite-title">Favorite communities</h3>
 		<div class="card" id="community-favorite">
@@ -74,12 +91,12 @@
 		{% if feature %}
 			{% community_page_element feature "Featured Communities" True %}
 		{% endif %}
-			{% if general %}{% community_page_element general "General Communities" %}{% endif %}
-			{% if game %}{% community_page_element game "Game Communities" %}{% endif %}
-			{% if special %}{% community_page_element special "Special Communities" %}{% endif %}
-			{% if user_communities %}{% community_page_element user_communities "Popular User-Created Communities" %}{% endif %}
-			{% if my_communities %}{% community_page_element my_communities "My Communities" %}{% endif %}
-			<a href="{% url "main:community-viewall" "gen" %}" class="big-button">Show more</a>
+			{% community_page_element general "General Communities" False "general" %}
+			{% community_page_element game "Game Communities" False "game" %}
+			{% community_page_element special "Special Communities" False "special" %}
+			{% community_page_element user_communities "Popular User-Created Communities" False "usr" %}
+			{% if user_communities %}<a href="{% url "main:community-viewall" "usr" %}" class="big-button">Show more</a>{% endif %}
+			{% community_page_element my_communities "My Communities" %}
 	</div>
 	<div id="community-guide-footer">
 		<div id="guide-menu">

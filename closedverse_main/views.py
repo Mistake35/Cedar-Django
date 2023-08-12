@@ -3,16 +3,15 @@ from django.template import loader
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import Http404
 from django.views.decorators.csrf import csrf_exempt
-from django.db.models import Q, QuerySet, Max, F, Count, Case, When, Exists, OuterRef
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from django.core.validators import EmailValidator
 from django.core.exceptions import ValidationError
 from django.db.models import Q, Count, Exists, OuterRef
+from django.db.models.functions import Now
 from .models import *
 from .util import *
-from .serializers import CommunitySerializer
 from closedverse import settings
 import re
 from django.urls import reverse
@@ -22,14 +21,19 @@ from json import dumps, loads
 import sys, traceback
 import base64
 import subprocess
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.utils import timezone
 import django.utils.dateformat
 from binascii import hexlify
 from os import urandom
 
+#from silk.profiling.profiler import silk_profile
+
 # client-side mii fetch GET endpoint (like pf2m.com/hash if it supported cors)
 mii_endpoint = 'https://nnidlt.murilo.eu.org/api.php?output=hash_only&env=production&user_id='
+#mii_endpoint = '/origin?a='
+if hasattr(settings, 'mii_endpoint'):
+	mii_endpoint = settings.mii_endpoint
 
 def json_response(msg='', code=0, httperr=400):
 	thing = {
@@ -46,9 +50,10 @@ def json_response(msg='', code=0, httperr=400):
 	'code': httperr,
 	}
 	return JsonResponse(thing, safe=False, status=httperr)
+
 def community_list(request):
 	"""Lists communities / main page."""
-	popularity = Community.popularity
+	#popularity = Community.popularity
 	obj = Community.objects
 	if request.user.is_authenticated:
 		classes = ['guest-top']
@@ -64,7 +69,8 @@ def community_list(request):
 		ad = "no ads"
 	
 	WelcomeMSG = welcomemsg.objects.filter(show=True).order_by('-order', '-id')
-	announcements = Post.objects.filter(community__tags='announcements').order_by('-id')[:6]
+	# announcements within the past week-ish
+	announcements = Post.objects.filter(community__tags='announcements', created__gte=Now()-timedelta(days=5)).order_by('-created')[:6]
 	if request.user.is_authenticated:
 		my_communities = obj.filter(creator=request.user).order_by('-created')[0:12]
 	else:
@@ -79,7 +85,7 @@ def community_list(request):
 		'general': obj.filter(type=0).order_by('-created')[0:12],
 		'game': obj.filter(type=1).order_by('-created')[0:12],
 		'special': obj.filter(type=2).order_by('-created')[0:12],
-		'user_communities': sorted(obj.filter(type=3), key=lambda x: x.popularity(), reverse=True)[0:12],	
+		'user_communities': sorted(obj.filter(type=3), key=lambda x: x.popularity(), reverse=True)[0:12],
 		'my_communities': my_communities,
 		'feature': obj.filter(is_feature=True).order_by('-created'),
 		'favorites': favorites,
@@ -206,7 +212,7 @@ def login_page(request):
 		else:
 			# Todo: I might want to do some things relating to making models take care of object stuff like this instead of the view, it's totally messed up now.
 			successful = False if user[1] is False or not user[0].is_active() else True
-			LoginAttempt.objects.create(user=user[0], success=successful, user_agent=request.META.get('HTTP_USER_AGENT'), addr=request.META.get('HTTP_CF_CONNECTING_IP'))
+			LoginAttempt.objects.create(user=user[0], success=successful, user_agent=request.META.get('HTTP_USER_AGENT'), addr=request.META.get('REMOTE_ADDR'))
 			if user[1] == False:
 				return HttpResponse("Invalid password.", status=401)
 			elif user[1] == 2:
@@ -219,7 +225,7 @@ def login_page(request):
 		# Then, let's get the referrer and either return that or the root.
 		# Actually, let's not for now.
 		#if request.META['HTTP_REFERER'] and "login" not in request.META['HTTP_REFERER'] and request.META['HTTP_HOST'] in request.META['HTTP_REFERER']:
-		#    location = request.META['HTTP_REFERER']
+		#	location = request.META['HTTP_REFERER']
 		#else:
 		location = '/'
 		if request.GET.get('next'):
@@ -243,12 +249,12 @@ def signup_page(request):
 	if request.user.is_authenticated:
 		return redirect('/')
 	if request.method == 'POST':
-		if settings.recaptcha_pub:
-			if not recaptcha_verify(request, settings.recaptcha_priv):
+		if settings.RECAPTCHA_PUBLIC_KEY:
+			if not recaptcha_verify(request, settings.RECAPTCHA_PRIVATE_KEY):
 				return HttpResponse("The reCAPTCHA validation has failed.", status=402)
 		if not (request.POST.get('username') and request.POST.get('password') and request.POST.get('password_again')):
 			return HttpResponseBadRequest("You didn't fill in all of the required fields.")
-			
+
 		invited = False
 		invite = None
 		if settings.invite_only:
@@ -262,16 +268,43 @@ def signup_page(request):
 			if not invite.is_valid():
 				return HttpResponseBadRequest("The provided invite code has been used or is void. Please ask for another code.")
 				invited = True
-					
-					
+
 		if not re.compile(r'^[A-Za-z0-9-._]{1,32}$').match(request.POST['username']) or not re.compile(r'[A-Za-z0-9]').match(request.POST['username']):
 			return HttpResponseBadRequest("Your username either contains invalid characters or is too long (only letters + numbers, dashes, dots and underscores are allowed")
-		for keyword in ['admin', 'admln', 'adrnin', 'admn', ]:
-			if keyword in request.POST['username'].lower():
-				return HttpResponseForbidden("You aren't funny. Please use a funny name.")
-		for keyword in ['nigger', 'nigga', 'faggot', 'kile', ]:
-			if keyword in request.POST['username'].lower():
-				return HttpResponseForbidden("Nigga test failed, invalid pass.")
+		
+		# forbidden keywords
+		groups = [
+			[
+				'admin', 'admln', 'adrnin', 'admn', 'closedverse',
+				'arian', 'kordi', 'windowscj', 'gab', 'term',
+				'penis', 'nazi', 'hitler', 'hitlre', 'ihtler', 'heil', 'kkk'
+				'nigg', 'niger', 'fag',
+				'smf9', 'dakux', 'dacucks', 'adrian'
+			],
+			['adam', 'nintendotom'],
+			['funny'],
+			['doeggs', 'do_eggs', 'do-eggs', 'do.eggs'],
+		]
+		messages = [
+			"That username isn't funny. Please pick a funny username.",
+			"Adam, no.",
+			"I'm laughing so hard right now!! No seriously. Pick a better username.",
+			"the world may never know",
+		]
+		for id in range(len(groups)):
+			for keyword in groups[id]:
+				if keyword in request.POST['username'].lower() or keyword in request.POST['nickname'].lower():
+					# perhaps warn admins at a later time
+					return HttpResponseForbidden(messages[id])
+
+		# this is such a miniscule amount of NNIDs that either an admin or a person could
+		# claim all of them, in which case they could not be reused
+		#for keyword in ['windowscj', 'gabalt']:
+		#	if keyword in request.POST['origin_id'].lower():
+		#		return HttpResponseForbidden("You're very funny. Unfortunately your funniness blah blah blah fuck off.")
+
+		# end of forbidden keywords
+
 		conflicting_user = User.objects.filter(Q(username__iexact=request.POST['username']) | Q(username__iexact=request.POST['username'].replace(' ', '')))
 		if conflicting_user:
 			return HttpResponseBadRequest("A user with that username already exists.")
@@ -280,11 +313,11 @@ def signup_page(request):
 		# do the length check
 		if len(request.POST['password']) < settings.minimum_password_length:
 			return HttpResponseBadRequest('The password must be at least ' + str(settings.minimum_password_length) + ' characters long.')
-		if not (request.POST['nickname'] or request.POST['origin_id']):
-			return HttpResponseBadRequest("You didn't fill in an NNID, so you need a nickname.")
+		if not request.POST['nickname']:
+			return HttpResponseBadRequest("You need a nickname. What else are we gonna call you????? Ghosty?")
 		if request.POST['nickname'] and len(request.POST['nickname']) > 32:
 			return HttpResponseBadRequest("Your nickname is either too long or too short (1-32 characters)")
-		if request.POST['origin_id'] and (len(request.POST['origin_id']) > 16 or len(request.POST['origin_id']) < 6):
+		if request.POST.get('origin_id') and (len(request.POST['origin_id']) > 16 or len(request.POST['origin_id']) < 6):
 			return HttpResponseBadRequest("The NNID provided is either too short or too long.")
 		if request.POST.get('email'):
 			if User.email_in_use(request.POST['email']):
@@ -293,46 +326,50 @@ def signup_page(request):
 				EmailValidator()(value=request.POST['email'])
 			except ValidationError:
 				return HttpResponseBadRequest("Your e-mail address is invalid. Input an e-mail address, or input nothing.")
-		check_others = Profile.objects.filter(user__addr=request.META['HTTP_CF_CONNECTING_IP'], let_freedom=False).exists()
+		check_others = Profile.objects.filter(user__addr=request.META['REMOTE_ADDR'], let_freedom=False).exists()
 		if check_others:
 			return HttpResponseBadRequest("Unfortunately, you cannot make any accounts at this time. This restriction was set for a reason, please contact the administration. Please don't bypass this, as if you do, you are just being ignorant. If you have not made any accounts, contact the administration and this restriction will be removed for you.")
-		check_othersban = User.objects.filter(addr=request.META['HTTP_CF_CONNECTING_IP'], active=False).exists()
+		check_othersban = User.objects.filter(addr=request.META['REMOTE_ADDR'], active=False).exists()
 		if check_othersban:
 			return HttpResponseBadRequest("You cannot sign up while banned.")
-		check_signupban = User.objects.filter(signup_addr=request.META['HTTP_CF_CONNECTING_IP'], active=False).exists()
+		check_signupban = User.objects.filter(signup_addr=request.META['REMOTE_ADDR'], active=False).exists()
 		if check_signupban:
 			return HttpResponseBadRequest("Get on your hands and knees")
-		if iphub(request.META['HTTP_CF_CONNECTING_IP']):
-			if settings.disallow_proxy:
-				return HttpResponseBadRequest("You cannot sign up with a proxy.")
-		if request.POST['origin_id']:
+		if iphub(request.META['REMOTE_ADDR']):
+			if settings.DISALLOW_PROXY:
+				return HttpResponseBadRequest("please do not use a vpn ok thanks")
+		if request.POST.get('origin_id'):
+			if not request.POST.get('mh'):
+			  return HttpResponseBadRequest("sorry didn't get the mii image attribute. you might need to wait or just refresh, sorry")
 			if User.nnid_in_use(request.POST['origin_id']):
 				return HttpResponseBadRequest("That Nintendo Network ID is already in use, that would cause confusion.")
-			mii = get_mii(request.POST['origin_id'])
-			if not mii:
-				return HttpResponseBadRequest("The NNID provided doesn't exist.")
-			nick = mii[1]
+			#mii = get_mii(request.POST['origin_id'])
+			#if not mii:
+			#	return HttpResponseBadRequest("The NNID provided doesn't exist.")
+			#nick = mii[1]
+			nick = request.POST['nickname']
+			mii = [request.POST.get('mh'), 'if you see this then something is wrong', request.POST['origin_id']]
 			gravatar = False
 		else:
 			nick = request.POST['nickname']
 			mii = None
 			gravatar = True
-		make = User.objects.closed_create_user(username=request.POST['username'], password=request.POST['password'], email=request.POST.get('email'), addr=request.META['HTTP_CF_CONNECTING_IP'], user_agent=request.META['HTTP_USER_AGENT'], signup_addr=request.META['HTTP_CF_CONNECTING_IP'], nick=nick, nn=mii, gravatar=gravatar)
+		make = User.objects.closed_create_user(username=request.POST['username'], password=request.POST['password'], email=request.POST.get('email'), addr=request.META['REMOTE_ADDR'], user_agent=request.META['HTTP_USER_AGENT'], signup_addr=request.META['REMOTE_ADDR'], nick=nick, nn=mii, gravatar=gravatar)
 		if invited == True:
 			invite.used = True
 			invite.used_by = make
 			invite.save()
 
-		LoginAttempt.objects.create(user=make, success=True, user_agent=request.META.get('HTTP_USER_AGENT'), addr=request.META.get('HTTP_CF_CONNECTING_IP'))
+		LoginAttempt.objects.create(user=make, success=True, user_agent=request.META.get('HTTP_USER_AGENT'), addr=request.META.get('REMOTE_ADDR'))
 		login(request, make)
 		request.session['passwd'] = make.password
 		return HttpResponse("/")
 	else:
-		if not settings.recaptcha_pub:
-			settings.recaptcha_pub = None
+		if not settings.RECAPTCHA_PUBLIC_KEY:
+			settings.RECAPTCHA_PUBLIC_KEY = None
 		return render(request, 'closedverse_main/signup_page.html', {
 			'title': 'Sign up',
-			'recaptcha': settings.recaptcha_pub,
+			'recaptcha': settings.RECAPTCHA_PUBLIC_KEY,
 			'invite_only': settings.invite_only,
 			'age': settings.age_allowed,
 			'mii_domain': mii_domain,
@@ -374,10 +411,15 @@ def forgot_passwd(request):
 
 def logout_page(request):
 	"""Password email page / post endpoint."""
+	if not request.user.is_active():
+		r = HttpResponseForbidden("You can't log out while you're inactive. According to me and God, you'll just have to sit here and suffer for now. Go contemplate your actions. You will be redirected to Wario Land 4 momentarily.", content_type='text/plain')
+		r['Refresh'] = '7; url=https://gba.js.org/player#warioland4'
+		return r
 	logout(request)
 	if request.GET.get('next'):
 		return redirect(request.GET['next'])
 	return redirect('/')
+
 def user_view(request, username):
 	"""The user view page, has recent posts/yeahs."""
 	user = get_object_or_404(User, username__iexact=username)
@@ -423,11 +465,15 @@ def user_view(request, username):
 		if len(request.POST.get('bg_url')) > 300:
 			return json_response('Background URL is too long (length '+str(len(request.POST.get('bg_url')))+', max 300)')
 		if len(request.POST.get('whatareyou')) > 300:
-			return json_response('Big brother it\'s too big, I can\'t take it! (length '+str(len(request.POST.get('whatareyou')))+', max 300)')
+			return json_response('"What Are You" is too long (length '+str(len(request.POST.get('whatareyou')))+', max 300)')
 		if len(request.POST.get('external')) > 255:
-			return json_response('Big brother it\'s too big, I can\'t take it! (length '+str(len(request.POST.get('external')))+', max 300)')
+			return json_response('Discord Tag is too long (length '+str(len(request.POST.get('external')))+', max 300)')
 		if len(request.POST.get('email')) > 500:
-			return json_response('Big brother it\'s too big, I can\'t take it! (length '+str(len(request.POST.get('email')))+', max 500)')
+			return json_response('Email is too long (length '+str(len(request.POST.get('email')))+', max 500)')
+		# Kinda unneeded but gdsjkgdfsg
+		if request.POST.get('website') == 'Web URL' or request.POST.get('country') == 'Region' or request.POST.get('external') == 'Discord Tag':
+			return json_response("I'm laughing right now.")
+		
 		if len(request.POST.get('avatar')) > 255:
 			return json_response('Avatar is too long (length '+str(len(request.POST.get('avatar')))+', max 255)')
 		if request.POST.get('email') and not request.POST.get('email') == 'None':
@@ -615,11 +661,11 @@ def user_posts(request, username):
 		next_offset = offset + 50
 
 	if request.META.get('HTTP_X_AUTOPAGERIZE'):
-			return (debug(request, username) if 'HTTP_DIS' in request.META else render(request, 'closedverse_main/elements/u-post-list.html', {
+		return render(request, 'closedverse_main/elements/u-post-list.html', {
 			'posts': posts,
 			'next': next_offset,
 			'time': offset_time.isoformat(),
-		}))
+		})
 	else:
 		return render(request, 'closedverse_main/user_posts.html', {
 			'user': user,
@@ -1079,7 +1125,7 @@ def community_create_action(request):
 def post_create(request, community):
 	if request.method == 'POST':
 		# Wake
-		request.user.wake(request.META['HTTP_CF_CONNECTING_IP'])
+		request.user.wake(request.META['REMOTE_ADDR'])
 		# Required
 		if not (request.POST.get('community')):
 			return HttpResponseBadRequest()
@@ -1106,7 +1152,8 @@ def post_create(request, community):
 			7: "Please don't spam.",
 			9: "You're very funny. Unfortunately your funniness blah blah blah fuck off.",
 			10: "No mr white, you can't make a post entirely consistant of spaces",
-			11: "Please don't post Zalgo text.",
+			11: "The video you've uploaded is invalid.",
+			12: "Please don't post Zalgo text.",
 			}.get(new_post))
 		# Render correctly whether we're posting to Activity Feed
 		if community.is_activity():
@@ -1134,6 +1181,7 @@ def post_view(request, post):
 		post.can_rm = post.can_rm(request)
 		post.is_favorite = post.is_favorite(request.user)
 		post.can_comment = post.can_comment(request)
+		post.can_lock_comments = post.can_lock_comments(request)
 	if post.is_mine:
 		title = 'Your post'
 	else:
@@ -1183,6 +1231,12 @@ def post_change(request, post):
 	return HttpResponse()
 @require_http_methods(['POST'])
 @login_required
+def lock_the_comments(request, post):
+	the_post = get_object_or_404(Post, id=post)
+	the_post.lock_the_comments_up(request)
+	return HttpResponse()
+@require_http_methods(['POST'])
+@login_required
 def post_setprofile(request, post):
 	the_post = get_object_or_404(Post, id=post)
 	the_post.favorite(request.user)
@@ -1215,11 +1269,9 @@ def comment_rm(request, comment):
 @login_required
 def post_comments(request, post):
 	post = get_object_or_404(Post, id=post)
-	if not request.is_ajax():
-		raise Http404()
 	if request.method == 'POST':
 		# Wake
-		request.user.wake(request.META['HTTP_CF_CONNECTING_IP'])
+		request.user.wake(request.META['REMOTE_ADDR'])
 		# Method of Post
 		new_post = post.create_comment(request)
 		if not new_post:
@@ -1234,7 +1286,7 @@ def post_comments(request, post):
 			2: "The image you've uploaded is invalid.",
 			3: "You're making comments too fast, wait a few seconds and try again.",
 			6: "Not allowed.",
-			11: "Please don't post Zalgo text.",
+			12: "Please don't post Zalgo text.",
 			}.get(new_post))
 		# Give the notification!
 		if post.is_mine(request.user):
@@ -1327,17 +1379,15 @@ def user_follow(request, username):
 	if user.follow(request.user):
 		# Give the notification!
 		Notification.give_notification(request.user, 4, user)
-	followct = request.user.num_following()
+	followct = user.num_followers()
 	return JsonResponse({'following_count': followct})
 @require_http_methods(['POST'])
 @login_required
 def user_unfollow(request, username):
 	user = get_object_or_404(User, username=username)
 	user.unfollow(request.user)
-	return HttpResponse()
-	followct = request.user.num_following()
+	followct = user.num_followers()
 	return JsonResponse({'following_count': followct})
-	
 @require_http_methods(['POST'])
 @login_required
 def user_friendrequest_create(request, username):
@@ -1383,7 +1433,7 @@ def user_addblock(request, username):
 	user = get_object_or_404(User, username=username)
 	user.make_block(request.user)
 	return HttpResponse()
-	
+
 # Notifications work differently since the Openverse rebranding. (that we changed back)
 # They used to respond with a JSON for values for unread notifications and messages.
 # NOW we send the unread notifications in bytes, and then the unread messages in bytes, 2 bytes. The JS is using charCodeAt()
@@ -1397,7 +1447,7 @@ def check_notifications(request):
 	all_count = request.user.get_frs_notif() + n_count
 	msg_count = request.user.msg_count()
 	# Let's update the user's online status
-	request.user.wake(request.META['HTTP_CF_CONNECTING_IP'])
+	request.user.wake(request.META['REMOTE_ADDR'])
 	# Let's just now return the JSON only for Accept: HTML
 	if 'html' in request.META.get('HTTP_ACCEPT'):
 		return JsonResponse({'success': True, 'n': all_count, 'msg': msg_count})
@@ -1412,14 +1462,6 @@ def check_notifications(request):
 	except ValueError:
 		binary_notifications = bytes([255]) + bytes([255])
 	return HttpResponse(binary_notifications, content_type='application/octet-stream')
-@require_http_methods(['POST'])
-@login_required
-def notification_setread(request):
-	if request.GET.get('fr'):
-		update = request.user.read_fr()
-	else:
-		update = request.user.notification_read()
-	return HttpResponse()
 @require_http_methods(['POST'])
 @login_required
 def notification_delete(request, notification):
@@ -1559,7 +1601,7 @@ def messages_view(request, username):
 	conversation = friendship.conversation()
 	if request.method == 'POST':
 		# Wake
-		request.user.wake(request.META['HTTP_CF_CONNECTING_IP'])
+		request.user.wake(request.META['REMOTE_ADDR'])
 		new_post = conversation.make_message(request)
 		if not new_post:
 			return HttpResponseBadRequest()
@@ -1636,46 +1678,6 @@ def prefs(request):
 	lights = not (request.session.get('lights', False))
 	arr = [profile.let_yeahnotifs, lights, request.user.hide_online]
 	return JsonResponse(arr, safe=False)
-
-@login_required
-def post_list(request):
-	if not request.user.is_staff():
-		return JsonResponse({"err": "Not authorized"})
-	if not request.GET.get('s') or not request.GET.get('e'):
-		return JsonResponse({"err": "Start time required with 's' query param and end required with 'e' param (epoch)"})
-	if not request.GET.get('l'):
-		return JsonResponse({"err": "Limit required via 'l' query param"})
-	else:
-			 limit = int(request.GET['l'])
-	if not request.GET.get('o'):
-		return JsonResponse({"err": "Offset required via 'o' query param"})
-	else:
-			 offset = int(request.GET['o'])
-
-	if limit > 250:
-		return JsonResponse({"err": "Limit cannot be higher than 250"})
-
-	dateone = datetime.fromtimestamp(int(request.GET['s']))
-	datetwo = datetime.fromtimestamp(int(request.GET['e']))
-	iable = Post.objects.filter(created__range=(dateone, datetwo)).order_by('-created')[offset:offset + limit]
-	resparr = []
-
-	for post in iable:
-		resparr.append({
-			'id': post.id,
-			'created': django.utils.dateformat.format(post.created, 'U'),
-			'user': post.creator.username,
-			'community': post.community_id,
-			'feeling': post.feeling,
-			'spoiler': post.spoils,
-			'content': (post.body or None),
-			'drawing': (post.drawing or None),
-			'screenshot': (post.screenshot or None),
-			'url': (post.url or None),
-		})
-
-	#return HttpResponse(msgpack.packb(resparr), content_type='application/x-msgpack')
-	return JsonResponse(resparr, safe=False)
 	
 def user_tools(request, username):
 	if not request.user.is_authenticated:
@@ -1840,15 +1842,15 @@ def create_invite(request):
 	else:
 		raise Http404()
 
-@require_http_methods(['POST'])
+#@require_http_methods(['POST'])
 # Disabling login requirement since it's in signup now. Regret?
 #@login_required
 def origin_id(request):
 	if not request.headers.get('x-requested-with') == 'XMLHttpRequest':
 		return HttpResponse("<a href='https://github.com/ariankordi/closedverse/blob/master/closedverse_main/util.py#L44-L86'>Please do not use this as an API!</a>")
-	if not request.POST.get('a'):
+	if not request.GET.get('a'):
 		return HttpResponseBadRequest()
-	mii = get_mii(request.POST['a'])
+	mii = get_mii(request.GET['a'])
 	if not mii:
 		return HttpResponseBadRequest("The NNID provided doesn't exist.")
 	return HttpResponse(mii[0])
@@ -1954,17 +1956,17 @@ def whatads(request):
 	return render(request, 'closedverse_main/help/whatads.html', {'title': 'What are user-generated ads?'})
 @login_required
 def help_rules(request):
-	return render(request, 'closedverse_main/help/rules.html', {'title': 'Cedar Three Rules', 'age': settings.age_allowed})
+	return render(request, 'closedverse_main/help/rules.html', {'title': 'Rules', 'age': settings.age_allowed})
 def help_faq(request):
 	return render(request, 'closedverse_main/help/faq.html', {'title': 'FAQ'})
 def help_legal(request):
-	if not settings.PROD:
+	if not settings.CLOSEDVERSE_PROD:
 		return HttpResponseForbidden()
-	return render(request, 'closedverse_main/help/legal.html', {})
+	return render(request, 'closedverse_main/help/legal.html', {'title': "Legal Information"})
 def help_contact(request):
-	return render(request, 'closedverse_main/help/contact.html', {'title': "Contact Info"})
+	return render(request, 'closedverse_main/help/contact.html', {'title': "Contact info"})
 def help_why(request):
-	return render(request, 'closedverse_main/help/why.html', {'title': "Why even join Cedar Three?"})
+	return render(request, 'closedverse_main/help/why.html', {'title': "Why even join this site?"})
 def help_login(request):
 	return render(request, 'closedverse_main/help/login-help.html', {'title': "Login help"})
 

@@ -33,7 +33,6 @@ If you have an announcement community, each post will appear there.
 Can you rewrite this?
 
 # YOU NEED
-- Cloudflare
 - A server (obviously)
 - Terminal access (also, obviously)
 - Python 3
@@ -55,7 +54,7 @@ You need Pip
 
 4.
 Get everything else you need.
-`pip3 install Django==3.2.2 urllib3 lxml passlib bcrypt pillow django-markdown-deux django-markdown2 whitenoise`
+`pip3 install Django==3.2.2 urllib3 lxml passlib bcrypt pillow django-markdown-deux django-markdown2 whitenoise django-xff`
 
 5.
 Clone the clone!
@@ -98,9 +97,6 @@ A: You forgot to migrate and make the database.
 
 Q: "Why is the page white, with no color or style at all?"
 A: You need to collect the static files as mentioned prior.
-
-Q: "KeyError: HTTP_CF_CONNECTING_IP"
-A: Cloudflare is needed for this shit to work properly.
 
 You may have to do some additional troubleshooting, and that's the joy of web-hosting.
 Fixing problems yourself is a great way to learn how this shit works.
@@ -148,8 +144,3 @@ Make sure it works too!
 ```
 sudo systemctl status django
 ```
-
-18.
-The final stretch!
-Set up your server with Cloudflare. You need a domain name, and you need patience, as this can take some time to take effect.
-If you do this final step right, Cedar should be working fine, and it should have HTTPS working too!

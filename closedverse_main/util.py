@@ -1,6 +1,6 @@
-# Todo: move all requests to using requests instead of urllib3
 import urllib.request, urllib.error
-import requests
+# requests is only used for get_mii which is not being used currently
+#import requests
 from lxml import etree
 from random import choice
 import json
@@ -38,35 +38,41 @@ def HumanTime(date, full=False):
 					unit_name += 's'
 				return f'{number_of_units} {unit_name} ago'
 
+# the current source as of now uses AJAX to get mii data
 def get_mii(id):
 	# Using AccountWS
 	dmca = {
 		'X-Nintendo-Client-ID': 'a2efa818a34fa16b8afbc8a74eba3eda',
 		'X-Nintendo-Client-Secret': 'c91cdb5658bd4954ade78533a339cf9a',
 	}
-	# TODO: Make this, the gravatar request, and reCAPTCHA request escape (or plainly use) URL params
-	nnid = requests.get('https://accountws.nintendo.net/v1/api/admin/mapped_ids?input_type=user_id&output_type=pid&input=' + id, headers=dmca)
-	nnid_dec = etree.fromstring(nnid.content)
-	del(nnid)
+	
+	# Perform the first request to get pid
+	url_pid = 'https://accountws.nintendo.net/v1/api/admin/mapped_ids?input_type=user_id&output_type=pid&input=' + id
+	request_pid = urllib.request.Request(url_pid, headers=dmca)
+	with urllib.request.urlopen(request_pid) as nnid_response:
+		nnid_content = nnid_response.read()
+	nnid_dec = etree.fromstring(nnid_content)
 	pid = nnid_dec[0][1].text
 	if not pid:
 		return False
-	del(nnid_dec)
-	mii = requests.get('https://accountws.nintendo.net/v1/api/miis?pids=' + pid, headers=dmca)
+	
+	# Perform the second request to get mii information
+	url_mii = 'https://accountws.nintendo.net/v1/api/miis?pids=' + pid
+	request_mii = urllib.request.Request(url_mii, headers=dmca)
+	with urllib.request.urlopen(request_mii) as mii_response:
+		mii_content = mii_response.read()
 	try:
-		mii_dec = etree.fromstring(mii.content)
-	# Can't be fucked to put individual exceptions to catch here
+		mii_dec = etree.fromstring(mii_content)
 	except:
 		return False
-	del(mii)
+	
 	try:
 		miihash = mii_dec[0][2][0][0].text.split('.net/')[1].split('_')[0]
 	except IndexError:
 		miihash = None
 	screenname = mii_dec[0][3].text
 	nnid = mii_dec[0][6].text
-	del(mii_dec)
-	# Also todo: Return the NNID based on what accountws returns, not the user's input!!!
+	
 	return [miihash, screenname, nnid]
 
 def recaptcha_verify(request, key):
@@ -77,6 +83,26 @@ def recaptcha_verify(request, key):
 	if not jsond['success']:
 		return False
 	return True
+
+def video_upload(video):
+	hash = sha1()
+	for chunk in video.chunks():
+		hash.update(chunk)
+	imhash = hash.hexdigest()
+	# only either webm or mp4
+	extension = video.name[-4:]
+	if extension == '.mp4':
+		fname = imhash + '.mp4'
+	elif extension == 'webm':
+		fname = imhash + '.webm'
+	else:
+		return 1
+	# simply only write image if the hashed path doesn't already exist
+	if not os.path.exists(settings.MEDIA_ROOT + fname):
+		with open(settings.MEDIA_ROOT + fname, "wb+") as destination:
+			for chunk in video.chunks():
+				destination.write(chunk)
+	return settings.MEDIA_URL + fname
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 def image_upload(img, stream=False, drawing=False, avatar=False):
@@ -212,11 +238,28 @@ def getipintel(addr):
 	else:
 		return 0
 """
+
+# not ideal, switch this to use a real cache when caching for everything else is implemented (never?)
+iphub_cache = dict()
+
 # Now using iphub
-def iphub(addr):
+def iphub(addr, want_asn=False):
+	# hack to exclude my private network at the time (security flaw?)
 	if settings.IPHUB_KEY and not '192.168' in addr:
-		get = requests.get('http://v2.api.iphub.info/ip/' + addr, headers={'X-Key': settings.IPHUB_KEY})
-		if get.json()['block'] == 1:
-			return True
+		if addr in iphub_cache:
+			get_r = iphub_cache[addr]
+			#print('getting ip ' + addr + ' from cache 😌')
 		else:
-			return False
+			#print('GETTING IP ' + addr + ' FROM IPHUB😤😤😤😤😤😤')
+			req = urllib.request.Request('http://v2.api.iphub.info/ip/' + addr, headers={'X-Key': settings.IPHUB_KEY})
+			response = urllib.request.urlopen(req)
+			data = response.read().decode()
+			get_r = json.loads(data)
+			iphub_cache[addr] = get_r
+		if want_asn:
+			return get_r.get('asn', '0')
+		if get_r.get('block', 0) == 1:
+			return True
+		# should just return falsey when returning nothing anyway?
+		#else:
+		#	return False
