@@ -545,13 +545,14 @@ class User(models.Model):
 		return messages
 	def password_reset_email(self, request):
 		htmlmsg = render_to_string('closedverse_main/help/email.html', {
-			'menulogo': request.build_absolute_uri(settings.STATIC_URL + 'img/menu-logo.png'),
+			'menulogo': request.build_absolute_uri(settings.STATIC_URL + 'img/menu-logo.svg'),
 			'contact': request.build_absolute_uri(reverse('main:help-contact')),
 			'link': request.build_absolute_uri(reverse('main:forgot-passwd')) + "?token=" + base64.urlsafe_b64encode(bytes(self.password, 'utf-8')).decode(),
 		})
 		subj = '{1} password reset for "{0}"'.format(self.username, brand_name)
 		return send_mail(
 		subject=subj, 
+		message='',
 		html_message=htmlmsg,
 		from_email="{1} <{0}>".format(settings.DEFAULT_FROM_EMAIL, brand_name),
 		recipient_list=[self.email],
@@ -953,7 +954,7 @@ class Post(models.Model):
 		# If you are a mod, you can bypass the timer
 		# The timer is a personal choice of mine, I don't want users to pussy out of a fight too early or whatever.
 		# Always annoys me when someone has a dumb ass take only for them to turn off the comments immediately.
-		if self.created < timezone.now() - timedelta(hours=24) or request.user.can_manage():
+		if self.created < timezone.now() - timedelta(hours=2) or request.user.can_manage():
 			if self.creator == request.user:
 				return True
 		if not self.creator.has_authority(request.user) and request.user.can_manage():
