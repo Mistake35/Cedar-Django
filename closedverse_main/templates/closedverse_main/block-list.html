@@ -1,0 +1,43 @@
+{% extends "closedverse_main/layout.html" %}
+{% load static %}{% load closedverse_user %}{% load closedverse_tags %}
+{% block main-body %}
+{% user_sidebar request user user.profile 0 True %}
+<div class="main-column"><div class="post-list-outline">
+  <h2 class="label">Blocked Users</h2>
+  {% if blocks %}
+	<div class="list news-list" id="friend-list-content">
+	{% for block in blocks %}
+		<li class="news-list-content trigger" data-href="{% url "main:user-view" block.target.username %}">
+			{% user_icon_container block.target %}
+
+		  <div class="body">
+			<a href="{% url "main:user-view" block.target.username %}" class="nick-name"{% if block.target.color %}style=color:{{ block.target.color }}{% endif %}>{{ block.target.nickname }}</a><br><span class="timestamp"> {% time block.created %}</span>
+			<button class="button received-request-button" type="button" dataaa="{{ block.target_id }}">Unblock</button>
+		  </div>
+		</li>
+<div class="dialog none" data-modal-types="post-unblock" id="{{ block.target_id }}">
+<div class="dialog-inner">
+  <div class="window">
+    <h1 class="window-title">Unblock {{ block.target.nickname }}</h1>
+    <div class="window-body">
+      {% user_sidebar_info block.target %}
+      <form method="post" data-action="{% url "main:user-rmblock" block.target.username %}">
+        <p class="window-body-content">Unblock this user?</p>
+        <div class="form-buttons">
+          <input type="button" class="olv-modal-close-button gray-button" value="No">
+          <input type="submit" value="Yes" class="post-button black-button">
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+</div>
+	{% endfor %}
+	</div>
+  {% else %}
+  <div class="no-content">
+<p>You have not blocked any users.</p>
+</div>
+  {% endif %}
+</div></div>
+{% endblock %}

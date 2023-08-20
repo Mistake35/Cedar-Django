@@ -230,7 +230,7 @@ form.search input[type="submit"] {
     display: block;
     border-right: 1px solid var(--theme-dark, #202030);
 }
-#global-menu li#global-menu-mymenu .icon-container img {
+#global-menu li#global-menu-mymenu .icon-container img:not(.official-tag) {
     border: 1px solid #000;
     width: 36px;
     height: 36px;
@@ -414,10 +414,6 @@ form.search {
     background: #fff;
     border: 2px solid #000;
 }
-.Announcement-content {
-  background: var(--theme-dark, #202030);
-  border: #000 solid 1px;
-}
 .sidebar-setting a {
     color: #ccc;
     border-top: 1px solid #000;
@@ -445,7 +441,7 @@ form.search {
 .digest .post .icon-container {
     border: 1px solid rgb(0, 0, 0);
 }
-#empathy-content .post-permalink-feeling-icon img {
+#empathy-content .post-permalink-feeling-icon .user-icon {
     border: 1px solid #000;
     background: transparent;
 }

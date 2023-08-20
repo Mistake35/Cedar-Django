@@ -1,6 +1,6 @@
 {% extends "closedverse_main/layout.html" %}
 {% block main-body %}{% load closedverse_user %}
 <div class="no-content"><div class="window-create-new-topic"><p>This user is blocked.</p>
-{% if profile.can_block %}<div class="post-buttons-content"><button type="button" class="button block-button">Unblock</button></div>{% endif %}
+<div class="post-buttons-content"><button type="button" class="button block-button">Unblock</button></div>
 {% block_modal user profile %}
 {% endblock %}

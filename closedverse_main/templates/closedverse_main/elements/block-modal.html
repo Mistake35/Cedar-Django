@@ -1,11 +1,11 @@
-{% load closedverse_user %}{% if profile.can_block %}
+{% load closedverse_user %}
 <div class="dialog none" data-modal-types="post-block">
 	<div class="dialog-inner">
 		<div class="window">
 			<h1 class="window-title">{% if profile.is_blocked %}Unblock{% else %}Block{% endif %} {{ user.nickname }}</h1>
 			<div class="window-body">
 				{% user_sidebar_info user profile %}
-				<form method="post" data-action="{% url "main:user-addblock" user.username %}">
+				<form method="post" data-action="{% if profile.is_blocked %}{% url "main:user-rmblock" user.username %}{% else %}{% url "main:user-addblock" user.username %}{% endif %}">
 					<p class="window-body-content">Really {% if profile.is_blocked %}un{% endif %}block this user?{% if not profile.is_blocked %} You won't be able to see each other's posts or profile.{% endif %}</p>
 					<div class="form-buttons">
 						<input type="button" class="olv-modal-close-button gray-button" value="No">
@@ -16,4 +16,3 @@
 		</div>
 	</div>
 </div>
-{% endif %}

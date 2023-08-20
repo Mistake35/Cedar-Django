@@ -53,8 +53,11 @@
 	{% if not has_authority and request.user.can_manage %}
 	<button class="button" data-href="{% url "main:user-tools" user.username %}">User Settings</button>
 	{% endif %}
-	{% if not user.is_me and profile.can_block %}
-	<button type="button" class="button block-button">{% if profile.is_blocked %}Unblock{% else %}Block{% endif %}</button>
+	{% if not general and not user.is_me and profile.can_block %}
+	<div class="report-buttons-content">
+		<!-- for later use <button type="button" class="report-button report-user" data-track-label="user" data-track-action="openReportModal" data-track-category="reportViolator" data-modal-open="#report-violator-page">Report Violation</button> -->
+		<button type="button" class="report-button block-button">{% if profile.is_blocked %}Unblock{% else %}Block{% endif %}</button>
+	</div>
 	{% endif %}
 </div>
 
@@ -175,7 +178,7 @@
 		{% endif %}
 		{% if profile.external %}
 		<div class="data-content">
-			<h4><span>Discord Tag</span></h4>
+			<h4><span>Discord</span></h4>
 			<div class="note">
 				<span>{{ profile.external }}</span>
 			</div>

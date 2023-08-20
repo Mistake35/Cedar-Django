@@ -3,9 +3,9 @@
 <div class="main-column center">
     <div class="post-list-outline login-page">
         <form method="post">
-			<img src="{% static "img/menu-logo.svg" %}">
-			<p class="lh">Reset password</p>
-			<p>Hello {{ user.username }}, it's time to reset your password.</p>
+			<img src="{{ brand_logo }}">
+			<p class="lh">{{ title }}</p>
+			<p>Welcome back, {{ user.username }}! It's time to reset your password.</p>
 				<h3 class="label"><label>New password: <input type="password" class="auth-input" name="password" placeholder="Password" required></label></h3>
 				<h3 class="label"><label>Confirm new password: <input type="password" class="auth-input" name="password_again" placeholder="Password again" required></label></h3>
 				{% csrf_token %}
@@ -13,7 +13,7 @@
 			<button type="submit" class="button">Reset</button>
 		</form>
 			<div class="ll">
-			<p>Once finished you can log into your account with your new password.</p>
+				<p>Having issues? Want to get back into your account? Try <a href="{% url "main:help-contact" %}">contacting us</a> if you need help with this.</p>
 			</div>
 	</div>
 </div>

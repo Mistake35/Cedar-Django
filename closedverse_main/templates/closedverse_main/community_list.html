@@ -34,6 +34,15 @@
 		</div>
 		{% endif %}
 		
+		{% if settings.memo_title and settings.memo_msg %}
+				<div class="post-list-outline index-memo">
+					<h2 class="label">{{ settings.memo_title }}</h2>
+					<div>
+					{% autoescape off %}{{ settings.memo_msg }}{% endautoescape %}
+					</div>
+				</div>
+		{% endif %}
+		
 	{% if announcements and request.user.is_authenticated %}
 	<div class="tleft">
   	<div class="post-list-outline">
@@ -47,17 +56,6 @@
 	  	</div>
   </div>
   </div>
-	{% endif %}
-		
-	{% if WelcomeMSG and not request.user.is_authenticated %}
-	<div class="post-list-outline index-memo">
-		<h2 class="label">Welcome to {{ brand_name }}!</h2>
-		{% for WelcomeMSG in WelcomeMSG %}
-		<h2>{{ WelcomeMSG.Title }}</h2>
-		<p>{{ WelcomeMSG.message|linebreaksbr|urlize }}</p>
-		{% if WelcomeMSG.image %}<image src={{ WelcomeMSG.image.url }}></image>{% endif %}
-		{% endfor %}
-	</div>
 	{% endif %}
 	{% if request.user.c_tokens > 0 %}<a class="big-button" href={% url "main:community-create" %}><span class="symbol-label">Create a community</span></a>{% endif %}
 		{% if availableads %}
@@ -97,6 +95,12 @@
 			{% community_page_element user_communities "Popular User-Created Communities" False "usr" %}
 			{% if user_communities %}<a href="{% url "main:community-viewall" "usr" %}" class="big-button">Show more</a>{% endif %}
 			{% community_page_element my_communities "My Communities" %}
+
+			{% if not feature and not game and not special and not user_communities and not my_communities %}
+				<div class="post-list-outline">
+				{% nocontent "There are no communities of any kind yet. You can either create one in the admin panel, or make a user-created community once you sign up." %}
+				</div>
+			{% endif %}
 	</div>
 	<div id="community-guide-footer">
 		<div id="guide-menu">

@@ -42,12 +42,6 @@ class ClosedMiddleware(object):
 			# can just forbid post requests for the time being (but leav our funny logout message :3)
 			if not request.user.is_active() and request.method != 'GET' and request.get_full_path() != '/logout/':
 				return HttpResponseForbidden()
-			# If there isn't a request.session
-			if not request.session.get('passwd'):
-				request.session['passwd'] = request.user.password
-			else:
-				if request.session['passwd'] != request.user.password:
-					logout(request)
 		response = self.get_response(request)
 		if request.user.is_authenticated:
 			# for reverse proxy

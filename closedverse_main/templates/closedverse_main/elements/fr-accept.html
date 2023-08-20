@@ -1,4 +1,4 @@
-{% load closedverse_tags %}{% load closedverse_user %}<div class="dialog none" data-modal-types="accept-friend-request" uuid="{{ fr.unique_id }}" data-screen-name="{{ fr.source.nickname }}" data-reject-action="{% url "main:user-fr-reject" fr.source.username %}" data-action="{% url "main:user-fr-accept" fr.source.username %}">
+{% load closedverse_tags %}{% load closedverse_user %}<div class="dialog none" data-modal-types="accept-friend-request" data-screen-name="{{ fr.source.nickname }}" data-reject-action="{% url "main:user-fr-reject" fr.source.username %}" data-action="{% url "main:user-fr-accept" fr.source.username %}">
     <div class="dialog-inner">
         <div class="window">
             <h1 class="window-title">Friend Request from {{ fr.source.nickname }} at {% time fr.created True %}</h1>

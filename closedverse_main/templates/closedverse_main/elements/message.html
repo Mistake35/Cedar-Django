@@ -1,8 +1,8 @@
-{% load markdown_deux_tags %}{% load closedverse_tags %}      <div class="post scroll {% if message.mine %}my{% else %}other{% endif %}" id="{{ message.unique_id }}">
+{% load markdown_deux_tags %}{% load closedverse_tags %}      <div class="post scroll {% if message.mine %}my{% else %}other{% endif %}" id="message-{{ message.id }}">
         {% user_icon_container message.creator message.feeling %}
 		<p class="timestamp-container">
           <span class="timestamp">{% time message.created %}{% if message.read %} - Read{% endif %}</span>
-		  <button type="button" class="symbol button edit-button rm-post-button" data-action="{% url "main:message-delete" message.unique_id %}"><span class="symbol-label">Delete</span></button>
+		  <button type="button" class="symbol button edit-button rm-post-button" data-action="{% url "main:message-delete" message.id %}"><span class="symbol-label">Delete</span></button>
         </p>
         <div class="post-body">
 		  {% if message.drawing %}

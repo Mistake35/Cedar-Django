@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
+from django.conf.global_settings import PASSWORD_HASHERS
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -129,21 +130,28 @@ LOGGING = {
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
 
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
-]
+# only use these when debug is not enabled so that making dummy accounts in debug is easier
+if not DEBUG:
+	AUTH_PASSWORD_VALIDATORS = [
+		  {
+		      'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+		  },
+		  {
+		      'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+		  },
+		  {
+		      'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+		  },
+		  {
+		      'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+		  },
+	]
 
+# append the old passlib hasher to the end of PASSWORD_HASHERS
+# you only need this if your closedverse instance has passwords from before 08/2023, otherwise leave it commented
+# although django has a bcrypt sha256 method, it's not compatible with passlib's, which is what closedverse used
+# python3 -m pip install django-hashers-passlib
+#PASSWORD_HASHERS += ['hashers_passlib.bcrypt_sha256']
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
@@ -160,6 +168,14 @@ USE_L10N = False
 
 USE_TZ = True
 
+# You can use Mailtrap to get the email system working. Mailtrap is free and will work well for what you'll be doing with this.
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = None
+EMAIL_HOST_USER = None
+EMAIL_HOST_PASSWORD = None
+EMAIL_PORT = None
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = None
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
@@ -239,6 +255,7 @@ DISALLOW_PROXY = False
 # Setting this to True forces every user to log in/
 # sign up for the site to view any content.
 FORCE_LOGIN = False
+
 # A list of URLs that are always accessible
 # whether the above value is set or not.
 LOGIN_EXEMPT_URLS = {
@@ -249,6 +266,7 @@ LOGIN_EXEMPT_URLS = {
     r'^help/rules$',
     r'^help/contact$',
     r'^help/login$',
+    r'^s/.*$',
 }
 
 # Action to perform on images belonging to posts/
@@ -272,6 +290,7 @@ level_needed_to_man_communities = 5
 # if someone's level is equal or above this, they can edit any user with a lower level on your clone.
 level_needed_to_man_users = 5
 
+<<<<<<< Updated upstream
 # file size limits in megabytes! only applies when using the community tools.
 max_icon_size = .5
 max_banner_size = 1
@@ -280,6 +299,8 @@ max_banner_size = 1
 # This will definitely miss a few people off who just want to sign up without worrying about long passwords.
 minimum_password_length = 7
 
+=======
+>>>>>>> Stashed changes
 # The hard limit for uploading, Will cause an error if this is exceeded. This is set to 15MB by default (15728640)
 DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800
 
@@ -296,6 +317,13 @@ age_allowed = "13"
 
 # brand name currently being implemented throughout templates
 brand_name = "Cedar"
+
+memo_title = 'Cedar-Django'
+memo_msg = """
+<h2>Cedar</h2>
+<p>what</p>
+<h2>Why is this person rehosting it?</h2>
+<p>im bored</p>"""
 
 # This option enables some production-specific pages
 # and routines, such as HTTPS scheme redirection and

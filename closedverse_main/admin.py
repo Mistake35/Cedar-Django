@@ -126,11 +126,6 @@ class AdsAdmin(admin.ModelAdmin):
 class InvitesAdmin(admin.ModelAdmin):
 		raw_id_fileds = ('id', 'created', 'creator')
 
-class WelcomemsgAdmin(admin.ModelAdmin):
-		raw_id_fileds = ('id', 'created', 'message', )
-		list_display = ('Title', 'message', 'show', 'order', 'created', )
-		actions = [Hide_Memo, Show_Memo]
-
 class YeahAdmin(admin.ModelAdmin):
 		raw_id_fields = ('by', 'post', 'comment', )
 		list_display = ('by', 'post', 'comment', )
@@ -140,10 +135,14 @@ class HistoryAdmin(admin.ModelAdmin):
 		raw_id_fields = ('user',)
 		list_display = ('id', 'user')
 
+class RoleAdmin(admin.ModelAdmin):
+		exclude = ('is_static', )
+
 #class BlockAdmin(admin.ModelAdmin)
 
 admin.site.unregister(Group)
 
+admin.site.register(models.Role, RoleAdmin)
 admin.site.register(models.User, UserAdmin)
 admin.site.register(models.Profile, ProfileAdmin)
 admin.site.register(models.Community, CommunityAdmin)
@@ -158,6 +157,7 @@ admin.site.register(models.ProfileHistory, HistoryAdmin)
 
 admin.site.register(models.Post, PostAdmin)
 admin.site.register(models.Comment, CommentAdmin)
+<<<<<<< Updated upstream
 admin.site.register(models.Ads, AdsAdmin)
 admin.site.register(models.welcomemsg, WelcomemsgAdmin)
 admin.site.register(models.Yeah, YeahAdmin)
@@ -167,3 +167,15 @@ admin.site.register(models.Friendship, ConversationAdmin)
 admin.site.register(models.Invites, InvitesAdmin)
 admin.site.register(models.Poll)
 admin.site.register(models.PollVote)
+=======
+
+if settings.DEBUG:
+	admin.site.register(models.Yeah)
+	admin.site.register(models.Follow)
+	admin.site.register(models.FriendRequest)
+	admin.site.register(models.Friendship, ConversationAdmin)
+	#admin.site.register(models.Notification)
+	admin.site.register(models.Poll)
+	admin.site.register(models.PollVote)
+admin.site.register(models.Ads, AdsAdmin)
+>>>>>>> Stashed changes

@@ -508,7 +508,7 @@ var Olv = Olv || {};
 			case 500:
 				errmsg = "An error has been encountered in the server.\n";
 				if(a.getResponseHeader('Content-Type').indexOf('html') < 0) {
-					window.tmpUnescapedHtmlForError = errmsg + "<br>Error information is available; please send this to an administrator:<code>" + b.SimpleDialog.htmlLineBreak(a.responseText) + "</pre>\n";
+					window.tmpUnescapedHtmlForError = errmsg + "<br>Error information is available; please send this to a developer:<code>" + b.SimpleDialog.htmlLineBreak(a.responseText) + "</pre>\n";
 					/*if(innerWidth <= 480) {
 						errmsg += a.responseText.substr(0, 400);
 					} else {
@@ -2595,7 +2595,8 @@ var Olv = Olv || {};
 		b.Closed.changesel("news");
 		$('.received-request-button').on('click', function(a) {
 			a.preventDefault()
-			fr = new b.ModalWindow($('div[data-modal-types=accept-friend-request][uuid='+ $(this).parent().parent().attr('id') +']'));fr.open();
+			window.ass = a
+			fr = new b.ModalWindow($('div[data-modal-types=accept-friend-request][data-action="'+ $(this).parent().parent().data('action') +'"]'));fr.open();
 		})
 		$('div[data-modal-types=accept-friend-request] .ok-button.post-button').on('click', function(a){
 					a.preventDefault();
@@ -3339,6 +3340,22 @@ mode_post = 0;
 			});
 		})
 	}),
+	b.router.connect("^/my_blacklist$", function() {
+		$('.received-request-button').on('click', function(a) {
+			a.preventDefault()
+			window.fr = new b.ModalWindow($('div#' + a.originalEvent.target.getAttribute('dataaa')));
+			window.fr.open();
+		});
+		$('div[data-modal-types=post-unblock] input.post-button').on('click', function(g){
+			g.preventDefault();
+					b.Form.toggleDisabled($(this), true);
+					b.Form.post(g.target.form.dataset.action).done(function() {
+						window.fr.close();
+						b.Form.toggleDisabled($(this), false);
+						b.Net.reload();
+				});
+		});
+	}),
 	b.router.connect("^/users/[^\/]+/(tools)$", function(c, d, e) {
         function f(c) {
             var d = a(this)
@@ -3495,7 +3512,7 @@ mode_post = 0;
             		$('.color-thing2').spectrum();
                 b.Net.reload();
                 var updateAvatar = function() {
-                	a('#global-menu-mymenu .icon-container img').attr('src', a('#sidebar-profile-body .icon').attr('src'));
+                  a('#global-menu-mymenu .icon-container .user-icon').attr('src', a('#sidebar-profile-body .icon').attr('src'));
                 	var them = a('[name=theme]').val();
 		              if(them === 'None') {
 		              	toDefault();

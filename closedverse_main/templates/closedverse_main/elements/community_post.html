@@ -1,5 +1,5 @@
 {% if not post.is_rm %}
-{% load closedverse_tags %}<div id="{{ post.unique_id }}" {% if post.spoils and not post.is_mine or not post.creator.is_active %}data-href-hidden{% else %}data-href{% endif %}="{% if post.is_reply %}{% url "main:comment-view" post.id %}{% else %}{% url "main:post-view" post.id %}{% endif %}" class="post post-subtype-default trigger{% if post.spoils and not post.is_mine or not post.creator.is_active or post.user_is_blocked %} hidden test-hidden{% endif %}{% if type == 2 %} post-list-outline{% endif %}" tabindex="0">
+{% load closedverse_tags %}<div id="post-{{ post.id }}" {% if post.spoils and not post.is_mine or not post.creator.is_active %}data-href-hidden{% else %}data-href{% endif %}="{% if post.is_reply %}{% url "main:comment-view" post.id %}{% else %}{% url "main:post-view" post.id %}{% endif %}" class="post post-subtype-default trigger{% if post.spoils and not post.is_mine or not post.creator.is_active or post.user_is_blocked %} hidden test-hidden{% endif %}{% if type == 2 %} post-list-outline{% endif %}" tabindex="0">
   {% if with_community_container %}
   <p class="community-container">
 	{% if post.is_reply %}
@@ -81,7 +81,7 @@
       View all comments ({{ post.number_comments }})
     </div>
 {% endif %}
-  <div id="{{ post.recent_comment.unique_id }}" tabindex="0" class="recent-reply trigger">
+  <div tabindex="0" class="recent-reply trigger">
     {% user_icon_container post.recent_comment.creator post.recent_comment.feeling %}
     <p class="user-name"><a href="{% url "main:user-view" post.recent_comment.creator.username %}">{{ post.recent_comment.creator.nickname }}</a></p>
     <p class="timestamp-container">

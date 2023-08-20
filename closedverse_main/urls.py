@@ -42,6 +42,8 @@ urlpatterns = [
 	url(r'users/'+ username +'/tools$', views.user_tools, name='user-tools'),
 	url(r'users/'+ username +'/tools/meta$', views.user_tools_meta, name='user-tools-meta'),
 	url(r'users/'+ username +'/block$', views.user_addblock, name='user-addblock'),
+	url(r'users/'+ username +'/block_rm$', views.user_rmblock, name='user-rmblock'),
+	url(r'my_blacklist$', views.user_blocklist, name='block-list'),
 	# Communities
 	url(r'communities.search$', views.community_search, name='community-search'),
 	url(r'communities/'+ community +'$', views.community_view, name='community-view'),
@@ -72,8 +74,8 @@ urlpatterns = [
 	url(r'comments/'+ comment +'/change$', views.comment_change, name='comment-change'),
 	url(r'comments/'+ comment +'/rm$', views.comment_rm, name='comment-rm'),
 	# Post-meta: polls
-	url(r'poll/(?P<poll>'+ uuidr +'+)/vote$', views.poll_vote, name='poll-vote'),
-	url(r'poll/(?P<poll>'+ uuidr +'+)/unvote$', views.poll_unvote, name='poll-unvote'),
+	url(r'poll/(?P<poll>[0-9]+)/vote$', views.poll_vote, name='poll-vote'),
+	url(r'poll/(?P<poll>[0-9]+)/unvote$', views.poll_unvote, name='poll-unvote'),
 
 	# Notifications
 	url(r'alive$', views.check_notifications, name='check-notifications'),
@@ -87,7 +89,7 @@ urlpatterns = [
 	url(r'pref$', views.prefs, name='prefs'),
 	url(r'settings/profile$', views.profile_settings, name='profile-settings'),
 	url(r'messages/?$', views.messages, name='messages'),
-	url(r'messages/(?P<message>'+ uuidr +'+)/rm$', views.message_rm, name='message-delete'),
+	url(r'messages/(?P<message>[0-9]+)/rm$', views.message_rm, name='message-delete'),
 	url(r'messages/'+ username +'$', views.messages_view, name='messages-view'),
 	url(r'messages/'+ username +'/read$', views.messages_read, name='messages-read'),
 
@@ -107,13 +109,6 @@ urlpatterns = [
 	url(r'help/login/?$', views.help_login, name='help-login'),
 	url(r'help/whatads/?$', views.whatads, name='what-ads'),
 	url(r'why/?$', views.help_why, name='help-why'),
-	
-
-	# Util, right now we are away from the primary appo
-	url(r'origin$', views.origin_id, name='origin-id-get'),
-	# :^)
-	#url(r'openverse.png', views.openverse_logo, name='openverse-logo'),
-
 ]
 # + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 # serve static and media i think???? mighTTT???????

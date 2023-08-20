@@ -3,61 +3,50 @@
 <div class="main-column"><div class="post-list-outline">
 <h2 class="label">Change settings for {{ user.username }}</h2>
 <form class="setting-form" method="post" action={% url "main:user-tools-set" user.username %}>
+	<p>Yes, this form is now ugly, but it's way more powerful.</p>
 		<li class="setting">
 		{% user_sidebar_info user %}
-		<p class="settings-label">Set Username:</p>
-		<div class="center center-input">
-			<input type="text" name="username" maxlength="32" placeholder="New Username" value="{{ user.username }}">
-		</div>
-			<p class="note">Change the account username here.<br />If you need to change this, make sure the user is aware of the change, otherwise they won't be able to log in.</p>
+		
+		{% for field in user_form %}
+			<li class='setting'>
+				{% if field.field.widget.input_type == 'checkbox' %}
+					<p>&nbsp;</p>
+					{{ field }}{{ field.label_tag }}
+				{% elif field.field.widget.input_type == 'number' %}
+				<p class='settings-label'>{{ field.label_tag }}</p>
+				{{ field }}
+				{% else %}
+					<p class='settings-label'>{{ field.label_tag }}</p>
+					<div class="center-input">{{ field }}</div>
+				{% endif %}
+				<p class='note'>{{ field.help_text }}</p>
+				</li>
+		{% endfor %}
+
+		{% for field in profile_form %}
+			<li class='setting'>
+				{% if field.field.widget.input_type == 'checkbox' %}
+					<p>&nbsp;</p>
+					{{ field }}{{ field.label_tag }}
+				{% elif field.field.widget.input_type == 'number' %}
+				<p class='settings-label'>{{ field.label_tag }}</p>
+				{{ field }}
+				{% else %}
+					<p class='settings-label'>{{ field.label_tag }}</p>
+					<div class="center-input">{{ field }}</div>
+				{% endif %}
+				<p class='note'>{{ field.help_text }}</p>
+				</li>
+		{% endfor %}
+		
 			</li>
-			</li>
-	  <li class="setting-profile-comment">
-		<p class="settings-label">Profile comment:</p>
-		<textarea class="textarea" name="profile_comment" maxlength="2200" placeholder="Profile comment">{{ profile.comment }}</textarea>
-		<p class="note">In case you need to change something in this person's profile comment, you can do so here.</p>
-	  </li>
-			<li class="setting">
-		<p class="settings-label">Set Nickname:</p>
-		<div class="center center-input">
-			<input type="text" name="nickname" maxlength="32" placeholder="New Username" value="{{ user.nickname }}">
-		</div>
-			<p class="note">Change the account nickname here</p>
-			</li>
-			<li class="setting">
-		<p class="settings-label">Specify warning or ban reason:</p>
-		<div class="center center-input">
-			<input type="text" name="warned_reason" maxlength="400" placeholder="Reason" value="{% if user.warned_reason %}{{ user.warned_reason }}{% endif %}">
-		</div>
-			<p class="note">If you are going to warn or disable someone, PLEASE SPECIFY WHY HERE!<br />Nothing feels worse than to get banned or warned without knowing why.</p>
-			<input type="checkbox" name="warned" {% if user.warned %}checked{% endif %}>Show warning
-			</li>
-			<li class="setting">
-			<p class="settings-label">Account restrictions:</p>
-			<input type="checkbox" name="active" {% if not user.active %}checked{% endif %}>Disable account:
-			<p class="note">Check this setting to disable the account and prevent new accounts from being made. This is basically the main way to ban people. Remember to specify a reason for doing this.</p>
-			<p>&nbsp;</p>
-			<input type="checkbox" name="cannot_edit" {% if profile.cannot_edit %}checked{% endif %}>Lock user settings:
-			<p class="note">If you need to lock someone's profile settings, you can do that here!</p>
-			<input type="number" name="post_limit" min="0" max="999" value="{{ profile.limit_post }}"> Post limit:
-			<p class="note">If you need to set a post limit for someone, you can do that here, Set this back to "0" to remove the restriction.</p>
-			<input type="checkbox" name="let_freedom" {% if not profile.let_freedom %}checked{% endif %}>Restrict image posting:
-			<p class="note">If you need to prevent someone from posting images and URLs, you can do that here. This will also prevent this user from making new accounts on the same IP address.</p>
-			<input type="checkbox" name="can_invite" {% if not user.can_invite %}checked{% endif %}>Restrict invite creation:
-			<p class="note">This site has an invitation function. If this invite function is active, users will need a code to sign up. Every user can make a code as long as they are allowed to do so. Check this box to prevent this user from making invites.</p>
-			</li>
-			<ul>
 			<li class="setting">
 			<p class="settings-label">Purge content:</p>
-			<input name="purge_posts" type="checkbox" />Purge posts:
-			<p class="note">Remove all posts from this user.</p>
-			<input name="purge_comments" type="checkbox" />Purge comments:
-			<p class="note">Remove all comments from this user.</p>
-			<p>&nbsp;</p>
-			<input name="restore_content" type="checkbox" />Restore comments and posts:
-			<p class="note">Restore purged comments and posts from this user.</p>
+			{% for field in purge_form %}
+				{{ field }}{{ field.label_tag }}
+				<p class='note'>{{ field.help_text }}</p>
+			{% endfor %}
 			</li>
-			</ul>
 			<li class="setting">
 			<div class="center center-input">
 			<p class="settings-label">Metadata:</p>
@@ -70,6 +59,7 @@
 			<a class='button' href="{% url "main:user-tools-meta" user.username %}">View private info</a>
 			{% endif %}
 			</div>
+			</li>
 		{% if accountmatch %}
 			<h3>Account(s) found with the same IP address.</h3>
 			<div class="user-data">
@@ -82,6 +72,7 @@
 			</table>
 			</div>
 		{% endif %}
+		
 		{% if seen_by %}
 			<h3>Account viewed by:</h3>
 			<div class="user-data">
@@ -99,6 +90,7 @@
 				</table>
 			</div>
 		{% endif %}
+		
 		{% if has_seen %}
 			<h3>This user has viewed:</h3>
 			<div class="user-data">
@@ -116,11 +108,11 @@
 				</table>
 			</div>
 		{% endif %}
+		
 			</li>
 		{% csrf_token %}
 		<div class="form-buttons">
 			<input type="submit" class="black-button apply-button" value="Save">
-			<p class="note">More settings will be added soon!</p>
 		</div>
 </form></div></div>
 {% endblock %}

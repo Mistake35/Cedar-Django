@@ -3,9 +3,9 @@
 <div class="main-column center">
     <div class="post-list-outline login-page">
         <form method="post">
-			<img src="{% static "img/menu-logo.svg" %}">
-			<h1 class="lh">Sign In</h1>
-			<h2 class="lh">Please sign in to access {{ brand_name }}.</h2>
+			<img src="{{ brand_logo }}">
+			<p class="lh">Log In</p>
+			<p>Sign in to access this instance of {{ brand_name }}</p>
 			<div class="login-box">
     			<h3 class="label"><input type="text" class="auth-input" name="username" maxlength="32" placeholder="Username"></h3>
     			<h3 class="label"><input type="password" class="auth-input" name="password" maxlength="32" placeholder="Password"></h3>
@@ -15,18 +15,17 @@
 			<p class="red" style="margin-bottom:6px"></p>
 
 			<button type="submit" class="black-button">Sign In</button>
-
-			{% if allow_signups %}
 			<div class="ll">
-				<p>Can't remember your password?  <a href="{% url "main:forgot-passwd" %}"> Reset it here!</a></a></p>
-			    <p>If you don't have an account, you're in luck! <a href="{% url "main:signup" %}"> You can create an account there.</a></a></p>
-			</div>
-			{% endif %}
-			{% if not allow_signups %}
-			<div class="ll">
+				{% if allow_signups %}
+				<p>If you don't have an account, <a href="{% url "main:signup" %}"><b>sign up</b> here.</a></p>
+				{% else %}
 			    <p>Signing up is disabled for now, check back later.</p>
+				{% endif %}
+				{% if reset_supported %}
+				<p>If you forgot your password, <a href="{% url "main:forgot-passwd" %}"><b>reset</b> it here.</a></p>
+				{% endif %}
+				<br><p>If you need help with logging in, see the <a href="{% url "main:help-login" %}"><b>login help</b></a> page.</p>
 			</div>
-			{% endif %}
 		</form>
 	</div>
 </div>

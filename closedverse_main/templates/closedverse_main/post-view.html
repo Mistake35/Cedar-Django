@@ -10,6 +10,7 @@
     </h1>
   </header>
   {% if post.is_mine or post.can_rm %}
+  {% if user.is_active %}
 	<div class="edit-buttons-content">
 	  <button type="button" class="symbol button edit-button rm-post-button" data-action="{% url "main:post-rm" post.id %}"><span class="symbol-label">Delete</span></button>
 	  {% if post.is_mine and not post.has_edit %}
@@ -22,6 +23,7 @@
 	  <button type="button" class="symbol button edit-button lock-comments-button" data-action="{% url "main:lock-the-comments" post.id %}"><span class="symbol-label">Lock comments</span></button>
 	  {% endif %}
     </div>
+	{% endif %}
 {% endif %}
 
   <div class="user-content">
@@ -70,7 +72,7 @@
 	      {% endif %}
 		  
 		  {% if post.poll %}
-		  <div class="post-poll{% if post.poll.has_vote %} selected{% endif %}" data-action="{% url "main:poll-vote" post.poll.unique_id %}" data-action-unvote="{% url "main:poll-unvote" post.poll.unique_id %}">
+		  <div class="post-poll{% if post.poll.has_vote %} selected{% endif %}" data-action="{% url "main:poll-vote" post.poll.id %}" data-action-unvote="{% url "main:poll-unvote" post.poll.id %}">
 			<a class="poll-votes">{{ post.poll.num_votes }} vote{% if not post.poll.num_votes == 1 %}s{% endif %}</a>
 				<div class="poll-options{% if post.screenshot %} with-background" style="background-image:url('{{ post.screenshot }}')"
 <div class="poll-background" style="width:50%"></div>{% else %}">{% endif %}

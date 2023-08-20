@@ -10,7 +10,7 @@
 	<li class="setting-community-name">
 	<p class="settings-label">Set name:</p>
 		<div class="center center-input">
-			<input type="text" name="community_name" maxlength="32" placeholder="New Name" value="{{ community.name }}">
+			<input type="text" name="community_name" maxlength="64" placeholder="New Name" value="{{ community.name }}">
 		</div>
 	</li>
 	<li class="setting-community-description">
@@ -32,7 +32,11 @@
 		<input accept="image/gif, image/png, image/webp, image/jpeg, image/jpg, image/svg+xml, image/bmp" type="file" style="display: none;" name="community_banner" onchange="loadFile(event)" id="upload-file">
 	  </label>
 	  </li>
+<<<<<<< Updated upstream
 	  {% endif %}
+=======
+	{% endif %}
+>>>>>>> Stashed changes
 	  <li>
 	  <p>&nbsp;</p>
 	  <input type="checkbox" name="force_login" {% if  community.require_auth %}checked{% endif %}>Require login:

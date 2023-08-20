@@ -3,7 +3,7 @@
 <div class="main-column center">
     <div class="post-list-outline login-page">
         <form method="post" onload="">
-			<img src="{% static "img/menu-logo.svg" %}">
+			<img src="{{ brand_logo }}">
 			<p class="lh">Sign Up</p>
 			<p>Create a {{ brand_name }} account to make posts and comments to various communities, give Yeahs to other users' content, and interact with other members of the {{ brand_name }} community.</p><br>
 			<p>Please follow <a href="{% url "main:help-rules" %}">our rules</a>. If you don't, be careful with your behavior.<br><br>You <strong>must</strong> be {{ age }} years of age or older to join, no exceptions.<br>If you are suspected to be younger than {{ age }} years old, we will ban you until you're {{ age }}.</p>
