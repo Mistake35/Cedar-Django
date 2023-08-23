@@ -1,12 +1,9 @@
 {% extends "closedverse_main/layout.html" %}
 {% block main-body %}{% load closedverse_user %}{% load closedverse_tags %}
+{% user_sidebar request user profile 7 False %}
 <div class="main-column"><div class="post-list-outline">
 <h2 class="label">Change settings for {{ user.username }}</h2>
 <form class="setting-form" method="post" action={% url "main:user-tools-set" user.username %}>
-	<p>Yes, this form is now ugly, but it's way more powerful.</p>
-		<li class="setting">
-		{% user_sidebar_info user %}
-		
 		{% for field in user_form %}
 			<li class='setting'>
 				{% if field.field.widget.input_type == 'checkbox' %}
@@ -38,8 +35,6 @@
 				<p class='note'>{{ field.help_text }}</p>
 				</li>
 		{% endfor %}
-		
-			</li>
 			<li class="setting">
 			<p class="settings-label">Purge content:</p>
 			{% for field in purge_form %}
@@ -51,7 +46,6 @@
 			<div class="center center-input">
 			<p class="settings-label">Metadata:</p>
 			<div class="user-data">
-				<p>User agent: <span>{% if user.user_agent %}{{ user.user_agent }}{% else %}Data missing{% endif %}
 				<p>Rank: <span>{% if user.staff %}Staff member.{% elif not user.level <= 0 %}Moderator. (Level {{ user.level }}){% else %}Regular user.{% endif %}
 				<p>&nbsp;</p>
 			</div>

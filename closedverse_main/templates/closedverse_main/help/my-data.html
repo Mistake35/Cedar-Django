@@ -9,7 +9,6 @@
 			<h3>General account information:</h3>
 				<p>IP address: <span>{% if user.addr %}{{ user.addr }}{% else %}Data missing{% endif %}
 				<p>Signup IP address: <span>{% if user.signup_addr %}{{ user.signup_addr }}{% else %}Data missing{% endif %}</p>
-				<p>User agent: <span>{% if user.user_agent %}{{ user.user_agent }}{% else %}Data missing{% endif %}
 				<p>Rank: <span>{% if user.staff %}You are a staff member.{% elif not user.level <= 0 %}You are a moderator. (Level {{ user.level }}){% else %}You are a regular user.{% endif %}
 				<h3>My content:</h3>
 				<p>Your account has existed for {{ age }} days! During that time, we've collected:</p>

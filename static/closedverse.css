@@ -144,6 +144,12 @@ input.disabled {
 .green {
   color: green !important;
 }
+.warning-reason {
+  margin-top: 6px;
+}
+.warning-note {
+  margin-top: 6px;
+}
 body {
   font-size: 14px;
   text-align: center;
@@ -1943,6 +1949,9 @@ font-size: 18px;
 .button-wiiu:hover {
   background: #1088b6;
 }
+.list .bigger {
+  padding: 29px;
+}
 .list > li,
 .list > div,
 .list > a,
@@ -3384,6 +3393,18 @@ border-top: 1px solid var(--theme, #94ff3d);
 }
 .sidebar-setting .sidebar-menu-empathies:before {
   content: "e";
+  color: var(--theme, #5ac800);
+}
+.sidebar-setting .sidebar-admin-settings:before {
+  content: "y";
+  color: var(--theme, #5ac800);
+}
+.sidebar-setting .sidebar-admin-warnings:before {
+  content: "n";
+  color: var(--theme, #5ac800);
+}
+.sidebar-setting .sidebar-admin-bans:before {
+  content: "x";
   color: var(--theme, #5ac800);
 }
 .sidebar-setting .sidebar-menu-replies:before {

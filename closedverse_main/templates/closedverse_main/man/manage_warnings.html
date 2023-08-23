@@ -1,0 +1,49 @@
+{% extends "closedverse_main/layout.html" %}
+{% block main-body %}{% load closedverse_user %}{% load closedverse_tags %}
+{% user_sidebar request user profile 8 False %}
+<div class="main-column"><div class="post-list-outline">
+<h2 class="label">Send a warning to {{ user.username }}</h2>
+<form class="setting-form" method="post" action={% url "main:user-tools-warnings" user.username %}>
+		<li class="setting">
+        <p class="settings-label">Reasoning:</p>
+		{{ form.reason }}
+		<p class='note'>Warnings will show as notifications. {{ user.username }} will not be able to post, comment, or message another user until this notification is seen. {{ user.username }} will not see who sent this warning.</p>
+		</li>
+		<div class="user-data">
+		{% if unread_warnings %}<li>
+		<p class='setting'>Warnings that have not been read yet:<p>
+		<table style="width:100%">
+				<tr>
+					<th>Time</th>
+					<th>Incident</th>
+				</tr>
+				{% for Notifications in unread_warnings %}
+				<tr>
+					<td>{{ Notifications.created }}</td>
+					<td>{{ Notifications.context_warning.reason }}</td>
+				</tr>
+				{% endfor %}
+			</table>{% endif %}
+			</li>{% if all_warnings %}
+		<p class='setting'>Incident history:<p>
+		<table style="width:100%">
+				<tr>
+					<th>Time</th>
+					<th>Issued by</th>
+					<th>Incident</th>
+				</tr>
+				{% for Warning in all_warnings %}
+				<tr>
+					<td>{{ Warning.created }}</td>
+					<td>{{ Warning.by }}</td>
+					<td>{{ Warning.reason }}</td>
+				</tr>
+				{% endfor %}
+			</table>{% endif %}
+			</div>
+		{% csrf_token %}
+		<div class="form-buttons">
+			<input type="submit" class="button apply-button" value="Send warning to {{ user.username }}">
+		</div>
+</form></div></div>
+{% endblock %}

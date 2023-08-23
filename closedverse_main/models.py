@@ -42,13 +42,12 @@ class UserManager(BaseUserManager):
 		user.save(using=self._db)
 		return user
 
-	def closed_create_user(self, username, password, email, addr, signup_addr, user_agent, nick, nn, gravatar):
+	def closed_create_user(self, username, password, email, addr, signup_addr, nick, nn, gravatar):
 		user = self.model(
 		username = username,
 		nickname = util.filterchars(nick),
 		addr = addr,
 		signup_addr = signup_addr,
-		user_agent = user_agent,
 		email = email,
 		)
 		profile = Profile.objects.model()
@@ -125,7 +124,7 @@ class Role(models.Model):
 	id = models.AutoField(primary_key=True)
 	# determines whether to fetch role from static or media, for built-in roles
 	is_static = models.BooleanField(default=False)
-	image = models.ImageField(upload_to='roles/', max_length=100, help_text='Upload an icon that will show on the top right of one\'s profile.')
+	image = models.ImageField(upload_to='roles/', max_length=100, help_text='Upload an icon that will show on the top left of one\'s profile. A 22x22 image works best!')
 	organization = models.CharField(max_length=255, blank=True, null=True, help_text='Text that shows above one\'s username')
 
 	def __str__(self):
@@ -143,39 +142,26 @@ class User(AbstractBaseUser):
 	nickname = models.CharField(max_length=64, null=True)
 	password = models.CharField(max_length=128)
 	email = models.EmailField(null=True, blank=True, default='')
-	has_mh = models.BooleanField(default=False)
+	has_mh = models.BooleanField(default=False, help_text='Don\'t touch this. This is if the user\'s avatar is set to a Mii.')
 	avatar = models.CharField(max_length=1200, blank=True, default='')
 	theme = ColorField(blank=True, null=True)
 	# LEVEL: 0-1 is default, everything else is just levels
-	level = models.SmallIntegerField(default=0)
-	# ROLE: This doesn't have anything
-<<<<<<< Updated upstream
-	role = models.SmallIntegerField(default=0, choices=((0, 'normal'), (1, 'bot'), (2, 'administrator'), (3, 'moderator'), (4, 'openverse'), (5, 'donator'), (6, 'cool'), (7, 'urapp'), (8, 'owner'), (9, 'badgedes'), (10, 'jack'), (11, 'verified'),))
-=======
-	#role = models.SmallIntegerField(default=0, choices=((0, 'normal'), (1, 'bot'), (2, 'administrator'), (3, 'moderator'), (4, 'openverse'), (5, 'donator'), (6, 'cool'), (7, 'urapp'), (8, 'owner'), (9, 'badgedes'), (10, 'jack'), (11, 'verified'),))
+	level = models.SmallIntegerField(default=0, help_text='The rank of the user, \"0\" is by default. Users with a high enough rank will be able to manage users.')
 	role = models.ForeignKey(Role, blank=True, null=True, on_delete=models.SET_NULL, help_text='This will show a funny badge and text on this user\'s profile. This does not grant the user any additional power and is only visual.')
->>>>>>> Stashed changes
 	addr = models.CharField(max_length=64, null=True, blank=True)
 	signup_addr = models.CharField(max_length=64, null=True, blank=True)
-	user_agent = models.TextField(null=True, blank=True)
 	# C Tokens are things that let you make communities and shit.
-<<<<<<< Updated upstream
-	c_tokens = models.IntegerField(default=1)
-	protect_data = models.BooleanField(default=False)
-=======
 	c_tokens = models.IntegerField(default=1, help_text='How many communities should this user be allowed to make?')
-	protect_data = models.BooleanField(default=False, null=True, help_text='Prevent people from lookin\' at private data for this user.')
->>>>>>> Stashed changes
 	
 	# Things that don't have to do with auth lol
-	hide_online = models.BooleanField(default=False)
+	hide_online = models.BooleanField(default=False, help_text='If this is ticked, the user has opted to hide their online status.')
 	color = ColorField(default='', null=True, blank=True)
 	
-	staff = models.BooleanField(default=False)
-	active = models.BooleanField(default=True)
-	can_invite = models.BooleanField(default=True)
-	warned = models.BooleanField(default=False)
-	warned_reason = models.CharField(blank=True, null=True, max_length=600)
+	staff = models.BooleanField(default=False, help_text='Allow this user to access the admin panel you\'re using right now?')
+	active = models.BooleanField(default=True, help_text='If this is off, the user is basically banned and can\'t do shit here')
+	can_invite = models.BooleanField(default=True, help_text='Can this user invite new users? This does not matter unless the invite system is turned on.')
+	warned = models.BooleanField(default=False, help_text='Shows an annoying fucking warning box on the front page.')
+	warned_reason = models.CharField(blank=True, null=True, max_length=600, help_text='This string will show if the user is banned, or warned.')
 	bg_url = models.CharField(max_length=300, null=True, blank=True)
 	
 	is_anonymous = False
@@ -209,12 +195,6 @@ class User(AbstractBaseUser):
 		return self.warned
 	def get_warned_reason(self):
 		return self.warned_reason
-	"""
-	def set_password(self, raw_password):
-		self.password = bcrypt_sha256.using(rounds=13).hash(raw_password)
-	def check_password(self, raw_password):
-		return bcrypt_sha256.using(rounds=13).verify(raw_password, hash=self.password)
-	"""
 	def profile(self, thing=None):
 		# If thing is specified, that field is retrieved
 		if thing:
@@ -236,6 +216,8 @@ class User(AbstractBaseUser):
 		except:
 			return None
 		return infodecode[0]
+	def unread_warning(self):
+		return Notification.objects.filter(type=5, to=self, read=False).exists()
 	def has_plain_avatar(self):
 		if not self.has_mh and '/' in self.avatar and not 'gravatar.com' in self.avatar:
 			return True
@@ -261,25 +243,8 @@ class User(AbstractBaseUser):
 		return int(limit) - recent_posts
 		
 	def get_class(self):
-			"""
-			first = {
-			1: '/s/img/bot.png',
-			2: '/s/img/administrator.png',
-			3: '/s/img/moderator.png',
-			9: '/s/img/badgedes.png',
-			}.get(self.role, '')
-			second = {
-			1: "Bot",
-			2: "Administrator",
-			3: "Moderator",
-			9: "Badge Designer",
-			}.get(self.role, '')
-			"""
-			#if first:
-			#	first = 'official ' + first
 			if not self.role:
 				return [None, None]
-			#first = self.role.image
 			second = self.role.organization
 			first = self.role.image.url
 			if self.role.is_static:
@@ -429,7 +394,7 @@ class User(AbstractBaseUser):
 	def notification_read(self):
 		return self.notification_to.filter(read=False).update(read=True)
 	def get_notifications(self):
-		return self.notification_to.select_related('context_post').select_related('context_comment').select_related('source').filter().order_by('-latest')[0:64]
+		return self.notification_to.select_related('context_post').select_related('context_comment').select_related('context_warning').select_related('source').filter().order_by('-latest')[0:64]
 	def notifications_clean(self):
 		""" Broken - gives OperationError on MySQL
 		notif_get = self.notification_to.all().values_list('id', flat=True)
@@ -616,7 +581,44 @@ class User(AbstractBaseUser):
 		except:
 			return False
 		return user
-		
+
+# This will be a fucking pain in the ass!
+class Ban(models.Model):
+	id = models.AutoField(primary_key=True)
+	created = models.DateTimeField(auto_now_add=True)
+	by = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE, related_name='banned_by')
+	to = models.ForeignKey(User, on_delete=models.CASCADE, related_name='banned_user')
+	reason = models.TextField(null=True, blank=True)
+	expiry_date = models.DateTimeField(help_text='The date and time on which this ban will expire, Set this way off into the future if this ban should be permanent')
+	active = models.BooleanField(default=True, help_text='Untick this to disable this ban')
+	
+	def is_expired(self):
+		if timezone.now() > self.expiry_date:
+			return True
+		return False
+	def __str__(self):
+		return "Ban for " + str(self.to)
+
+# The new warning system, Warnings do not contribute to bans, they just show as warnings.
+# Can also be used as a means of reporting incident history.
+class Warning(models.Model):
+	id = models.AutoField(primary_key=True)
+	created = models.DateTimeField(auto_now_add=True)
+	by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='Warned_by', help_text="This is not shown to the recipient")
+	to = models.ForeignKey(User, on_delete=models.CASCADE, related_name='Warned_user')
+	reason = models.TextField(null=True, blank=True)
+	
+	def save(self, *args, **kwargs):
+		# check if the object is being created or updated
+		is_new = self.pk is None 
+		super().save(*args, **kwargs)
+		# create new notification only after new warning is created
+		if is_new:
+			Notification.give_notification(user=self.by, type=5, to=self.to, warning=self)
+
+	def __str__(self):
+		return "Warning for " + str(self.to)
+
 # An invite system, for closed off communities or for whatever reason.
 class Invites(models.Model):
 	id = models.AutoField(primary_key=True)
@@ -640,21 +642,20 @@ class Invites(models.Model):
 class Community(models.Model):
 	id = models.AutoField(primary_key=True)
 	name = models.CharField(max_length=255)
-	description = models.TextField(blank=True, default='')
-	ico = models.ImageField(upload_to='icon/%y/%m/%d/', max_length=100, blank=True, null=True)
-	banner = models.ImageField(upload_to='banner/%y/%m/%d/', max_length=100, blank=True, null=True)
+	description = models.TextField(blank=True)
+	ico = models.ImageField(null=True, blank=True)
+	banner = models.ImageField(null=True, blank=True)
 	# Type: 0 - general, 1 - game, 2 - special 
-	type = models.SmallIntegerField(default=0, choices=((0, 'General'), (1, 'Game'), (2, 'Special'), (3, 'User Community'), (4, 'Hide')))
-	# Platform - 0/none, 1/3DS, 2/Wii U, 3/both
+	type = models.SmallIntegerField(default=0, help_text='The category the community belongs in, setting this to None will remove the community.', choices=((0, 'General'), (1, 'Game'), (2, 'Special'), (3, 'User Community'), (4, 'Hide')))
 	platform = models.SmallIntegerField(default=0, choices=((0, 'none'), (1, '3ds'), (2, 'wii u'), (3, 'switch'), (4, 'both'), (5, 'PC'), (6, 'Xbox'), (7, 'Playstation')))
-	tags = models.CharField(blank=True, null=True, max_length=255, choices=(('announcements', 'main announcement community'), ('changelog', 'main changelog'), ('activity', 'Activity Feed posting community'), ('general', 'General Discussion Community')))
+	tags = models.CharField(blank=True, help_text='Provides special functionality for specific communities.', null=True, max_length=255, choices=(('announcements', 'main announcement community'), ('changelog', 'main changelog'), ('activity', 'Activity Feed posting community'), ('general', 'General Discussion Community')))
 	created = models.DateTimeField(auto_now_add=True)
 	updated = models.DateTimeField(auto_now=True)
-	is_rm = models.BooleanField(default=False)
-	is_feature = models.BooleanField(default=False)
-	require_auth = models.BooleanField(default=False)
-	rank_needed_to_post = models.IntegerField(default=0)
-	creator = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE)
+	is_rm = models.BooleanField(default=False, help_text='Tick this on to remove the community.')
+	is_feature = models.BooleanField(default=False, help_text='Feature this community on the front page where everyone can see it.')
+	require_auth = models.BooleanField(default=False, help_text='Force your users to sign in to view this community.')
+	rank_needed_to_post = models.IntegerField(default=0, help_text='Make admin only communities.')
+	creator = models.ForeignKey(User, blank=True, null=True, help_text='Who owns this community? It\'s highly recommended to not fill this on for general communities. Keep in mind that owners can block others from using communities they own.', on_delete=models.CASCADE)
 
 	objects = PostManager()
 	real = models.Manager()
@@ -668,7 +669,7 @@ class Community(models.Model):
 	def __str__(self):
 		return self.name
 	def icon(self):
-		if self.ico and hasattr(self.ico, 'url'):
+		if self.ico:
 			return self.ico.url
 		else:
 			return settings.STATIC_URL + "img/title-icon-default.png"
@@ -802,6 +803,8 @@ class Community(models.Model):
 			return 6
 		if not request.user.is_active():
 			return 6
+		if request.user.unread_warning():
+			return 13
 		if len(request.POST['body']) > 2200 or (len(request.POST['body']) < 1 and not request.POST.get('_post_type') == 'painting'):
 			return 1
 		upload = None
@@ -866,14 +869,14 @@ class Post(models.Model):
 	url = models.URLField(max_length=1200, null=True, blank=True, default='')
 	spoils = models.BooleanField(default=False)
 	disable_yeah = models.BooleanField(default=False)
-	lock_comments = models.SmallIntegerField(default=0, choices=((0, 'Not locked'), (1, 'Locked by user'), (2, 'Locked by mod')))
+	lock_comments = models.SmallIntegerField(default=0, choices=((0, 'Not locked'), (1, 'Locked by user'), (2, 'Locked by mod')), help_text='People will not be able to comment on posts that are locked.')
 	created = models.DateTimeField(auto_now_add=True)
 	edited = models.DateTimeField(auto_now=True)
-	befores = models.TextField(null=True, blank=True)
-	poll = models.ForeignKey('Poll', null=True, blank=True, on_delete=models.CASCADE)
+	befores = models.TextField(null=True, blank=True, help_text='If this post gets edited, the old body will be here.')
+	poll = models.ForeignKey('Poll', null=True, blank=True, on_delete=models.CASCADE, help_text='A busted ass poll feature that does not work.')
 	has_edit = models.BooleanField(default=False)
-	is_rm = models.BooleanField(default=False)
-	status = models.SmallIntegerField(default=0, choices=post_status)
+	is_rm = models.BooleanField(default=False, help_text='Tick this to hide this post')
+	status = models.SmallIntegerField(default=0, choices=post_status, help_text='Used to distinguish how a post was removed. Our purging feature uses this to determine what posts to restore and what not to.')
 	creator = models.ForeignKey(User, on_delete=models.CASCADE)
 
 	objects = PostManager()
@@ -1044,6 +1047,8 @@ class Post(models.Model):
 			return 6
 		if len(request.POST['body']) > 2200 or (len(request.POST['body']) < 1 and not request.POST.get('_post_type') == 'painting'):
 			return 1
+		if request.user.unread_warning():
+			return 13
 		upload = None
 		drawing = None
 		if request.FILES.get('screen'):
@@ -1145,8 +1150,8 @@ class Comment(models.Model):
 	edited = models.DateTimeField(auto_now=True)
 	befores = models.TextField(null=True, blank=True)
 	has_edit = models.BooleanField(default=False)
-	is_rm = models.BooleanField(default=False)
-	status = models.SmallIntegerField(default=0, choices=post_status)
+	is_rm = models.BooleanField(default=False, help_text='Tick this to hide this comment')
+	status = models.SmallIntegerField(default=0, choices=post_status, help_text='Used to distinguish how a comment was removed. Our purging feature uses this to determine what comments to restore and what not to.')
 	creator = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE)
 
 	objects = PostManager()
@@ -1278,8 +1283,8 @@ class Profile(models.Model):
 	#birthday = models.DateField(null=True, blank=True)
 	id_visibility = models.SmallIntegerField(default=0, choices=visibility)
 	
-	pronoun_is = models.IntegerField(default=0, choices=(
-	(0, "I don't know"), (1, "He/him"), (2, "She/her"), (3, "He/she"), (4, "It"), (5, "They/Them")
+	pronoun_is = models.IntegerField(default=0, help_text='haha attack helicopter.', choices=(
+	(0, "Not specified"), (1, "He/him"), (2, "She/her"), (3, "He/she"), (4, "It"), (5, "They/Them")
 	)) 
 
 	let_friendrequest = models.SmallIntegerField(default=0, choices=visibility)
@@ -1292,11 +1297,11 @@ class Profile(models.Model):
 	favorite = models.ForeignKey(Post, blank=True, null=True, on_delete=models.SET_NULL)
 
 	let_yeahnotifs = models.BooleanField(default=True)
-	let_freedom = models.BooleanField(default=True)
+	let_freedom = models.BooleanField(default=True, help_text='Restrict this user from posting images, videos, URLs, and even making new accounts.')
 	# Todo: When you see this, implement it; make it a bool that determines whether the user should be able to edit their avatar; if this is true and 
 	#let_avatar = models.BooleanField(default=False)
 	# Post limit, 0 for none
-	limit_post = models.SmallIntegerField(default=0)
+	limit_post = models.SmallIntegerField(default=0, help_text='Great for spammers, set to \"0\" to remove the restriction.')
 	# If this is true, the user can't change their avatar or nickname
 	cannot_edit = models.BooleanField(default=False, help_text='Make it so this user cannot change settings.')
 	email_login = models.SmallIntegerField(default=1, choices=((0, 'Do not allow'), (1, 'Okay'), (2, 'Only allow')))
@@ -1389,11 +1394,12 @@ class Notification(models.Model):
 	(2, 'Comment on my post'),
 	(3, 'Comment on others\' post'),
 	(4, 'Follow to me'),
-	(5, 'New Announcement'),
+	(5, 'Warning received'),
 	))
 	merges = models.TextField(blank=True, default='')
 	context_post = models.ForeignKey(Post, null=True, blank=True, on_delete=models.CASCADE)
 	context_comment = models.ForeignKey(Comment, null=True, blank=True, on_delete=models.CASCADE)
+	context_warning = models.ForeignKey(Warning, null=True, blank=True, on_delete=models.CASCADE)
 	
 	created = models.DateTimeField(auto_now_add=True)
 	latest = models.DateTimeField(auto_now=True)
@@ -1401,6 +1407,8 @@ class Notification(models.Model):
 	def __str__(self):
 		return "Notification from " + str(self.source) + " to " + str(self.to) + " with type \"" + self.get_type_display() + "\""
 	def url(self):
+		if self.type == 5:
+			return None
 		what_type = {
 			0: 'main:post-view',
 			1: 'main:comment-view',
@@ -1462,11 +1470,13 @@ class Notification(models.Model):
 			self.source.is_following = False
 	# In the future, please put giving notifications for classes into their respective classes (right now they're in views)
 	@staticmethod
-	def give_notification(user, type, to, post=None, comment=None):
+	def give_notification(user, type, to, post=None, comment=None, warning=None):
 		# Just keeping this simple for now, might want to make it better later
 		# If the user sent a notification to this user at least 5 seconds ago, return False
 		# Or if user is to
 		# Or if yeah notifications are off and this is a yeah notification
+		if type == 5:
+			return user.notification_sender.create(type=type, to=to, context_warning=warning)
 		user_is_self_unk = (not type == 3 and user == to)
 		is_notification_too_fast = (user.notification_sender.filter(created__gt=timezone.now() - timedelta(seconds=5), type=type).exclude(type=4) and not type == 3)
 		user_no_yeahnotif = (not to.let_yeahnotifs() and (type == 0 or type == 1))
@@ -1606,6 +1616,8 @@ class Conversation(models.Model):
 			return 3
 		if len(request.POST['body']) > 50000 or (len(request.POST['body']) < 1 and not request.POST.get('_post_type') == 'painting'):
 			return 1
+		if request.user.unread_warning():
+			return 4
 		upload = None
 		drawing = None
 		if request.FILES.get('screen'):
@@ -1771,10 +1783,11 @@ class UserBlock(models.Model):
 class AuditLog(models.Model):
 	id = models.AutoField(primary_key=True)
 	created = models.DateTimeField(auto_now_add=True)
-	type = models.SmallIntegerField(choices=((0, "Post delete"), (1, "Comment delete"), (2, "User edit"), (3, "Disable comments"), (4, "User delete"), (5, "Image delete"), (6, "Purge 1"), (7, "Purge 2"), (8, "Purge 3"), (9, "Purge 4"), (10, "Purge 5"), (11, "Un-purge 1"), (12, 'Changed server settings'), ))
+	type = models.SmallIntegerField(choices=((0, "Post delete"), (1, "Comment delete"), (2, "User edit"), (3, "Disable comments"), (4, "Community edit"), ))
 	post = models.ForeignKey(Post, related_name='audit_post', null=True, on_delete=models.CASCADE)
 	comment = models.ForeignKey(Comment, related_name='audit_comment', null=True, on_delete=models.CASCADE)
 	user = models.ForeignKey(User, related_name='audit_user', null=True, on_delete=models.CASCADE)
+	community = models.ForeignKey(Community, related_name='audit_community', null=True, on_delete=models.CASCADE)
 	reasoning = models.TextField(null=True, blank=True, default="")
 	by = models.ForeignKey(User, related_name='audit_by', on_delete=models.CASCADE)
 	reversed_by = models.ForeignKey(User, null=True, related_name='audit_reverse_by', on_delete=models.CASCADE)

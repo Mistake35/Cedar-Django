@@ -1,4 +1,4 @@
-from django.http import HttpResponse, HttpResponseNotFound, HttpResponseBadRequest,  HttpResponseServerError, HttpResponseForbidden, JsonResponse
+from django.http import HttpResponse, HttpResponseNotFound, HttpResponseBadRequest,	 HttpResponseServerError, HttpResponseForbidden, JsonResponse
 from django.template import loader
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import Http404
@@ -13,6 +13,7 @@ from django.contrib.auth import update_session_auth_hash
 from django.db.models import Q, Count, Exists, OuterRef
 from django.db.models.functions import Now
 from .models import *
+from .forms import *
 from .util import *
 from closedverse import settings
 import re
@@ -183,69 +184,33 @@ def community_favorites(request):
 	})
 
 def login_page(request):
-	"""Login page! using our own user objects."""
-	# Redirect the user to / if they're logged in, forcing them to log out
-	location = '/'
+	# rn the password form does not take into account if you have the old password format or not.
 	if request.user.is_authenticated:
-		return redirect(location)
+		return redirect('/')
 	if request.method == 'POST':
-		# If we don't have all of the POST parameters we want..
-		if not (request.POST['username'] and request.POST['password']):
-		# then return that.
-			return HttpResponseBadRequest("You didn't fill in all of the fields.")
-		# Now let's authenticate.
-		# Wait, first check if the user exists. Remove spaces from the username, because some people do that.
-		# Hold up, first we need to check proxe.
-		
-		# Uncomment this if you want users to be forbidden from logging in with a proxy.
-		#if settings.CLOSEDVERSE_PROD and settings.DISALLOW_PROXY and iphub(request.META['REMOTE_ADDR']):
-		#	return HttpResponseNotFound("The user doesn't exist.")
-		user = User.objects.authenticate(username=request.POST['username'], password=request.POST['password'])
-		# None = doesn't exist, False = invalid password.
-		if user is None:
-			return HttpResponseNotFound("The user doesn't exist.")
-		else:
-			# Todo: I might want to do some things relating to making models take care of object stuff like this instead of the view, it's totally messed up now.
-			successful = False if user[1] is False or not user[0].is_active() else True
-			LoginAttempt.objects.create(user=user[0], success=successful, user_agent=request.META.get('HTTP_USER_AGENT'), addr=request.META.get('REMOTE_ADDR'))
-			if user[1] == False:
-				# check if a hasher could not be identified due to moving from passlib
-				try:
-					# will throw a ValueError if no hasher is found
-					identify_hasher(user[0].password)
-				except ValueError as e:
-					# error says "Unknown password hashing algorithm ''......", meaning that the password is not converted
-					if '\'\'' in str(e):
-						return HttpResponseBadRequest("The password is either encoded in an unsupported format, or the passwords haven't been updated yet. As part of a recent update, passwords need to be converted - sorry about that. If password resets work, you can use that to make your account usable immediately.")
-					else:
-						return HttpResponseBadRequest("The password is either encoded in an unsupported format, or the settings haven't been updated yet. Please add - or direct the server owner to add - hashers_passlib.bcrypt_sha256 to settings.PASSWORD_HASHERS, and then install django-hashers-passlib. I'm sorry for the inconvenience! If password resets work, you can use that immediately.")
-				else:
-					return HttpResponse("Invalid password.", status=401)
-			elif user[1] == 2:
-				return HttpResponse("This account's password needs to be reset. Contact an admin or reset by email.", status=400)
-			elif not user[0].is_active():
-				return HttpResponseForbidden("This account was disabled.")
-		request.session['passwd'] = user[0].password
-		login(request, user[0])
-
-		# Then, let's get the referrer and either return that or the root.
-		# Actually, let's not for now.
-		#if request.META['HTTP_REFERER'] and "login" not in request.META['HTTP_REFERER'] and request.META['HTTP_HOST'] in request.META['HTTP_REFERER']:
-		#	location = request.META['HTTP_REFERER']
-		#else:
-		if request.GET.get('next'):
-			location = request.GET['next']
-		if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-			# because if you respond to an ajax with a redirect, the response will just be the page, you can't get the redirect value from js
-			return HttpResponse(location)
-		return redirect(location)
+		incorrect_password = False
+		form = LoginForm(request.POST)
+		if form.is_valid():
+			user = User.objects.get(username__iexact=form.cleaned_data['username'])
+			# no longer logs failed logins
+			# do I really want to fix that?
+			LoginAttempt.objects.create(user=user,success=True, user_agent=request.META.get('HTTP_USER_AGENT'),addr=request.META.get('REMOTE_ADDR'))
+			request.session['passwd'] = user.password
+			login(request, user)
+			location = request.GET.get('next', '/')
+			if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+				return HttpResponse(location)
+			return redirect(location)
 	else:
-		return render(request, 'closedverse_main/login_page.html', {
-			'title': 'Log in',
-			'allow_signups': settings.allow_signups,
-			'reset_supported': hasattr(settings, 'DEFAULT_FROM_EMAIL'),
-			#'classes': ['no-login-btn']
-		})
+		form = LoginForm()
+
+	return render(request, 'closedverse_main/login_page.html', {
+		'title': 'Log in',
+		'form': form,
+		'allow_signups': settings.allow_signups,
+		'reset_supported': hasattr(settings, 'DEFAULT_FROM_EMAIL'),
+	})
+
 def signup_page(request):
 	"""Signup page, lots of checks here"""
 	# Redirect the user to / if they're logged in, forcing them to log out
@@ -280,7 +245,6 @@ def signup_page(request):
 
 		if not re.compile(r'^[A-Za-z0-9-._]{1,32}$').match(request.POST['username']) or not re.compile(r'[A-Za-z0-9]').match(request.POST['username']):
 			return HttpResponseBadRequest("Your username either contains invalid characters or is too long (only letters + numbers, dashes, dots and underscores are allowed")
-		
 		# forbidden keywords
 		groups = [
 			[
@@ -305,15 +269,6 @@ def signup_page(request):
 				if keyword in request.POST['username'].lower() or keyword in request.POST['nickname'].lower():
 					# perhaps warn admins at a later time
 					return HttpResponseForbidden(messages[id])
-
-		# this is such a miniscule amount of NNIDs that either an admin or a person could
-		# claim all of them, in which case they could not be reused
-		#for keyword in ['windowscj', 'gabalt']:
-		#	if keyword in request.POST['origin_id'].lower():
-		#		return HttpResponseForbidden("You're very funny. Unfortunately your funniness blah blah blah fuck off.")
-
-		# end of forbidden keywords
-
 		conflicting_user = User.objects.filter(Q(username__iexact=request.POST['username']) | Q(username__iexact=request.POST['username'].replace(' ', '')))
 		if conflicting_user:
 			return HttpResponseBadRequest("A user with that username already exists.")
@@ -369,7 +324,7 @@ def signup_page(request):
 			nick = request.POST['nickname']
 			mii = None
 			gravatar = True
-		make = User.objects.closed_create_user(username=request.POST['username'], password=request.POST['password'], email=request.POST.get('email'), addr=request.META['REMOTE_ADDR'], user_agent=request.META['HTTP_USER_AGENT'], signup_addr=request.META['REMOTE_ADDR'], nick=nick, nn=mii, gravatar=gravatar)
+		make = User.objects.closed_create_user(username=request.POST['username'], password=request.POST['password'], email=request.POST.get('email'), addr=request.META['REMOTE_ADDR'], signup_addr=request.META['REMOTE_ADDR'], nick=nick, nn=mii, gravatar=gravatar)
 		if invited == True:
 			invite.used = True
 			invite.used_by = make
@@ -400,19 +355,11 @@ def forgot_passwd(request):
 		try:
 			user = User.objects.get(email=request.POST['email'])
 		except (User.DoesNotExist, ValueError):
-<<<<<<< Updated upstream
-			return HttpResponseNotFound("There isn't a user with that email address.")
-		try:
-			user.password_reset_email(request)
-		except:
-			return HttpResponseBadRequest("There was an error submitting that.")
-=======
 			return HttpResponseNotFound("The email address could not be found.")
 		try:
 			user.password_reset_email(request)
 		except Exception as error:
 			return HttpResponseBadRequest("There was an error submitting that, sorry! Here's why: " + str(error))
->>>>>>> Stashed changes
 		return HttpResponse("Success! Check your emails, it should have been sent from \"{0}\".".format(settings.DEFAULT_FROM_EMAIL))
 	if request.GET.get('token'):
 		user = User.get_from_passwd(request.GET['token'])
@@ -488,7 +435,7 @@ def user_view(request, username):
 		nickname_old = user.nickname
 		if profile.cannot_edit:
 			return json_response("Not allowed.")
-		if request.POST.get('screen_name') is None or len(request.POST['screen_name']) > 32:
+		if len(request.POST.get('screen_name')) is 0 or len(request.POST['screen_name']) > 32:
 			return json_response('Nickname is too long or too short (length '+str(len(request.POST.get('screen_name')))+', max 32)')
 		if len(request.POST.get('profile_comment')) > 2200:
 			return json_response('Profile comment is too long (length '+str(len(request.POST.get('profile_comment')))+', max 2200)')
@@ -1044,6 +991,7 @@ def community_favorite_rm(request, community):
 	
 def community_tools(request, community):
 	the_community = get_object_or_404(Community, id=community)
+	activity_feed = True if the_community.type == 4 else False
 	if not request.user.is_authenticated:
 		raise Http404()
 	can_edit = the_community.can_edit_community(request)
@@ -1052,77 +1000,17 @@ def community_tools(request, community):
 	return render(request, 'closedverse_main/community_tools.html', {
 	'title': 'Community tools',
 	'community': the_community,
-	'max_icon_size': settings.max_icon_size,
-	'max_banner_size': settings.max_banner_size,
+	'activity_feed': activity_feed,
 	})
-	
+
 def community_tools_set(request, community):
 	if request.method == 'POST':
 		the_community = get_object_or_404(Community, id=community)
-		#do the checks
 		if not request.user.is_authenticated:
 			return HttpResponseForbidden()
 		can_edit = the_community.can_edit_community(request)
 		if not can_edit:
 			return HttpResponseForbidden()
-<<<<<<< Updated upstream
-		if len(request.POST.get('community_name')) == 0 or len(request.POST.get('community_name')) >= 100:
-			return json_response('Your community name is either too short or too long.')
-		if len(request.POST.get('community_description')) >= 1024:
-			return json_response('Your community description is too long.')
-		if int(request.POST.get('community_platform')) >= 8:
-			return json_response('Invalid Platform type.')
-		if the_community.is_rm:
-			return json_response('Community is removed')
-		if the_community.type == 4:
-			return json_response('Community is removed')
-		#do the settings
-		the_community.name = request.POST.get('community_name')
-		the_community.description = request.POST.get('community_description')
-		the_community.platform = (request.POST.get('community_platform') or 0)
-		the_community.require_auth = False if request.POST.get('force_login') is None else True
-		ico = request.FILES.get('community_icon')
-		banner = request.FILES.get('community_banner')
-		#if icon is not set, ignore it
-		if ico != None:
-			#make sure it's an image.
-			if 'image' in ico.content_type:
-			# Set the upload limit in megabytes
-				upload_limit = settings.max_icon_size
-			
-				max_size = upload_limit * 1024 * 1024
-				current_size = ico.size
-				max_mb = max_size / 1024 / 1024
-				if current_size > max_size:
-					return json_response('Your icon is too big! Please upload an image under ' + str(max_mb) + 'MB. (' + str(round(current_size / 1024 / 1024, 3)) + 'MB)')
-				the_community.ico = ico
-			else:
-				return json_response('bad image')
-				
-		if banner != None:
-			if 'image' in banner.content_type:
-			# Set the upload limit in megabytes
-				upload_limit = settings.max_banner_size
-				max_size = upload_limit * 1024 * 1024
-				current_size = banner.size
-				max_mb = max_size / 1024 / 1024
-				if current_size > max_size:
-				# i hate this fucking shit
-					return json_response('Your banner is too big! Please upload an image under ' + str(max_mb) + ' MB. (' + str(round(current_size / 1024 / 1024, 3)) + 'MB)')
-				the_community.banner = banner
-			else:
-				return json_response('bad image')
-				
-		'''
-		if request.FILES.get('community_icon') != None:
-			if
-			the_community.ico = request.FILES.get('community_icon')
-		if request.FILES.get('community_banner') != None:
-			the_community.banner = request.FILES.get('community_banner')
-			'''
-		the_community.save()
-		#AuditLog.objects.create(type=2, user=user, by=request.user, reasoning=request.POST)
-=======
 		form = CommunitySettingForm(request.POST, request.FILES, request , instance=the_community)
 		if not form.is_valid():
 			return json_response(form.errors.as_text())
@@ -1139,7 +1027,6 @@ def community_tools_set(request, community):
 			community.banner = upload
 		community.save()
 		AuditLog.objects.create(type=4, community=community, user=community.creator, by=request.user)
->>>>>>> Stashed changes
 		return HttpResponse()
 	else:
 		raise Http404()
@@ -1202,6 +1089,7 @@ def post_create(request, community):
 			10: "No mr white, you can't make a post entirely consistant of spaces",
 			11: "The video you've uploaded is invalid.",
 			12: "Please don't post Zalgo text.",
+			13: "Please check your notifications.",
 			}.get(new_post))
 		# Render correctly whether we're posting to Activity Feed
 		if community.is_activity():
@@ -1335,6 +1223,7 @@ def post_comments(request, post):
 			3: "You're making comments too fast, wait a few seconds and try again.",
 			6: "Not allowed.",
 			12: "Please don't post Zalgo text.",
+			13: "Please check your notifications.",
 			}.get(new_post))
 		# Give the notification!
 		if post.is_mine(request.user):
@@ -1670,6 +1559,7 @@ def messages_view(request, username):
 			1: "Your message is too long ("+str(len(request.POST['body']))+" characters, 2200 max).",
 			2: "The image you've uploaded is invalid.",
 			3: "Sorry, but you're sending messages too fast.",
+			4: "Please check your notifications.",
 			6: "Not allowed.",
 			}.get(new_post))
 		friendship.update()
@@ -1742,18 +1632,19 @@ def prefs(request):
 	arr = [profile.let_yeahnotifs, lights, request.user.hide_online]
 	return JsonResponse(arr, safe=False)
 	
+@login_required
 def user_tools(request, username):
-	if not request.user.is_authenticated:
-		raise Http404()
 	if not request.user.can_manage():
 		return HttpResponseForbidden()
 	user = get_object_or_404(User, username__iexact=username)
 	profile = user.profile()
+	profile.setup(request)
+	
 	# check if the requesting user is allowed to change someone
 	if user.has_authority(request.user):
 		return HttpResponseForbidden()
-	user_form = UserForm(instance=user)
-	profile_form = ProfileForm(instance=profile)
+	user_form = User_tools_Form(instance=user)
+	profile_form = Profile_tools_Form(instance=profile)
 	purge_form = PurgeForm()
 	seen_by = MetaViews.objects.filter(target_user=user).distinct().order_by('-id')[:10]
 	has_seen = MetaViews.objects.filter(from_user=user).distinct().order_by('-id')[:10]
@@ -1774,18 +1665,15 @@ def user_tools(request, username):
 	'accountmatch': accountmatch,
 	'min_lvl_metadata_perms': settings.min_lvl_metadata_perms,
 	})
-	
+@login_required
 def user_tools_meta(request, username):
-	if not request.user.is_authenticated:
-		raise Http404()
 	if not request.user.can_manage():
 		return HttpResponseForbidden()
-	if request.user.level < settings.min_lvl_metadata_perms:
+	if request.user.level < settings.min_lvl_metadata_perms or settings.min_lvl_metadata_perms == 0:
 		return HttpResponseForbidden()
 	user = get_object_or_404(User, username__iexact=username)
 	profile = user.profile()
-	if user.protect_data:
-		return HttpResponseForbidden()
+	profile.setup(request)
 	# check if the requesting user is allowed to view someone
 	if user.has_authority(request.user):
 		return HttpResponseForbidden()
@@ -1821,7 +1709,69 @@ def user_tools_meta(request, username):
 	'profile': profile,
 	'min_lvl_metadata_perms': settings.min_lvl_metadata_perms,
 	})
-	
+
+@login_required
+def user_tools_warnings(request, username):
+	user = get_object_or_404(User, username__iexact=username)
+	profile = user.profile()
+	profile.setup(request)
+	if not request.user.can_manage():
+		return HttpResponseForbidden()
+	if user.has_authority(request.user):
+		return HttpResponseForbidden()
+	if request.method == 'POST':
+		form = Give_warning_form(request.POST)
+		if form.is_valid():
+			warning = form.save(commit=False)
+			warning.to = user
+			warning.by = request.user
+			warning.save()
+			return redirect('main:user-view', user)
+	unread_warnings = Notification.objects.filter(type=5, to=user, read=False)[:3]
+	all_warnings = Warning.objects.filter(to=user)[:8]
+	form = Give_warning_form()
+	return render(request, 'closedverse_main/man/manage_warnings.html', {
+	'user': user,
+	'unread_warnings': unread_warnings,
+	'all_warnings': all_warnings,
+	'profile': profile,
+	'form': form,
+	})
+
+@login_required
+def user_tools_bams(request, username):
+	user = get_object_or_404(User, username__iexact=username)
+	profile = user.profile()
+	profile.setup(request)
+	active_bans = user.banned_user.filter(active=True).exclude(expiry_date__lte=timezone.now())
+	if active_bans:
+		banned = True
+		active_ban = active_bans.first()
+	else:
+		banned = False
+		active_ban = None
+	if not request.user.can_manage():
+		return HttpResponseForbidden()
+	if user.has_authority(request.user):
+		return HttpResponseForbidden()
+	if request.method == 'POST':
+		form = Give_Ban_Form(request.POST)
+		if form.is_valid():
+			ban = form.save(commit=False)
+			ban.to = user
+			ban.by = request.user
+			ban.save()
+			return redirect('main:user-view', user)
+	if not banned:
+		form = Give_Ban_Form()
+	else: form = None
+	return render(request, 'closedverse_main/man/manage_bans.html', {
+	'user': user,
+	'banned': banned,
+	'active_ban': active_ban,
+	'profile': profile,
+	'form': form,
+	})
 
 def user_tools_set(request, username):
 	if request.method == 'POST':
@@ -1835,8 +1785,8 @@ def user_tools_set(request, username):
 		if user.has_authority(request.user):
 			return HttpResponseForbidden()
 
-		user_form = UserForm(request.POST, instance=user)
-		profile_form = ProfileForm(request.POST, instance=profile)
+		user_form = User_tools_Form(request.POST, instance=user)
+		profile_form = Profile_tools_Form(request.POST, instance=profile)
 		purge_form = PurgeForm(request.POST)
 		
 		if purge_form.is_valid():
@@ -1967,50 +1917,26 @@ def my_data(request):
 	})
 @login_required
 def change_password(request):
-	if not request.user.is_authenticated:
-		raise Http404()
 	user = request.user
-	return render(request, 'closedverse_main/change-password.html', {
-		'user': user,
-		'title': 'Change Password',
-	})
-def change_password_set(request):
 	if request.method == 'POST':
-		if not request.user.is_authenticated:
-			raise Http404()
-		user = request.user
-		old = request.POST.get('old-password')
-		new = request.POST.get('new-password')
-		confirm = request.POST.get('confirm-password')
-		# make sure they are filled out
-		# a bit inefficient but who cares?
-		if not old:
-			return json_response('Please specify your old password.')
-		if not new:
-			return json_response('Please specify your new password.')
-		if not confirm:
-			return json_response('Please specify your new password again.')
-		if not new == confirm:
-			return json_response('Passwords do not match')
-		if old == new:
-			return json_response('The old password and new password can\'t be the same.')
-		if not user.check_password(old):
-			return json_response('The old password specified does not match the user\'s password. Enter the password you use as of right now.')
-		# do the length check
-		#if len(new) < settings.minimum_password_length:
-		#	return json_response('The new password must be at least ' + str(settings.minimum_password_length) + ' characters long.')
-		try:
-			validate_password(new, user=user)
-		except ValidationError as error:
-			return json_response(error)
-		# do the thing
-		user.set_password(new)
-		user.save()
-		update_session_auth_hash(request, user)
-		return json_response("Success! Now you can log in with your new password!")
+		form = Settomgs_Change_Password(request.POST)
+		if form.is_valid():
+			old = form.cleaned_data.get('Old_Password')
+			new = form.cleaned_data.get('New_Password')
+			if not user.check_password(old):
+				return json_response('The old password specified does not match the user\'s password. Enter the password you use as of right now.', "Invalid old password")
+			user.set_password(new)
+			user.save()
+			update_session_auth_hash(request, user)
+			return json_response("Success! Now you can log in with your new password!", "Finished")
+		return json_response(form.errors.as_text())
 	else:
-		raise Http404
-	
+		form = Settomgs_Change_Password(request.POST)
+		return render(request, 'closedverse_main/change-password.html', {
+			'user': user,
+			'form': form,
+			'title': 'Change Password',
+		})
 def whatads(request):
 	return render(request, 'closedverse_main/help/whatads.html', {'title': 'What are user-generated ads?'})
 def help_rules(request):

@@ -1,0 +1,25 @@
+{% extends "closedverse_main/layout.html" %}
+{% block main-body %}{% load closedverse_user %}{% load closedverse_tags %}
+{% user_sidebar request user profile 9 False %}
+<div class="main-column"><div class="post-list-outline">
+<h2 class="label">Ban {{ user.username }}</h2>
+<form class="setting-form" method="post" action={% url "main:user-tools-bans" user.username %}>
+		{% if not banned %}
+		<li class="setting">
+        <p class="settings-label">Reasoning:</p>
+		{{ form.reason }}
+		<p class="settings-label">Expiry:</p>
+		{{ form.expiry_date }}
+		<p class='note'>{{ user.username }} will be banned from {{ brand_name }} until the time is right.</p>
+		</li>
+		{% csrf_token %}
+		<div class="form-buttons">
+			<input type="submit" class="button apply-button" value="Ban {{ user.username }}">
+		</div>
+		{% else %}
+		<p class="label">This user is banned already.</p>
+		    <p>The ban will expire on: {{ active_ban.expiry_date }}</p>
+			<p>Time remaining: {{ active_ban.expiry_date|timeuntil }}</p>
+		{% endif %}
+</form></div></div>
+{% endblock %}

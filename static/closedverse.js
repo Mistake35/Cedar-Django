@@ -2021,7 +2021,9 @@ var Olv = Olv || {};
 							event.preventDefault();
 					});
 
-					c.on("drop paste", handleFileChange);
+					c.on("drop", handleFileChange);
+					// upon choosing an image, and pasting plain text after, no image would be uploaded for some reason.
+					// yeah i got no fucking clue how to fix this shit.
 
 					c.on("olv:entryform:post:done", function() {
 							imageDimensions.text(b.EntryForm.tempPollutionButImageFormAllowedText);
@@ -3221,7 +3223,7 @@ mode_post = 0;
     b.router.connect("^/users/[^\/]+/favorites$", function(a, c, d) {
         b.Content.autopagerize(".community-list", d)
     }),
-	b.router.connect("^/login/$|^/signup/$", function(c, d, e) {
+	b.router.connect("^/signup/$", function(c, d, e) {
 		function lfinish(b) {
 		window.location.href=b
 		//a('body').attr('sess-usern', a('input[name=username]').val())

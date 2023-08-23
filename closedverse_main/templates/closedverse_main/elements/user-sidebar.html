@@ -11,17 +11,6 @@
 		</div>
 		</div>
 		{% endif %}
-		
-		{% if user.is_warned and user.is_active %}
-		<div class="notice" style="background-color: #ffc783;border: 1px solid #ffb358;">
-		<p><b>Notice</b>: This user has received a warning by an administrator.</p>
-		<div> 
-		{% if user.get_warned_reason %}
-		<p>Reason: "{{ user.get_warned_reason }}"</p>
-		{% endif %}
-		</div>
-		</div>
-		{% endif %}
 
   <div class="sidebar-container">
       {% if profile.favorite.screenshot %}
@@ -50,13 +39,10 @@
 		<button type="button" data-action="{% url "main:user-fr-delete" user.username %}" data-screen-name="{{ user.nickname }}" class="friend-button unf delete button symbol">Friends</button>
 		{% endif %}
 	{% endif %}
-	{% if not has_authority and request.user.can_manage %}
-	<button class="button" data-href="{% url "main:user-tools" user.username %}">User Settings</button>
-	{% endif %}
-	{% if not general and not user.is_me and profile.can_block %}
+	{% if not user.is_me %}
 	<div class="report-buttons-content">
 		<!-- for later use <button type="button" class="report-button report-user" data-track-label="user" data-track-action="openReportModal" data-track-category="reportViolator" data-modal-open="#report-violator-page">Report Violation</button> -->
-		<button type="button" class="report-button block-button">{% if profile.is_blocked %}Unblock{% else %}Block{% endif %}</button>
+			{% if profile.can_block %}<button type="button" class="report-button block-button">{% if profile.is_blocked %}Unblock{% else %}Block{% endif %}</button>{% endif %}
 	</div>
 	{% endif %}
 </div>
@@ -124,6 +110,21 @@
 	  {% endif %}
     </div>
   </div>
+  {% if not has_authority and request.user.can_manage %}
+  <div class="sidebar-setting sidebar-container">
+    <div class="sidebar-post-menu">
+      <a href={% url "main:user-tools" user.username %} class="sidebar-admin-settings symbol{% if selection == 7 %} selected{% endif %}">
+        <span>User Settings</span>
+      </a>
+	    <a href={% url "main:user-tools-warnings" user.username %} class="sidebar-admin-warnings symbol{% if selection == 8 %} selected{% endif %}">
+        <span>Warn User</span>
+      </a>
+	    <a href={% url "main:user-tools-bans" user.username %} class="sidebar-admin-bans symbol{% if selection == 9 %} selected{% endif %}">
+        <span>Ban User</span>
+      </a>
+    </div>
+  </div>
+  {% endif %}
 
   <div class="sidebar-container sidebar-profile">
 	{% if profile.comment %}

@@ -29,7 +29,7 @@ DEBUG = False
 # Do not include 127.0.0.1 or localhost
 # in production for security reasons.
 ALLOWED_HOSTS = [
-    '127.0.0.1',
+    '',
 ]
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
@@ -63,10 +63,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    
-    #'ban.middleware.BanManagement',
     'closedverse_main.middleware.ClosedMiddleware',
-    #'maintenance.middleware.MaintenanceManagement',
+	'closedverse_main.middleware.CheckForBanMiddleware',
 ]
 if not DEBUG:
 	MIDDLEWARE += ['whitenoise.middleware.WhiteNoiseMiddleware']
@@ -102,30 +100,6 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'sql.sqlite3'),
     }
 }
-
-
-"""
-# log errors.
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'file': {
-            'level': 'ERROR',
-            'class': 'logging.FileHandler',
-            'filename': 'logs/errors.log',
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['file'],
-            'level': 'ERROR',
-            'propagate': True,
-        },
-    },
-}
-"""
-
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
@@ -167,15 +141,6 @@ USE_I18N = False
 USE_L10N = False
 
 USE_TZ = True
-
-# You can use Mailtrap to get the email system working. Mailtrap is free and will work well for what you'll be doing with this.
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = None
-EMAIL_HOST_USER = None
-EMAIL_HOST_PASSWORD = None
-EMAIL_PORT = None
-EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = None
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
@@ -246,7 +211,7 @@ RECAPTCHA_PUBLIC_KEY = None
 RECAPTCHA_PRIVATE_KEY = None
 
 # Key for IPHub service for Closedverse, which detects proxies.
-IPHUB_KEY = ""
+IPHUB_KEY = None
 # If this is set to True, then users will receive an error
 # upon trying to sign up for the site behind a proxy.
 # Uses IPHub service and requires an API key defined above.
@@ -282,25 +247,17 @@ invite_only = False
 
 # Minimum level required to view IP addresses and user agents. (default: 10)
 # Mods under this level will still be able to manage users, however will not be able to view any sensitive data.
-min_lvl_metadata_perms = 100
+# Set this to 0 to prevent anyone from viewing data.
+min_lvl_metadata_perms = 0
 
-# if someone's level is equal or above this, they can edit most community on your clone.
+# if someone's level is equal or above this, they can edit the most communities on your clone.
 level_needed_to_man_communities = 5
 
 # if someone's level is equal or above this, they can edit any user with a lower level on your clone.
 level_needed_to_man_users = 5
 
-<<<<<<< Updated upstream
-# file size limits in megabytes! only applies when using the community tools.
-max_icon_size = .5
-max_banner_size = 1
+# minimum_password_length is removed as the AUTH_PASSWORD_VALIDATORS work as of 08/2023
 
-# The minimum length required for a user's password. This is to save the users from themselves in the event of a data breach. The longer and more complex the password is, the harder it is to be cracked. (default: 7)
-# This will definitely miss a few people off who just want to sign up without worrying about long passwords.
-minimum_password_length = 7
-
-=======
->>>>>>> Stashed changes
 # The hard limit for uploading, Will cause an error if this is exceeded. This is set to 15MB by default (15728640)
 DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800
 
@@ -323,7 +280,8 @@ memo_msg = """
 <h2>Cedar</h2>
 <p>what</p>
 <h2>Why is this person rehosting it?</h2>
-<p>im bored</p>"""
+<p>im bored</p>
+"""
 
 # This option enables some production-specific pages
 # and routines, such as HTTPS scheme redirection and

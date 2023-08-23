@@ -20,23 +20,19 @@
 	{% if request.user.has_freedom %}
 	<li class="setting-community-icon">
 		<label class="file-button-container">
-		<p class="input-label">Community icon: {{ max_icon_size }}MB</p>
+		<p class="input-label">Community icon:</p>
 		<span class="button file-upload-button">Upload a new icon</span>
-		<input accept="image/gif, image/png, image/webp, image/jpeg, image/jpg, image/svg+xml, image/bmp" type="file" style="display: none;" name="community_icon" onchange="loadFile(event)" id="upload-file">
+		<input accept="image/gif, image/png, image/webp, image/jpeg, image/jpg, image/svg+xml, image/bmp" type="file" style="display: none;" name="community_icon"  id="upload-file">
 		</label>
 	  </li>
 	  <li class="setting-community-banner">
 	  <label class="file-button-container">
-		<p class="input-label">Community banner: {{ max_banner_size }}MB</p>
+		<p class="input-label">Community banner:</p>
 		<span class="button file-upload-button">Upload a new banner</span>
 		<input accept="image/gif, image/png, image/webp, image/jpeg, image/jpg, image/svg+xml, image/bmp" type="file" style="display: none;" name="community_banner" onchange="loadFile(event)" id="upload-file">
 	  </label>
 	  </li>
-<<<<<<< Updated upstream
-	  {% endif %}
-=======
 	{% endif %}
->>>>>>> Stashed changes
 	  <li>
 	  <p>&nbsp;</p>
 	  <input type="checkbox" name="force_login" {% if  community.require_auth %}checked{% endif %}>Require login:

@@ -7,22 +7,7 @@
 		<form action="{% url "main:community-search" %}" class="search">
 			<input maxlength="32" name="query" placeholder="Search all communities" type="text"><input title="Search" type="submit" value="q">
 		</form>
-		<!--<div class="close-announce-container">
-			<div class="close-announce-link">
-				<a class="title" id="close-text-ann" href="/posts/1186"><b>Closedverse is still in indefinite maintenance.</b></a>
-			</div>
-		</div>-->
 		
-		{% if user.is_warned and user.is_active %}
-		<div class="notice" style="background-color: #ffc783;border: 1px solid #ffb358;">
-		<p><b>WARNING</b>: You have been issued a warning by an administrator.
-		<div> 
-		{% if user.get_warned_reason %}
-		<p>Reason: "{{ user.get_warned_reason }}"</p>
-		{% endif %}
-		</div>
-		</div>
-		{% endif %}
 		{% if not user.is_active and user.is_authenticated %}
 		<div class="notice" style="background-color: #ff9797;border: 1px solid #ff5252;">
 		<p><b>Oops</b>: You've been smacked by an admin. Better luck next time.
@@ -44,6 +29,7 @@
 		{% endif %}
 		
 	{% if announcements and request.user.is_authenticated %}
+	<a href="#communities">Skip to communities</a>
 	<div class="tleft">
   	<div class="post-list-outline">
       <h2 class="label">Latest Announcements</h2>

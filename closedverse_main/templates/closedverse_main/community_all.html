@@ -4,15 +4,15 @@
 	</div>
 	<div class="community-top-sidebar">
 	<div class="post-list-outline index-memo">
-		<h2 class="label">Community creation Q&amp;A</h2>
+	<h2 class="label">Community creation</h2>
 		<h2>Why?</h2>
-		<p>I have no idea, I guess it's cool to have. You can have your own little corner of this site now...</p>
-		<h2>What can I do with my own community?</h2>
-		<p>You can edit it, and that's basically it.</p>
+		<p>Maybe there's a community that's missing which should be here, or you just want a corner of the site to call your own.</p>
+		<h2>How can I make my own community?</h2>
+		<p>Assuming you haven't already made one, A button should be visible below that will allow you to create a community. Don't worry, you'll be able to set the icon and banner when editing a community after it has been made. Just keep in mind that creating inappropriate, or shitty communities can result in them getting taken down, if this does happen you will not be refunded your C-Token, and you're shit out of luck.</p>
 		<h2>What are C-Tokens, and how do I get them?</h2>
-		<p>Community tokens are a stupid and overcomplicated method of preventing 200,000 communities from being made by one person. You get one when signing up, and you can use it to make your own community. Please do not ask staff for more C-Tokens unless you believe the communities you are going to make are really that good.</p>
-		<h2>Any future plans?</h2>
-		<p>no</p>
+		<p>Community tokens are a stupid and overcomplicated method of preventing a bunch of communities from being made by one person. You get one when signing up, and you can use it to make your own community. Please do not ask staff for more C-Tokens, you probably won't be given any, and let's be honest here, one community is enough for one person.</p>
+		<h2>Okay great... Now what can I do with my community?</h2>
+		<p>Whatever you want, really... So long as your community isn't so shitty that we take it down. You are able to edit your community, set your banner, icon and whatnot. And you can ban people from posting and replying in your community if you block someone. Just keep in mind that blocks work both ways, they cannot fuck with you, nor can you fuck with them.</p>
 	</div>
 	{% if request.user.c_tokens > 0 %}<a class="big-button" href={% url "main:community-create" %}><span class="symbol-label">Create a community</span></a>{% endif %}
 	</div>

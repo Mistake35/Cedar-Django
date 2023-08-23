@@ -105,7 +105,10 @@ def video_upload(video):
 	return settings.MEDIA_URL + fname
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
-def image_upload(img, stream=False, drawing=False, avatar=False):
+def image_upload(img, stream=False, drawing=False, avatar=False, icon=False, banner=False):
+	Imagefield = False
+	if banner or icon:
+		Imagefield = True
 	if stream:
 		decodedimg = img.read()
 	else:
@@ -137,7 +140,8 @@ def image_upload(img, stream=False, drawing=False, avatar=False):
 			}
 			if orientation in rotations:
 				im = im.transpose(rotations[orientation])
-	if avatar:
+	if avatar or icon:
+		tiny = True
 		# crop 1:1 
 		width, height = im.size
 		min_dimension = min(width, height)
@@ -149,6 +153,7 @@ def image_upload(img, stream=False, drawing=False, avatar=False):
 		im = im.crop((left, top, right, bottom))
 		im.thumbnail((256, 256))
 	else:
+		tiny = False
 		im.thumbnail((1280, 1280))
 	
 	# Let's check the aspect ratio and see if it's crazy
@@ -174,11 +179,20 @@ def image_upload(img, stream=False, drawing=False, avatar=False):
 			im = im.convert('RGB')
 		elif 'webp' in img.content_type:
 			target = 'webp'
-	floc = imhash + '.' + target
+	# Janky goofy ahh solution to a stupid problem!
+	if tiny:
+		floc = imhash + '_tiny' + '.' + target
+	else:
+		floc = imhash + '.' + target
 	# If the file exists, just use it, that's what hashes are for.
+	
 	if not os.path.exists(settings.MEDIA_ROOT + floc):
 		im.save(settings.MEDIA_ROOT + floc, target, optimize=True)
-	return settings.MEDIA_URL + floc
+	if not Imagefield:	
+		return settings.MEDIA_URL + floc
+	# Not compatible with imagefield otherwise, if this is not here, Images uploaded will not show due to an incorrect URL.
+	# yes it's a crack den solution but it works.
+	else: return floc
 
 # Todo: Put this into post/comment delete thingy method
 def image_rm(image_url):

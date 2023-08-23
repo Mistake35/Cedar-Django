@@ -2,6 +2,8 @@ from django.http import HttpResponseForbidden
 from closedverse import settings
 from django.shortcuts import redirect
 from django.contrib.auth import logout
+from .models import Ban
+from django.utils import timezone
 from re import compile
 
 # Taken from https://python-programming.com/recipes/django-require-authentication-pages/
@@ -9,6 +11,31 @@ if settings.FORCE_LOGIN:
 	EXEMPT_URLS = [compile(settings.LOGIN_URL.lstrip('/'))]
 	if hasattr(settings, 'LOGIN_EXEMPT_URLS'):
 		EXEMPT_URLS += [compile(expr) for expr in settings.LOGIN_EXEMPT_URLS]
+
+class CheckForBanMiddleware:
+	def __init__(self, get_response):
+		self.get_response = get_response
+
+	def __call__(self, request):
+		response = self.get_response(request)
+		return response
+
+	def process_view(self, request, view_func, view_args, view_kwargs):
+
+		# If the user is not authenticated, there's no need to check for bans
+		if not request.user.is_authenticated:
+			return None
+
+		# Get one active ban that is not expired 
+		active_ban = Ban.objects.filter(
+			to=request.user,
+			active=True,
+			expiry_date__gte=timezone.now()
+		).first()
+
+		if active_ban:
+			return HttpResponseForbidden('You are banned from this site. Reason: ' + active_ban.reason)
+		return None
 
 class ClosedMiddleware(object):
 	def __init__(self, get_response):

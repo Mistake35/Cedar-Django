@@ -1,21 +1,39 @@
 Stuff that is done:
 - Disable comments button
-- merge with closedverse-video-support (mostly)
 - Prevent users from posting in communities created by blocked users.
 - Hide email password reset form if no SMTP server is set up. (done by Arian Kordi)
-- Fix icon and banner uploads.
-	Icons and banners use util.image_upload now, at the cost of having to set them all again.
 
 Stuff that is in progress
-- Removing shitty code.
-- Adding help_text, and placeholders for clarity, this will be seen on the admin panel and even forms too. 
-- moving to forms.py
-	So far, user_tools and community_tools have been moved over.
+- New Warning system.
+	Warnings are here, And there's an interface for warning users.
+	When a warning is made, a notification is also made.
+	Replaced the 5th notification type with warnings instead of announcements.
+	A check is made to make sure request.user does not have unread warnings before they can post.
+	There's no javascript for the form page yet.
+	Audit logs are not set up, but the Warning model shows who warned each user.
 
-Stuff that I want
+- User friendly interface for admins
+	Admins should be able to manage users quickly and effectively without having to worry about a clusterfuck interface.
+	Primary actions like warning users, banning users, and whatnot should be an easy few clicks away.
+
+- New Ban system.
+	Bans are here also with its own interface.
+	Instead of entering a datetime field manually, Admins are provided with choises for different ban lengths when using the frontend.
+	IP bans and range bans are not added yet.
+	A proper ban page is not added yet and simply shows a 403 error.
+	If a ban page is added, it should show the reason, and when the ban will expire.
+	There's no javascript for the form page yet.
+	Audit logs are not set up, but the Ban model shows who banned each user.
+
+- Removing shitty code.
+- moving to forms.py.
+	The login page, admin tools, and community tools are using forms.py.
+
+Ideas:
 - Image and video file boxes in one.
-- Pinning posts????
-	Not needed at all if I'm being honest.
+- A new user metadata page that does not suck.
+- Make it, so you need to enter your current password to change your email address.
 - Ways for mods to view who invited who.
-- Full ImageField integration
+- Full ImageField integration.
+- Filefield may have to be used for both photos and videos.
 - remove the useless feedback thing. (You can just make a bug reporting community)

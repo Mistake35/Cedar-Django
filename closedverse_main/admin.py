@@ -21,12 +21,12 @@ class UserForm(ModelForm):
 			'password': PasswordInput(),
 		}
 """
-@admin.action(description='Hide selected items')
-def Hide_Memo(modeladmin, request, queryset):
-	queryset.update(show = False)
-@admin.action(description='Show selected items')
-def Show_Memo(modeladmin, request, queryset):
-	queryset.update(show = True)
+@admin.action(description='Void selected Invites')
+def Void_invite(modeladmin, request, queryset):
+	queryset.update(void = True)
+@admin.action(description='Restore selected Invites')
+def Restore_invite(modeladmin, request, queryset):
+	queryset.update(void = False, used = False)
 @admin.action(description='Hide selected items')
 def Hide_content(modeladmin, request, queryset):
 	queryset.update(is_rm = True)
@@ -60,7 +60,7 @@ def Enable_user(modeladmin, request, queryset):
 
 
 class UserAdmin(admin.ModelAdmin):
-	search_fields = ('id', 'unique_id', 'username', 'nickname', 'email', )
+	search_fields = ('id', 'username', 'nickname', 'email', )
 	list_display = ('id', 'username', 'nickname', 'warned', 'level', 'staff', 'active', )
 	exclude = ('addr', 'signup_addr', 'password', )
 	actions = [Disable_user, Enable_user]
@@ -68,20 +68,27 @@ class UserAdmin(admin.ModelAdmin):
 	# Not yet
 	#form = UserForm
 class ProfileAdmin(admin.ModelAdmin):
-	search_fields = ('id', 'unique_id', 'origin_id', )
-	raw_id_fields = ('user', 'favorite', )
-	list_display = ('id', 'user', 'comment', 'let_freedom', )
+	search_fields = ('id', 'user__username__icontains', 'comment', 'origin_id',)
+	raw_id_fields = ('user', 'favorite',)
+	list_display = ('id', 'user', 'comment', 'let_freedom',)
+
+class InvitesAdmin(admin.ModelAdmin):
+	search_fields = ('creator__username', 'used_by__username', 'code', )
+	raw_id_fields = ('creator', 'used_by', )
+	list_display = ('creator', 'used_by', 'code', 'used', 'void', )
+	actions = [Void_invite, Restore_invite]
 
 class ComplaintAdmin(admin.ModelAdmin):
-	search_fields = ('id', 'unique_id', 'body', )
+	search_fields = ('id', 'body', )
 	raw_id_fields = ('creator', )
+
 class ConversationAdmin(admin.ModelAdmin):
-	search_fields = ('id', 'unique_id', )
+	search_fields = ('id', )
 	raw_id_fields = ('source', 'target', )
 
 class PostAdmin(admin.ModelAdmin):
 	raw_id_fields = ('creator', 'poll', )
-	search_fields = ('id', 'unique_id', 'body', 'creator__username', )
+	search_fields = ('id', 'body', 'creator__username', )
 	list_display = ('id', 'creator', 'body', 'is_rm', )
 	actions = [Hide_content, Show_content, Disable_comments, Enable_comments]
 	def get_queryset(self, request):
@@ -89,7 +96,7 @@ class PostAdmin(admin.ModelAdmin):
 
 class CommentAdmin(admin.ModelAdmin):
 	raw_id_fields = ('creator', 'original_post', )
-	search_fields = ('id', 'unique_id', 'body', 'creator__username', )
+	search_fields = ('id', 'body', 'creator__username', )
 	list_display = ('id', 'creator', 'body', 'original_post', 'is_rm', )
 	actions = [Hide_content, Show_content]
 	def get_queryset(self, request):
@@ -98,45 +105,42 @@ class CommentAdmin(admin.ModelAdmin):
 class CommunityAdmin(admin.ModelAdmin):
 	raw_id_fields = ('creator', )
 	list_display = ('id', 'name', 'description', 'type', 'creator', 'popularity', 'is_rm', 'is_feature', 'require_auth')
-	search_fields = ('id', 'unique_id', 'name', 'description', )
+	search_fields = ('id', 'name', 'description', )
 	actions = [Hide_content, Show_content, Feature_community, Unfeature_community, force_login, unforce_login]
 	def get_queryset(self, request):
 		return models.Community.real.get_queryset()
 
 class MessageAdmin(admin.ModelAdmin):
 	raw_id_fields = ('creator', 'conversation', )
-	search_fields = ('id', 'unique_id', 'body', 'creator__username', )
+	search_fields = ('id', 'body', 'creator__username', )
 	list_display = ('id', 'creator', 'conversation', 'body', )
 	actions = [Hide_content, Show_content]
 	def get_queryset(self, request):
 		return models.Message.real.get_queryset()
 
 class NotificationAdmin(admin.ModelAdmin):
-		raw_id_fields = ('to', 'source', 'context_post', 'context_comment', )
-		search_fields = ('unique_id', )
-		list_display = ('id', 'to', 'source', 'context_post', 'context_comment', )
+	raw_id_fields = ('to', 'source', 'context_post', 'context_comment',)
+	search_fields = ('to__username', 'source__username', 'context_post__body', 'context_comment__body',)
+	list_display = ('id', 'to', 'source', 'context_post', 'context_comment',)
 
 class AuditAdmin(admin.ModelAdmin):
-		raw_id_fields = ('by', 'user', 'post', 'comment', 'reversed_by', )
-		search_fields = ('by__username', 'user__username', )
+	raw_id_fields = ('by', 'user', 'post', 'comment', 'community', 'reversed_by', )
+	search_fields = ('by__username', 'user__username', 'post__body', 'comment__body', 'community__name', )
 
 class AdsAdmin(admin.ModelAdmin):
-		raw_id_fileds = ('id', 'created', 'url', 'imageurl')
-		
-class InvitesAdmin(admin.ModelAdmin):
-		raw_id_fileds = ('id', 'created', 'creator')
+	raw_id_fileds = ('id', 'created', 'url', 'imageurl')
 
 class YeahAdmin(admin.ModelAdmin):
-		raw_id_fields = ('by', 'post', 'comment', )
-		list_display = ('by', 'post', 'comment', )
-		search_fields = ('by__username', 'post__body', 'comment__body', )
+	raw_id_fields = ('by', 'post', 'comment', )
+	list_display = ('by', 'post', 'comment', )
+	search_fields = ('by__username', 'post__body', 'comment__body', )
 		
 class HistoryAdmin(admin.ModelAdmin):
-		raw_id_fields = ('user',)
-		list_display = ('id', 'user')
+	raw_id_fields = ('user',)
+	list_display = ('id', 'user')
 
 class RoleAdmin(admin.ModelAdmin):
-		exclude = ('is_static', )
+	exclude = ('is_static', )
 
 #class BlockAdmin(admin.ModelAdmin)
 
@@ -145,11 +149,13 @@ admin.site.unregister(Group)
 admin.site.register(models.Role, RoleAdmin)
 admin.site.register(models.User, UserAdmin)
 admin.site.register(models.Profile, ProfileAdmin)
+admin.site.register(models.Invites, InvitesAdmin)
 admin.site.register(models.Community, CommunityAdmin)
 admin.site.register(models.Complaint, ComplaintAdmin)
 admin.site.register(models.Message, MessageAdmin)
 admin.site.register(models.Conversation, ConversationAdmin)
 admin.site.register(models.Notification, NotificationAdmin)
+#admin.site.register(models.LoginAttempt, LoginAdmin)
 admin.site.register(models.UserBlock)
 admin.site.register(models.AuditLog, AuditAdmin)
 admin.site.register(models.ProfileHistory, HistoryAdmin)
@@ -157,17 +163,9 @@ admin.site.register(models.ProfileHistory, HistoryAdmin)
 
 admin.site.register(models.Post, PostAdmin)
 admin.site.register(models.Comment, CommentAdmin)
-<<<<<<< Updated upstream
-admin.site.register(models.Ads, AdsAdmin)
-admin.site.register(models.welcomemsg, WelcomemsgAdmin)
-admin.site.register(models.Yeah, YeahAdmin)
-admin.site.register(models.Follow)
-admin.site.register(models.FriendRequest)
-admin.site.register(models.Friendship, ConversationAdmin)
-admin.site.register(models.Invites, InvitesAdmin)
-admin.site.register(models.Poll)
-admin.site.register(models.PollVote)
-=======
+
+admin.site.register(models.Ban)
+admin.site.register(models.Warning)
 
 if settings.DEBUG:
 	admin.site.register(models.Yeah)
@@ -178,4 +176,3 @@ if settings.DEBUG:
 	admin.site.register(models.Poll)
 	admin.site.register(models.PollVote)
 admin.site.register(models.Ads, AdsAdmin)
->>>>>>> Stashed changes
