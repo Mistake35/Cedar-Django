@@ -142,6 +142,10 @@ class HistoryAdmin(admin.ModelAdmin):
 class RoleAdmin(admin.ModelAdmin):
 	exclude = ('is_static', )
 
+class BanAdmin(admin.ModelAdmin):
+	# Hide that shit for now, Eventually I plan to get rid of the user_tools_meta thing completely and just show IP addresses for staff like any normal site.
+	exclude = ('ip_address', )
+
 #class BlockAdmin(admin.ModelAdmin)
 
 admin.site.unregister(Group)
@@ -164,7 +168,7 @@ admin.site.register(models.ProfileHistory, HistoryAdmin)
 admin.site.register(models.Post, PostAdmin)
 admin.site.register(models.Comment, CommentAdmin)
 
-admin.site.register(models.Ban)
+admin.site.register(models.Ban, BanAdmin)
 admin.site.register(models.Warning)
 
 if settings.DEBUG:

@@ -1743,13 +1743,6 @@ def user_tools_bams(request, username):
 	user = get_object_or_404(User, username__iexact=username)
 	profile = user.profile()
 	profile.setup(request)
-	active_bans = user.banned_user.filter(active=True).exclude(expiry_date__lte=timezone.now())
-	if active_bans:
-		banned = True
-		active_ban = active_bans.first()
-	else:
-		banned = False
-		active_ban = None
 	if not request.user.can_manage():
 		return HttpResponseForbidden()
 	if user.has_authority(request.user):
@@ -1760,15 +1753,16 @@ def user_tools_bams(request, username):
 			ban = form.save(commit=False)
 			ban.to = user
 			ban.by = request.user
+			ban.ip_address = user.addr
 			ban.save()
 			return redirect('main:user-view', user)
-	if not banned:
+	if not user.banned():
 		form = Give_Ban_Form()
 	else: form = None
 	return render(request, 'closedverse_main/man/manage_bans.html', {
 	'user': user,
-	'banned': banned,
-	'active_ban': active_ban,
+	'banned': user.banned(),
+	'active_ban': user.active_ban(),
 	'profile': profile,
 	'form': form,
 	})

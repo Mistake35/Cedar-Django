@@ -1,12 +1,12 @@
 {% load closedverse_tags %}{% load closedverse_user %}
 {% if user.is_authenticated %}<div id="sidebar" class="{% if general %}general{% else %}user{% endif %}-sidebar">
 
-		{% if not user.is_active %}
+		{% if user.banned %}
 		<div class="notice" style="background-color: #ff9797;border: 1px solid #ff5252;">
-			<b>Notice</b>: This user account is disabled.
+			<b>Notice</b>: This user is banned.
 			<div> 
-		{% if user.get_warned_reason %}
-		<p>Reason: "{{ user.get_warned_reason }}"</p>
+		{% if user.active_ban.reason %}
+		<p>Reason: "{{ user.active_ban.reason }}"</p>
 		{% endif %}
 		</div>
 		</div>

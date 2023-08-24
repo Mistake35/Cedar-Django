@@ -1,5 +1,5 @@
 {% if not post.is_rm %}
-{% load closedverse_tags %}<div id="post-{{ post.id }}" {% if post.spoils and not post.is_mine or not post.creator.is_active %}data-href-hidden{% else %}data-href{% endif %}="{% if post.is_reply %}{% url "main:comment-view" post.id %}{% else %}{% url "main:post-view" post.id %}{% endif %}" class="post post-subtype-default trigger{% if post.spoils and not post.is_mine or not post.creator.is_active or post.user_is_blocked %} hidden test-hidden{% endif %}{% if type == 2 %} post-list-outline{% endif %}" tabindex="0">
+{% load closedverse_tags %}<div id="post-{{ post.id }}" {% if post.spoils and not post.is_mine or post.creator.banned %}data-href-hidden{% else %}data-href{% endif %}="{% if post.is_reply %}{% url "main:comment-view" post.id %}{% else %}{% url "main:post-view" post.id %}{% endif %}" class="post post-subtype-default trigger{% if post.spoils and not post.is_mine or post.creator.banned or post.user_is_blocked %} hidden test-hidden{% endif %}{% if type == 2 %} post-list-outline{% endif %}" tabindex="0">
   {% if with_community_container %}
   <p class="community-container">
 	{% if post.is_reply %}
@@ -15,9 +15,6 @@
 	<span class="owner-label">Community Owner</span>
 	{% endif %}
   <p class="user-name"><a href="{% url "main:user-view" post.creator.username %}"{% if post.creator.color %}style=color:{{ post.creator.color }}{% endif %}>{{ post.creator.nickname }}</a></p>
-    {% if not post.creator.is_active %}
-		<p style="color: #f00;">Banned</p>
-	{% endif %}
 	<p class="timestamp-container">
 	  <span class="spoiler-status{% if post.spoils %} spoiler{% endif %}">Spoilers·</span>
 	  {% if post.has_edit %}
@@ -45,15 +42,15 @@
 			{% endif %}
 			{% if post.screenshot %}<a class="screenshot-container still-image" href="{% if post.is_reply %}{% url "main:comment-view" post.id %}{% else %}{% url "main:post-view" post.id %}{% endif %}"><img src="{{ post.screenshot }}"></a>{% endif %}
 			{% if post.video %}<div class="screenshot-container still-image"><video class="vidya" controls src="{{ post.video }}" style="max-width:100%;max-height: 450px;"></video></div>{% endif %}
-		{% if post.spoils and not post.is_mine and post.creator.is_active %}
+		{% if post.spoils and not post.is_mine and not post.creator.banned %}
 		<div class="hidden-content"><p>This post contains spoilers.</p>
               <button type="button" class="hidden-content-button">View Post</button>
         </div>
 		{% endif %}
-		{% if not post.creator.is_active %}
-			<div class="hidden-content"><p>Content hidden because its creator was banned. </p>
-			{% if post.creator.get_warned_reason %}
-			<p>Reason: {{post.creator.get_warned_reason}}
+		{% if post.creator.banned %}
+			<div class="hidden-content"><p>Content hidden because {{ post.creator.username }} was banned. </p>
+			{% if post.creator.active_ban %}
+			<p>Reason: {{post.creator.active_ban.reason }}
 			{% endif %}
                 <button type="button" class="hidden-content-button">View Anyway</button>
           </p></div>
@@ -74,7 +71,7 @@
           <div class="reply symbol"><span class="symbol-label">Comments</span><span class="reply-count">{{ post.number_comments }}</span></div>
 		  {% endif %}
 		</div>
-{% if post.recent_comment and post.recent_comment.creator.is_active %}
+{% if post.recent_comment and not post.recent_comment.creator.banned %}
 	<div class="recent-reply-content">
 {% if post.number_comments > 1 %}
 <div class="recent-reply-read-more-container" tabindex="0">

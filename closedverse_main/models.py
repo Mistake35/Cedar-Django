@@ -207,6 +207,12 @@ class User(AbstractBaseUser):
 		if not g:
 			return settings.STATIC_URL + 'img/anonymous-mii.png'
 		return g
+	def banned(self):
+		banned = self.banned_user.filter(active=True, expiry_date__gt=timezone.now())
+		return banned.exists()
+	def active_ban(self):
+		ban = self.banned_user.filter(active=True, expiry_date__gt=timezone.now()).order_by('-created').first()
+		return ban
 	def mh(self):
 		origin_info = self.profile('origin_info')
 		if not origin_info:
@@ -582,7 +588,6 @@ class User(AbstractBaseUser):
 			return False
 		return user
 
-# This will be a fucking pain in the ass!
 class Ban(models.Model):
 	id = models.AutoField(primary_key=True)
 	created = models.DateTimeField(auto_now_add=True)
@@ -591,6 +596,7 @@ class Ban(models.Model):
 	reason = models.TextField(null=True, blank=True)
 	expiry_date = models.DateTimeField(help_text='The date and time on which this ban will expire, Set this way off into the future if this ban should be permanent')
 	active = models.BooleanField(default=True, help_text='Untick this to disable this ban')
+	ip_address = models.CharField(null=True, blank=True, max_length=256, help_text='Put an IP address in here to make this an IP ban. When using the ban function outside of the Django admin panel, this is filled in automatically.')
 	
 	def is_expired(self):
 		if timezone.now() > self.expiry_date:

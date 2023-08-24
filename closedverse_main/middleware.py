@@ -21,20 +21,25 @@ class CheckForBanMiddleware:
 		return response
 
 	def process_view(self, request, view_func, view_args, view_kwargs):
-
-		# If the user is not authenticated, there's no need to check for bans
 		if not request.user.is_authenticated:
 			return None
-
-		# Get one active ban that is not expired 
-		active_ban = Ban.objects.filter(
+		# Get one active ban that is not expired for the user
+		active_user_ban = Ban.objects.filter(
 			to=request.user,
 			active=True,
 			expiry_date__gte=timezone.now()
 		).first()
-
-		if active_ban:
-			return HttpResponseForbidden('You are banned from this site. Reason: ' + active_ban.reason)
+		if active_user_ban:		   
+			return HttpResponseForbidden('You are banned from this site. Reason: ' + active_user_ban.reason)
+		# Get one active ban that is not expired for the IP address
+		ip_address = request.META.get('REMOTE_ADDR')
+		active_ip_ban = Ban.objects.filter(
+			ip_address=ip_address,
+			active=True,
+			expiry_date__gte=timezone.now(),
+		).first()
+		if active_ip_ban:
+			return HttpResponseForbidden('Your IP address is banned from this site. Reason: ' + active_ip_ban.reason)
 		return None
 
 class ClosedMiddleware(object):
