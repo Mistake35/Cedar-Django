@@ -369,6 +369,7 @@ def forgot_passwd(request):
 			if not request.POST['password'] == request.POST['password_again']:
 				return HttpResponseBadRequest("Your passwords don't match.")
 			try:
+				new = request.POST['password']
 				validate_password(new, user=user)
 			except ValidationError as error:
 				return HttpResponseBadRequest(error)
