@@ -1789,7 +1789,7 @@ class UserBlock(models.Model):
 class AuditLog(models.Model):
 	id = models.AutoField(primary_key=True)
 	created = models.DateTimeField(auto_now_add=True)
-	type = models.SmallIntegerField(choices=((0, "Post delete"), (1, "Comment delete"), (2, "User edit"), (3, "Disable comments"), (4, "Community edit"), ))
+	type = models.SmallIntegerField(choices=((0, "Post delete"), (1, "Comment delete"), (2, "User edit"), (3, "Disable comments"), (4, "Community edit"), (5, "Ban user"), (6, "Edit ban for user"), ))
 	post = models.ForeignKey(Post, related_name='audit_post', null=True, on_delete=models.CASCADE)
 	comment = models.ForeignKey(Comment, related_name='audit_comment', null=True, on_delete=models.CASCADE)
 	user = models.ForeignKey(User, related_name='audit_user', null=True, on_delete=models.CASCADE)

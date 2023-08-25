@@ -4657,6 +4657,10 @@ div#activity-feed-tutorial.no-content p.tleft {
   padding: 0 5px 10px 10px;
   line-height: 1.2;
 }
+.DateTimeInput {
+    border-radius: 6px;
+    border: 1px solid #000;
+}
 .platform-tag {
   position: static;
   float: left;

@@ -126,3 +126,11 @@ class Give_Ban_Form(forms.ModelForm):
 	class Meta:
 		model = Ban
 		fields = ['reason', 'expiry_date']
+		
+class Give_Ban_Form_Edit(forms.ModelForm):
+	reason = forms.CharField(required=True, widget=forms.Textarea(attrs={'class': 'textarea'}))
+	expiry_date = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'DateTimeInput'}, format='%Y-%m-%dT%H:%M'))
+	active = forms.BooleanField(required=False)
+	class Meta:
+		model = Ban
+		fields = ['reason', 'expiry_date', 'active']

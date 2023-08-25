@@ -20,6 +20,20 @@
 		<p class="label">This user is banned already.</p>
 		    <p>The ban will expire on: {{ active_ban.expiry_date }}</p>
 			<p>Time remaining: {{ active_ban.expiry_date|timeuntil }}</p>
+			
+			<li class="setting">
+			<p class="settings-label">Edit Reasoning:</p>
+			{{ form.reason }}
+			<p class="settings-label">Change Expiry:</p>
+			{{ form.expiry_date }}
+			<p class="settings-label">Active:</p>
+			{{ form.active }}
+			<p class='note'>Uncheck this to unban {{ user.username }}.</p>
+			</li>
+			{% csrf_token %}
+			<div class="form-buttons">
+				<input type="submit" class="button apply-button" value="Edit ban for {{ user.username }}">
+			</div>
 		{% endif %}
 </form></div></div>
 {% endblock %}

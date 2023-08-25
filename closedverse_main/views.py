@@ -1749,17 +1749,26 @@ def user_tools_bams(request, username):
 	if user.has_authority(request.user):
 		return HttpResponseForbidden()
 	if request.method == 'POST':
-		form = Give_Ban_Form(request.POST)
-		if form.is_valid():
+		if not user.banned(): 
+			form = Give_Ban_Form(request.POST)
+			if form.is_valid():
+				ban = form.save(commit=False)
+				ban.to = user
+				ban.by = request.user
+				ban.ip_address = user.addr
+				ban.save()
+				AuditLog.objects.create(type=5, user=user, by=request.user)
+				return redirect('main:user-view', user)
+		else:
+			form = Give_Ban_Form_Edit(request.POST, instance=user.active_ban())
 			ban = form.save(commit=False)
-			ban.to = user
-			ban.by = request.user
-			ban.ip_address = user.addr
 			ban.save()
+			AuditLog.objects.create(type=6, user=user, by=request.user)
 			return redirect('main:user-view', user)
 	if not user.banned():
 		form = Give_Ban_Form()
-	else: form = None
+	else:
+		form = Give_Ban_Form_Edit(instance=user.active_ban())
 	return render(request, 'closedverse_main/man/manage_bans.html', {
 	'user': user,
 	'banned': user.banned(),
