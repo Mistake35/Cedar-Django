@@ -1729,7 +1729,7 @@ def user_tools_warnings(request, username):
 			warning.save()
 			return redirect('main:user-view', user)
 	unread_warnings = Notification.objects.filter(type=5, to=user, read=False)[:3]
-	all_warnings = Warning.objects.filter(to=user)[:8]
+	all_warnings = Warning.objects.filter(to=user).order_by('-id')[:8]
 	form = Give_warning_form()
 	return render(request, 'closedverse_main/man/manage_warnings.html', {
 	'user': user,
@@ -1740,7 +1740,7 @@ def user_tools_warnings(request, username):
 	})
 
 @login_required
-def user_tools_bams(request, username):
+def user_tools_bans(request, username):
 	user = get_object_or_404(User, username__iexact=username)
 	profile = user.profile()
 	profile.setup(request)

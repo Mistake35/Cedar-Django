@@ -56,7 +56,7 @@ input[type=text], input[type=password], input[type=email], input:not([type]), se
     border-bottom-color: #000;
 }
 #global-menu li.selected a {
-    color: var(--theme, #5ac800) !important;
+    color: var(--theme, #ff4159) !important;
 }
 .follow-done-button:after {
     content: 'ing';
@@ -309,7 +309,7 @@ form.search input[type="submit"] {
     color: #FF0000;
 }
 span.owner-label {
-    color: var(--theme, #5ac800);
+    color: var(--theme, #ff4159);
 }
 .guest#post-permlink .guest-message .arrow-button {
     border-top: 1px solid #000;
@@ -425,12 +425,17 @@ form.search {
     border-bottom: 2px dashed var(--theme-darker, #161626);
     color: #ccc;
 }
-.user-data td, th {
-    background: var(--theme-darker, #161626);
+.user-data th {
+    background: #0000005e;
     color: #ccc;
-    border: 1px var(--theme, #535374) solid;
-    font-size: 11px;
-    border-spacing: 5px;
+    border-bottom: 1px var(--theme, #ff4159) solid;
+}
+.user-data td {
+    background: #00000096;
+    color: #ccc;
+}
+.user-data tr:nth-child(odd) td {
+    background: #0000005e;
 }
 #footer {
     background-color: #1d1d2d;

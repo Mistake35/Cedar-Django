@@ -49,7 +49,7 @@
 		{% endif %}
 		{% if post.creator.banned %}
 			<div class="hidden-content"><p>Content hidden because {{ post.creator.username }} was banned. </p>
-			{% if post.creator.active_ban %}
+			{% if post.creator.active_ban.reason %}
 			<p>Reason: {{post.creator.active_ban.reason }}
 			{% endif %}
                 <button type="button" class="hidden-content-button">View Anyway</button>
