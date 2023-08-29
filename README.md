@@ -27,15 +27,25 @@ If you have an announcement community, each post will appear there.
 - Better audit logging system.
 - Purging is much easier now.
 - You can fucking ban people now without the Django panel.
+- Users and admins can turn off comments on posts.
 - Each and every ban is an IP ban automatically.
 - A page where every user can view collected data tied to their account.
-
-Can you rewrite this?
 
 # YOU NEED
 - A server (obviously)
 - Terminal access (also, obviously)
+- Access to the sudo command
 - Python 3
+- Django 3.2.2
+- urllib3
+- lxml
+- passlib
+- bcrypt
+- pillow
+- django-markdown-deux
+- django-markdown2
+- whitenoise
+- django-xff
 
 # Install time
 
