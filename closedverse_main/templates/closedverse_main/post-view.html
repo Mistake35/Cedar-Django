@@ -88,7 +88,7 @@
 			{% if post.yt_vid %}
 			<div class="screenshot-container video"><iframe class="youtube-player" type="text/html" style="max-width:100%;max-height: 450px;" src="https://www.youtube.com/embed/{{ post.yt_vid }}?rel=0&modestbranding=1&iv_load_policy=3" frameborder="0"></iframe></div>
 			{% elif post.video %}
-			<div class="screenshot-container video"><video class="vidya" controls src="{{ post.video }}" style="max-width:100%;max-height: 450px;"></video></div>
+			<div class="screenshot-container video"><video controls src="{{ post.video }}" style="max-width:100%;max-height: 450px;"></video></div>
 			{% elif post.discord_vid %}
      		<div class="DiscordCDN-container video">
      		<video class="discord-player" src="{{ post.url }}" style="max-width:100%;max-height: 450px;" controls></video>

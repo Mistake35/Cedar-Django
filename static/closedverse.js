@@ -616,10 +616,18 @@ var Olv = Olv || {};
             a(window).on("click submit", this.onMayLeavePage)
         },
         onDataHrefClick: function(c) {
-			if (a(c.target).attr("data-href")) {
+        		// if is video then don't navigate
+        		// bc most of the time you click on a video it plays in the background while navigating to the next post
+        		// this may make it more inconvenient to click on the post but it's a win to me
+        		//if (a(c.target).is('video')) {
+        		if (a(c.target).attr('controls')) {
+        			// ignore
+        			return;
+						}
+            if (a(c.target).attr("data-href")) {
                 b.Net.go($(this).attr("data-href"));
                 return;
-			}
+            }
             if (!c.isDefaultPrevented() && !a(c.target).closest("a,button").length) {
                 var d = a(this);
                 if (!d.hasClass("disabled")) {
@@ -1118,10 +1126,15 @@ var Olv = Olv || {};
         b.ModalWindowManager.setup()
     }),
     a(document).on("olv:pagechange", function() {
-        b.ModalWindowManager.closeAll();
-        if(!Olv.ModalWindowManager._windows.length && $('.mask').length) {
-        	b.ModalWindowManager.toggleMask();
-        }
+        // hackily re-add modals that were open on page forward/backwards, restoring their functionality
+        b.ModalWindowManager._windows = [];
+        a('.modal-window-open').each(function(i, v) {
+            var modal = new b.ModalWindow(v);
+            modal.triggerOpenHandlers(a.Deferred());
+            b.ModalWindowManager._windows.push(modal);
+            b.ModalWindowManager.currentWindow = modal;
+        });
+        //b.ModalWindowManager.closeAll()
     }),
     b.ModalWindow = function(b, c) {
         this.element = a(b),
@@ -1949,23 +1962,25 @@ var Olv = Olv || {};
 
 					var handleFileChange = function(event) {
 							//var fileList;
-							console.log('handleFileChange: files is being assigned...');
+							//console.log('handleFileChange: files is being assigned...');
+							var files;
 							switch(true) {
 									case event.target.files !== undefined:
-										  uploadFile[0].files = event.target.files;
+										  files = event.target.files;
 										  break;
 									case event.originalEvent.dataTransfer !== undefined:
-										  uploadFile[0].files = event.originalEvent.dataTransfer.files;
+										  files = event.originalEvent.dataTransfer.files;
 										  break;
 									case event.originalEvent.clipboardData !== undefined:
-										  uploadFile[0].files = event.originalEvent.clipboardData.files;
+										  files = event.originalEvent.clipboardData.files;
 										  break;
 									default:
 										  return;
 							}
 							
-							if (!(null === uploadFile[0].files || uploadFile[0].files.length < 1 || void 0 === uploadFile[0].files[0] || uploadFile[0].files[0].type.indexOf("image") < 0)) {
+							if (!(null === files || files.length < 1 || void 0 === files[0] || files[0].type.indexOf("image") < 0)) {
 									event.preventDefault();
+									uploadFile[0].files = files;
 									Olv.Form.toggleDisabled($("input.black-button"), false);
 									uploadPreview.hide();
 									uploadPreviewContainer.hide();
@@ -1977,7 +1992,7 @@ var Olv = Olv || {};
 									console.log('here is your fileList, and uploadFile')
 									*/
 									var blobURL = URL.createObjectURL(uploadFile[0].files[0]);
-									console.log(uploadFile[0].files[0])
+									//console.log(uploadFile[0].files[0])
 									uploadPreview.attr("src", blobURL);
 									uploadPreview.show();
 									
@@ -2021,9 +2036,7 @@ var Olv = Olv || {};
 							event.preventDefault();
 					});
 
-					c.on("drop", handleFileChange);
-					// upon choosing an image, and pasting plain text after, no image would be uploaded for some reason.
-					// yeah i got no fucking clue how to fix this shit.
+					c.on("drop paste", handleFileChange);
 
 					c.on("olv:entryform:post:done", function() {
 							imageDimensions.text(b.EntryForm.tempPollutionButImageFormAllowedText);
@@ -2597,7 +2610,6 @@ var Olv = Olv || {};
 		b.Closed.changesel("news");
 		$('.received-request-button').on('click', function(a) {
 			a.preventDefault()
-			window.ass = a
 			fr = new b.ModalWindow($('div[data-modal-types=accept-friend-request][data-action="'+ $(this).parent().parent().data('action') +'"]'));fr.open();
 		})
 		$('div[data-modal-types=accept-friend-request] .ok-button.post-button').on('click', function(a){
@@ -2916,7 +2928,7 @@ $('.post-poll .poll-votes').on('click', function() {
 		$('.edit-post-button').on('click',function(){
 			if($('.post-content-memo').length) {
 				b.showMessage("", "You can't edit a drawing, sorry.");
-            } else if($('.vidya').length) {
+            } if($('.screenshot-container > video').length) {
                 b.showMessage("", "You can't edit your uploaded video, sorry. But you can edit the contents of the post.");
                 et();
                 b.Form.toggleDisabled(submit_btn, true);
@@ -2948,7 +2960,9 @@ $('.post-poll .poll-votes').on('click', function() {
 		lock_comments_button.on('click',function(){
 			b.showConfirm("Lock comments", "Really lock up the comments? This cannot be undone.")
 				$('.ok-button').on('click',function(){
-					b.Form.post(lock_comments_button.attr('data-action')).done
+					b.Form.post(lock_comments_button.attr('data-action')).done(function() {
+						b.Net.reload();
+					});
 				})
 		})
 	}

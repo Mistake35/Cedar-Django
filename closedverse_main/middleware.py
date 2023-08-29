@@ -1,7 +1,6 @@
 from django.http import HttpResponseForbidden
 from closedverse import settings
 from django.shortcuts import redirect
-from django.contrib.auth import logout
 from .models import Ban
 from django.utils import timezone
 from re import compile

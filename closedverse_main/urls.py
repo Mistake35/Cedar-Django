@@ -1,10 +1,10 @@
 from django.conf.urls import url, re_path
-from django.conf.urls.static import static
 from django.views.static import serve
-from django.shortcuts import redirect
+#from django.conf.urls.static import static
+#from django.shortcuts import redirect
 
 from . import views
-from closedverse.settings import MEDIA_URL, MEDIA_ROOT
+from django.conf import settings
 
 username = r'(?P<username>[A-Za-z0-9-\'-._ ]+)'
 community = r'(?P<community>[0-9]+)'
@@ -113,4 +113,4 @@ urlpatterns = [
 ]
 # + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 # serve static and media i think???? mighTTT???????
-urlpatterns += [re_path(r'^i/(?P<path>.*)$', serve, {'document_root': MEDIA_ROOT, }), ]
+urlpatterns += [re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT, }), ]

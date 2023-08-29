@@ -18,7 +18,7 @@
         </div>
 		{% endif %}
     </div><a class="big-button" href="{% url "main:user-posts" user.username %}">View posts</a>
-	{% if profile.yeahs_visible and request.user.is_authenticated %}
+	{% if profile.yeahs_visible %}
     <div class="post-list-outline">
         <h2 class="label">Recently yeahed posts</h2>
 		{% if yeahed.count < 1 %}

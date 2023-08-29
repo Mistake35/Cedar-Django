@@ -1,9 +1,8 @@
 from django.contrib import admin
 #from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Group
-from django.forms import ModelForm, PasswordInput
-from closedverse_main import models
-from closedverse import settings
+#from django.forms import ModelForm, PasswordInput
+from django.conf import settings
 
 from . import models
 

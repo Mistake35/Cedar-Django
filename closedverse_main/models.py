@@ -2,13 +2,13 @@ from __future__ import unicode_literals
 from django.db import models
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import BaseUserManager
-from django.db.models import Q, QuerySet, Max, F, Count, Case, When, Exists, OuterRef, Subquery
+from django.db.models import Q, Max, F, Count, Exists, OuterRef, Subquery #, QuerySet, Case, When,
 from django.utils import timezone
+from django.http import Http404
 from django.core.validators import RegexValidator, URLValidator
 from django.core.exceptions import ValidationError
 from datetime import timedelta, time
 #from passlib.hash import bcrypt_sha256
-# you may want to import django.conf.settings instead (then change checks for DEFAULT_FROM_EMAIL)
 from closedverse import settings
 from closedverse_main.context_processors import brand_name, brand_logo
 from . import util
@@ -128,7 +128,7 @@ class Role(models.Model):
 	organization = models.CharField(max_length=255, blank=True, null=True, help_text='Text that shows above one\'s username')
 
 	def __str__(self):
-		return "role \"" + str(self.organization) + "\""
+		return "role \"" + str(self.organization) + "\", name " + str(self.image)
 
 #mii_domain = 'https://mii-secure.cdn.nintendo.net'
 # as of writing, mii-secure is unstable, nintendo please do not f*ck me for this
@@ -195,13 +195,17 @@ class User(AbstractBaseUser):
 		return self.warned
 	def get_warned_reason(self):
 		return self.warned_reason
-	def profile(self, thing=None):
-		# If thing is specified, that field is retrieved
-		if thing:
+	def profile(self, attr=None):
+		# If attr is specified, that field is retrieved
+		if attr:
 			# could this be shortened? or discontinued in general
-			return self.profile_set.all().values_list(thing, flat=True).first()
+			return self.profile_set.all().values_list(attr, flat=True).first()
 		# Otherwise just get full profile
-		return self.profile_set.filter().first()
+		result = self.profile_set.filter().first()
+		if not result:
+			# hacky but should make any page that requests this where it's not there, return a 404
+			raise Http404()
+		return result
 	def gravatar(self):
 		g = util.get_gravatar(self.email)
 		if not g:
@@ -344,7 +348,7 @@ class User(AbstractBaseUser):
 		# trailing
 		if UserBlock.objects.filter(source=source, target=self).exists():
 			return False
-		if not self.can_block(source):
+		if not self.can_block(source) or self == source:
 			return False
 		fs = Friendship.find_friendship(self, source)
 		if fs:
@@ -378,18 +382,29 @@ class User(AbstractBaseUser):
 				for post in posts:
 					post.setup(request)
 		return posts
-	def get_yeahed(self, type=0, limit=20, offset=0):
+	def get_yeahed(self, type, limit, offset, user):
 		# 0 - post, 1 - comment, 2 - any
-		if type == 2:
-			yeahs = self.yeah_set.select_related('post').select_related('comment').select_related('comment__original_post').select_related('comment__original_post__creator').annotate(num_yeahs_post=Count('post__yeah', distinct=True), num_yeahs_comment=Count('comment__yeah', distinct=True), num_comments=Count('post__comment', distinct=True)).filter().order_by('-created')[offset:offset + limit]
+		yeahs = self.yeah_set.select_related('post', 'comment', 'comment__original_post', 'comment__original_post__creator').annotate(
+				# todo clean up all queries like this lmao
+				num_yeahs_post=Count('post__yeah', distinct=True),
+				num_yeahs_comment=Count('comment__yeah', distinct=True),
+				num_comments=Count('post__comment', distinct=True)
+		)
+		# add type= if NOT selecting all
+		type_query = Q(type=type) if type != 2 else Q()
+		if not user.is_authenticated:
+			# if user is not authenticated then only search yeahs in communities that don't require auth
+			require_auth_query = Q(post__community__require_auth=False) | Q(comment__community__require_auth=False)
 		else:
-			yeahs = self.yeah_set.select_related('post').select_related('post__creator').annotate(num_yeahs_post=Count('post__yeah', distinct=True), num_comments=Count('post__comment', distinct=True)).filter(type=type, post__is_rm=False).order_by('-created')[offset:offset + limit]
-		for thing in yeahs:
-			if thing.post:
-				thing.post.num_yeahs = thing.num_yeahs_post
-				thing.post.num_comments = thing.num_comments
-			elif thing.comment:
-				thing.comment.num_yeahs = thing.num_yeahs_comment
+			require_auth_query = Q()
+		# sometimes is_rm'ed posts are searched so it's necessary to specifically specify non deleted
+		yeahs = yeahs.filter(type_query, require_auth_query, Q(post__is_rm=False) | Q(comment__is_rm=False)).order_by('-created')[offset:offset + limit]
+		for yeah in yeahs:
+				if yeah.post:
+						yeah.post.num_yeahs = yeah.num_yeahs_post
+						yeah.post.num_comments = yeah.num_comments
+				elif yeah.comment:
+						yeah.comment.num_yeahs = yeah.num_yeahs_comment
 		return yeahs
 	def get_following(self, limit=50, offset=0, request=None):
 		return self.follow_source.select_related('target').filter().order_by('-created')[offset:offset + limit]

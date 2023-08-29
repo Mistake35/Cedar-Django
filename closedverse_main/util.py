@@ -2,22 +2,16 @@ import urllib.request, urllib.error
 # requests is only used for get_mii which is not being used currently
 #import requests
 from lxml import etree
-from random import choice
 import json
 import time
 import os.path
-import random
-from PIL import Image, ExifTags, ImageFile
+from PIL import Image, ImageFile #, ExifTags,
 from datetime import datetime
-from binascii import crc32
 from math import floor
 from hashlib import md5, sha1
 import io
-from uuid import uuid4
-import imghdr
 import base64
 from closedverse import settings
-import re
 from os import remove, rename
 
 def HumanTime(date, full=False):

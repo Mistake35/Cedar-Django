@@ -1,14 +1,13 @@
-try:
-	from closedverse.settings import brand_name
-except ImportError:
+from closedverse import settings
+if not hasattr(settings, 'brand_name'):
 	# use default app name by default as brand name
 	from closedverse_main import apps
 	brand_name = apps.ClosedverseMainConfig.verbose_name
+else:
+	brand_name = settings.brand_name
 
-# for brand logo
-from closedverse.settings import STATIC_URL
 # variable for this and name are here for imports
-brand_logo = STATIC_URL + 'img/menu-logo.svg'
+brand_logo = settings.STATIC_URL + 'img/menu-logo.svg'
 
 # the name of the function is merely what's imported into settings.py
 def brand_name_universal(request):

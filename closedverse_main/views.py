@@ -208,7 +208,7 @@ def login_page(request):
 		'title': 'Log in',
 		'form': form,
 		'allow_signups': settings.allow_signups,
-		'reset_supported': hasattr(settings, 'DEFAULT_FROM_EMAIL'),
+		'reset_supported': settings.DEBUG or hasattr(settings, 'EMAIL_HOST_USER'),
 	})
 
 def signup_page(request):
@@ -369,8 +369,7 @@ def forgot_passwd(request):
 			if not request.POST['password'] == request.POST['password_again']:
 				return HttpResponseBadRequest("Your passwords don't match.")
 			try:
-				new = request.POST['password']
-				validate_password(new, user=user)
+				validate_password(request.POST['password'], user=user)
 			except ValidationError as error:
 				return HttpResponseBadRequest(error)
 			user.set_password(request.POST['password'])
@@ -383,7 +382,7 @@ def forgot_passwd(request):
 		})
 	return render(request, 'closedverse_main/forgot_page.html', {
 		'title': 'Reset password',
-		'reset_supported': hasattr(settings, 'DEFAULT_FROM_EMAIL'),
+		'reset_supported': settings.DEBUG or hasattr(settings, 'EMAIL_HOST_USER'),
 		#'classes': ['no-login-btn'],
 	})
 
@@ -586,7 +585,7 @@ def user_view(request, username):
 		user.save()
 		return HttpResponse()
 	posts = user.get_posts(3, 0, request, timezone.now())
-	yeahed = user.get_yeahed(0, 3)
+	yeahed = user.get_yeahed(0, 3, 0, request.user)
 	for yeah in yeahed:
 		if user.is_me(request):
 			yeah.post.yeah_given = True
@@ -668,8 +667,6 @@ def user_yeahs(request, username):
 	user = get_object_or_404(User, username__iexact=username)
 	if user.is_me(request):
 		title = 'My yeahs'
-	elif not request.user.is_authenticated:
-		raise Http404()
 	else:
 		if request.user.is_authenticated and not user.can_view(request.user):
 			raise Http404()
@@ -686,10 +683,7 @@ def user_yeahs(request, username):
 	if not profile.yeahs_visible:
 		raise Http404()
 
-	if request.GET.get('offset'):
-		yeahs = user.get_yeahed(2, 20, int(request.GET['offset']))
-	else:
-		yeahs = user.get_yeahed(2, 20, 0)
+	yeahs = user.get_yeahed(2, 20, int(request.GET.get('offset', 0)), request.user)
 	if yeahs.count() > 19:
 		if request.GET.get('offset'):
 			next_offset = int(request.GET['offset']) + 20
