@@ -18,14 +18,12 @@ Stuff that is in progress
 
 - New Ban system.
 	Bans are here also with its own interface.
-	Theres no way to unban a user when using the ban page.
-	Instead of entering a datetime field manually, Admins are provided with choises for different ban lengths when using the ban page.
+	Admins can unban or edit existing bans from the same page.
+	Instead of entering a datetime field manually, Admins are provided with choises for different ban lengths when using the ban page unless the ban is being edited.
 	IP bans are here but range bans are not added yet.
 	IPs are banned automatically when using the ban page.
 	A proper ban page is not added yet and simply shows a 403 error.
-	If a ban page is added, it should show the reason, and when the ban will expire.
 	There's no javascript for the form page yet.
-	Audit logs are not set up, but the Ban model shows who banned each user.
 
 - Removing shitty code.
 - moving to forms.py.
