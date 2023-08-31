@@ -54,10 +54,10 @@ INSTALLED_APPS = [
 X_FRAME_OPTIONS='SAMEORIGIN'
 
 MIDDLEWARE = [
+    # Uncomment if you need HTTP_X_FORWARDED_FOR support
+    #'closedverse_main.middleware.ProxyMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    # use this middleware if you need x-forwarded-for support
-    #'xff.middleware.XForwardedForMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',

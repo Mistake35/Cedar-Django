@@ -11,6 +11,32 @@ if settings.FORCE_LOGIN:
 	if hasattr(settings, 'LOGIN_EXEMPT_URLS'):
 		EXEMPT_URLS += [compile(expr) for expr in settings.LOGIN_EXEMPT_URLS]
 
+def get_client_ip(request):
+	try:
+		x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+		if x_forwarded_for and ',' not in x_forwarded_for:
+			ip = x_forwarded_for.split(',')[0]
+		else:
+			ip = request.META.get('REMOTE_ADDR')
+
+		# for Cloudflare
+		ip = request.META.get('HTTP_CF_CONNECTING_IP', ip)
+
+	except Exception:
+		ip = request.META.get('REMOTE_ADDR')
+
+	return ip
+
+
+class ProxyMiddleware:
+	def __init__(self, get_response):
+		self.get_response = get_response
+
+	def __call__(self, request):
+		request.META['REMOTE_ADDR'] = get_client_ip(request)
+		response = self.get_response(request)
+		return response
+
 class CheckForBanMiddleware:
 	def __init__(self, get_response):
 		self.get_response = get_response
