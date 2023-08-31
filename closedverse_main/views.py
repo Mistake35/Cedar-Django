@@ -241,7 +241,7 @@ def signup_page(request):
 				return HttpResponseBadRequest("The provided invite code does not exist.")
 			if not invite.is_valid():
 				return HttpResponseBadRequest("The provided invite code has been used or is void. Please ask for another code.")
-				invited = True
+			invited = True
 
 		if not re.compile(r'^[A-Za-z0-9-._]{1,32}$').match(request.POST['username']) or not re.compile(r'[A-Za-z0-9]').match(request.POST['username']):
 			return HttpResponseBadRequest("Your username either contains invalid characters or is too long (only letters + numbers, dashes, dots and underscores are allowed")

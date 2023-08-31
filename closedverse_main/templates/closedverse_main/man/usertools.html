@@ -12,6 +12,13 @@
 				{% elif field.field.widget.input_type == 'number' %}
 				<p class='settings-label'>{{ field.label_tag }}</p>
 				{{ field }}
+				{% elif field.field.widget.input_type == 'select' %}
+				<p class='settings-label'>{{ field.label_tag }}</p>
+				<div class="select-content">
+                    <div class="select-button">
+				        {{ field }}
+				    </div>
+				</div>
 				{% else %}
 					<p class='settings-label'>{{ field.label_tag }}</p>
 					<div class="center-input">{{ field }}</div>
@@ -28,6 +35,13 @@
 				{% elif field.field.widget.input_type == 'number' %}
 				<p class='settings-label'>{{ field.label_tag }}</p>
 				{{ field }}
+				{% elif field.field.widget.input_type == 'select' %}
+				<p class='settings-label'>{{ field.label_tag }}</p>
+				<div class="select-content">
+                    <div class="select-button">
+				        {{ field }}
+				    </div>
+				</div>
 				{% else %}
 					<p class='settings-label'>{{ field.label_tag }}</p>
 					<div class="center-input">{{ field }}</div>
