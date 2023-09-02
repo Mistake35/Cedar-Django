@@ -158,14 +158,14 @@
 		<div class="data-content">
 			<h4><span>Date Joined</span></h4>
 			<div class="note">
-				<span>{% time user.created True %}</span>
+				<span>{% time user.created %}</span>
 			</div>
 		</div>
 		{% if not user.hide_online %}
 		<div class="data-content">
 			<h4><span>Last Seen</span></h4>
 			<div class="note">
-				<span>{% time user.last_login True %}</span>
+				<span>{% time user.last_login %}</span>
 			</div>
 		</div>
 		{% endif %}

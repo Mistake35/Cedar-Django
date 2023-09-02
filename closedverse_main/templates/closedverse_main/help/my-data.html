@@ -11,7 +11,7 @@
 				<p>Signup IP address: <span>{% if user.signup_addr %}{{ user.signup_addr }}{% else %}Data missing{% endif %}</p>
 				<p>Rank: <span>{% if user.staff %}You are a staff member.{% elif not user.level <= 0 %}You are a moderator. (Level {{ user.level }}){% else %}You are a regular user.{% endif %}
 				<h3>My content:</h3>
-				<p>Your account has existed for {{ age }} days! During that time, we've collected:</p>
+				<p>Your account has existed for {{ user.created|timesince }}! During that time, we've collected:</p>
 				<ul>
 				<li>My posts: <span> {{ posts }}
 				<li>My comments: <span> {{ comments }}
@@ -33,18 +33,18 @@
 			<h3>Collected data:</h3>
 			<div class="user-data">
 				<p class="label">Account login history:</p>
-				<p>Each time you try and sign in to your account, we grab the <strong>IP</strong> and <strong>User agent</strong> from the device used. If you see any login attempts that you don't recognize as your own, you may want to change your password.</p>
+				<p>Each time you sign in to your account, we grab the <strong>IP</strong> and <strong>User agent</strong> from the device used. If you see any login attempts that you don't recognize as your own, you may want to change your password.</p>
 			<table style="width:100%">
 				<tr>
 					<th>Time</th>
-					<th>Success</th>
+					<!--<th>Success</th> not working right now -->
 					<th class="ip">IP</th>
 					<th>User agent</th>
 				</tr>
 				{% for log_attempt in log_attempt %}
 				<tr>
 					<td>{{ log_attempt.created }}</td>
-					<td{% if not log_attempt.success %} style="border: #f44336 2px solid;"{% endif %}>{{ log_attempt.success }}</td>
+					<!--<td{% if not log_attempt.success %} style="border: #f44336 2px solid;"{% endif %}>{{ log_attempt.success }}</td>-->
 					<td class="ip">{% if log_attempt.success %}{{ log_attempt.addr }}{% else %}REDACTED{% endif %}</td>
 					<td>{{ log_attempt.user_agent }}
 				</tr>

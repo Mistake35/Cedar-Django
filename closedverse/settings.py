@@ -36,8 +36,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 STATIC_URL = '/s/'
 MEDIA_URL = '/i/'
-CLOSEDVERSE_PROD = True
-IMAGE_DELETE_SETTING = 2
 
 # Application definition
 
@@ -231,7 +229,6 @@ LOGIN_EXEMPT_URLS = {
     r'^help/rules$',
     r'^help/contact$',
     r'^help/login$',
-    r'^s/.*$',
 }
 
 # Action to perform on images belonging to posts/
@@ -248,7 +245,7 @@ invite_only = False
 # Minimum level required to view IP addresses and user agents. (default: 10)
 # Mods under this level will still be able to manage users, however will not be able to view any sensitive data.
 # Set this to 0 to prevent anyone from viewing data.
-min_lvl_metadata_perms = 0
+min_lvl_metadata_perms = 10
 
 # if someone's level is equal or above this, they can edit the most communities on your clone.
 level_needed_to_man_communities = 5
@@ -265,10 +262,6 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800
 # TODO, make this work for users who aren't logged in.
 site_wide_theme_hex = 'ff4159'
 
-# Option to delete image if it's local
-# 0 - keep, 1 - move to 'rm' folder, 2 - DELETE
-image_delete_opt = 0
-
 # age (minimal 13 due to C.O.P.P.A)
 age_allowed = "13"
 
@@ -282,11 +275,6 @@ memo_msg = """
 <h2>Why is this person rehosting it?</h2>
 <p>im bored</p>
 """
-
-# This option enables some production-specific pages
-# and routines, such as HTTPS scheme redirection and
-# proxy detection via IPHub.
-CLOSEDVERSE_PROD = True
 
 XFF_TRUSTED_PROXY_DEPTH = 1
 XFF_STRICT = True

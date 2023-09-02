@@ -6,11 +6,11 @@
 <form class="setting-form" method="post" action={% url "main:user-tools-bans" user.username %}>
 		{% if not banned %}
 		<li class="setting">
-        <p class="settings-label">Reasoning:</p>
+        <p class="settings-label">Why this user is banned:</p>
 		{{ form.reason }}
-		<p class="settings-label">Expiry:</p>
+		<p class="settings-label">Ban this user for:</p>
 		{{ form.expiry_date }}
-		<p class='note'>{{ user.username }} will be banned from {{ brand_name }} until the time is right.</p>
+		<p class='note'>{{ user.username }} will be banned from {{ brand_name }} until the time runs out.</p>
 		</li>
 		{% csrf_token %}
 		<div class="form-buttons">
@@ -24,7 +24,7 @@
 			<li class="setting">
 			<p class="settings-label">Edit Reasoning:</p>
 			{{ form.reason }}
-			<p class="settings-label">Change Expiry:</p>
+			<p class="settings-label">Change Expiry date:</p>
 			{{ form.expiry_date }}
 			<p class="settings-label">Active:</p>
 			{{ form.active }}

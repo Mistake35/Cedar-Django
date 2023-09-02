@@ -1299,15 +1299,6 @@ def poll_unvote(request, poll):
 @login_required
 def user_follow(request, username):
 	user = get_object_or_404(User, username=username)
-	"""
-	if settings.CLOSEDVERSE_PROD:
-		# Issue 69420: PF2M is getting more follows than me.
-		if user.username == 'PF2M':
-			try:
-				User.objects.get(id=1).follow(request.user)
-			except:
-				pass
-	"""
 	if user.follow(request.user):
 		# Give the notification!
 		Notification.give_notification(request.user, 4, user)
@@ -1898,9 +1889,6 @@ def my_data(request):
 	user = request.user
 	log_attempt = LoginAttempt.objects.filter(user=user).order_by('-id')[:10]
 	history = ProfileHistory.objects.filter(user=user).order_by('-id')[:10]
-	creation_date = user.created.date()
-	datenow = timezone.now().date()
-	age = datenow - creation_date
 	return render(request, 'closedverse_main/help/my-data.html', {
 		'user': user,
 		'log_attempt': log_attempt,
@@ -1910,7 +1898,6 @@ def my_data(request):
 		'messages': Message.objects.filter(creator=user).count(),
 		'yeahs': Yeah.objects.filter(by=user).count(),
 		'notifications': Notification.objects.filter(to=user).count(),
-		'age': round(age.days),
 		'title': 'My data',
 	})
 @login_required
@@ -1942,8 +1929,6 @@ def help_rules(request):
 def help_faq(request):
 	return render(request, 'closedverse_main/help/faq.html', {'title': 'FAQ'})
 def help_legal(request):
-	if not settings.CLOSEDVERSE_PROD:
-		return HttpResponseForbidden()
 	return render(request, 'closedverse_main/help/legal.html', {'title': "Legal Information"})
 def help_contact(request):
 	return render(request, 'closedverse_main/help/contact.html', {'title': "Contact info"})

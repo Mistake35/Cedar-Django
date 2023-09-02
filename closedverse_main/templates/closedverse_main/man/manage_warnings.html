@@ -7,15 +7,15 @@
 		<li class="setting">
         <p class="settings-label">Reasoning:</p>
 		{{ form.reason }}
-		<p class='note'>Warnings will show as notifications. {{ user.username }} will not be able to post, comment, or message another user until this notification is seen. {{ user.username }} will not see who sent this warning.</p>
+		<p class='note'>Warnings will show as notifications. {{ user.username }} will not be able to post, comment, or message another user until this notification is seen. {{ user.username }} will not see who sent this warning. Please add important details and context when specifying a reason.</p>
 		</li>
 		<div class="user-data">
 		{% if unread_warnings %}<li>
-		<p class='setting'>Warnings that have not been read yet:<p>
+		<p class='setting'>Warnings notifications that have not been read yet:<p>
 		<table style="width:100%">
 				<tr>
 					<th>Time</th>
-					<th>Incident</th>
+					<th>Reasoning</th>
 				</tr>
 				{% for Notifications in unread_warnings %}
 				<tr>
@@ -25,12 +25,12 @@
 				{% endfor %}
 			</table>{% endif %}
 			</li>{% if all_warnings %}
-		<p class='setting'>Incident history:<p>
+		<p class='setting'>Warning history:<p>
 		<table style="width:100%">
 				<tr>
 					<th>Time</th>
 					<th>Issued by</th>
-					<th>Incident</th>
+					<th>Reasoning</th>
 				</tr>
 				{% for Warning in all_warnings %}
 				<tr>
