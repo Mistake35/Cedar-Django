@@ -1,27 +1,76 @@
 from django import forms
+import uuid
+from PIL import Image
+import io
 from .models import *
+from django.core.files.base import ContentFile
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.utils.timezone import timedelta
 from closedverse import settings
 
+# will be used for community icons and profile pictures
+def compress_and_resize_icon(image):
+	im = Image.open(image)
+	im = im.convert('RGB')  # Convert to RGB
+
+	# Crop to 1:1 aspect ratio
+	width, height = im.size
+	min_dimension = min(width, height)
+	left = (width - min_dimension) / 2
+	top = (height - min_dimension) / 2
+	right = (width + min_dimension) / 2
+	bottom = (height + min_dimension) / 2
+	im = im.crop((left, top, right, bottom))
+
+	# Resize to 100 by 100 or smaller
+	im.thumbnail((100, 100))
+
+	# Compress the image
+	output = io.BytesIO()
+	im.save(output, format='WEBP', quality=85)
+	output.seek(0)
+	random_name = f"{uuid.uuid4()}.webp"
+	return ContentFile(output.read(), name=random_name)
+
+def compress_and_resize_content(image):
+	im = Image.open(image)
+	im = im.convert('RGB')
+
+	# Resize to 1,200 by 1,200 or smaller
+	im.thumbnail((1200, 1200))
+
+	# Compress the image
+	output = io.BytesIO()
+	im.save(output, format='WEBP', quality=85)
+	output.seek(0)
+	random_name = f"{uuid.uuid4()}.webp"
+	return ContentFile(output.read(), name=random_name)
+
 # I do want to move each and every form over to here. Not only will this trivialize making new forms, this will also make it more secure or something.
 class CommunitySettingForm(forms.ModelForm):
-	community_name = forms.CharField(max_length=64,required=True)
-	community_description = forms.CharField(max_length = 2200,required=False)
-	community_platform = forms.IntegerField(max_value = 7, min_value = 0, required = True)
-	force_login = forms.BooleanField(required = False)
-	community_icon = forms.ImageField(required = False)
-	community_banner = forms.ImageField(required = False)
+	description	 = forms.CharField(max_length = 2200,required=False, widget=forms.Textarea(attrs={'class': 'textarea'}))
+	def clean_ico(self):
+		ico = self.cleaned_data.get('ico')
+		if ico:
+			return compress_and_resize_icon(image=ico)
+		return ico
+
+	def clean_banner(self):	
+		banner = self.cleaned_data.get('banner')
+		if banner:
+			return compress_and_resize_content(image=banner)
+		return banner
+
 	class Meta:
 		model = Community
 		fields = (
-			'community_name', 
-			'community_description', 
-			'community_platform', 
-			'force_login',
-			'community_icon',
-			'community_banner'
+			'name', 
+			'description', 
+			'platform', 
+			'require_auth',
+			'ico',
+			'banner',
 		)
 		
 class Settomgs_Change_Password(forms.Form):

@@ -5,37 +5,49 @@
 <form class="setting-form" method="post" action={% url "main:community-create-action" %}>
 	<p>Create your own community that you can edit here! Each community will cost you one Community Token.</p>
 	<li class="setting-community-name">
-	<p class="settings-label">Set name:</p>
-		<div class="center center-input">
-			<input type="text" name="community_name" maxlength="32" placeholder="New Name" value="{{ community.name }}">
-		</div>
-	</li>
-	<li class="setting-community-description">
-		<p class="settings-label">Community description:</p>
-		<textarea class="textarea" name="community_description" maxlength="2200" placeholder="Community description">{{ community.description }}</textarea>
-	  </li>
-	  <li>
-        <p class="settings-label"><label for="community_platform">Platform</label></p>
-        <div class="select-content">
-          <div class="select-button">
-            <select name="community_platform" id="community_platform">
-              <option value="0"{% if community.platform == 0 %} selected{% endif %}>None</option>
-              <option value="1"{% if community.platform == 1 %} selected{% endif %}>3DS</option>
-              <option value="2"{% if community.platform == 2 %} selected{% endif %}>Wii U</option>
-			  <option value="3"{% if community.platform == 3 %} selected{% endif %}>Switch</option>
-			  <option value="4"{% if community.platform == 4 %} selected{% endif %}>3DS and Wii U</option>
-			  <option value="5"{% if community.platform == 5 %} selected{% endif %}>PC</option>
-			  <option value="6"{% if community.platform == 6 %} selected{% endif %}>Xbox</option>
-			  <option value="7"{% if community.platform == 7 %} selected{% endif %}>Playstation</option>
-            </select>
-          </div>
-        </div>
-      </li>
+		<p class="settings-label">Set name:</p>
+			<div class="center center-input">
+				{{ form.name }}
+			</div>
+		</li>
+		<li class="setting-community-description">
+			<p class="settings-label">Community description:</p>
+			{{ form.description }}
+		  </li>
+		{% if request.user.has_freedom %}
+		<li class="setting-community-icon">
+			<label class="file-button-container">
+			<p class="input-label">Community icon:</p>
+				<span class="button file-upload-button">Upload a new icon</span>
+				<input accept="image/gif, image/png, image/webp, image/jpeg, image/jpg, image/svg+xml, image/bmp" type="file" style="display: none;" name="ico" id="upload-file">
+			</label>
+		  </li>
+		  <li class="setting-community-banner">
+		  <label class="file-button-container">
+			<p class="input-label">Community banner:</p>
+				<span class="button file-upload-button">Upload a new banner</span>
+				<input accept="image/gif, image/png, image/webp, image/jpeg, image/jpg, image/svg+xml, image/bmp" type="file" style="display: none;" name="banner" id="upload-file">
+		  </label>
+		  </li>
+		{% endif %}
+		  <li>
+		  <p>&nbsp;</p>
+		  {{ form.require_auth }}Require login:
+				<p class="note">If this is on, users will need to sign in to view your community.</p>
+		  </li>
+		  <li>
+			<p class="settings-label">Platform</p>
+			<div class="select-content">
+			  <div class="select-button">
+			   {{ form.platform }}
+			  </div>
+			</div>
+			<p class="note">If your community is for a video game, you can set the platform here. This will show an icon corresponding to what platform you pick.</p>
+		  </li>
 		{% csrf_token %}
 		<div class="form-buttons">
 			<input type="submit" class="black-button apply-button" value="Save">
 			<p class="note">You have {{ tokens }} token(s) remaining</p>
-			<p class="note">I'm too lazy to add the remaining settings in here for now, but you can change them after making the community. Oh yeah, also if your community gets removed by a staff member, you won't get your token back, so don't make communities that break the rules or whatever.</p>
 		</div>
 </form></div></div>
 {% endblock %}

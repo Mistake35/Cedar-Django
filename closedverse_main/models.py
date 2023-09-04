@@ -668,7 +668,7 @@ class Community(models.Model):
 	banner = models.ImageField(null=True, blank=True)
 	# Type: 0 - general, 1 - game, 2 - special 
 	type = models.SmallIntegerField(default=0, help_text='The category the community belongs in, setting this to None will remove the community.', choices=((0, 'General'), (1, 'Game'), (2, 'Special'), (3, 'User Community'), (4, 'Hide')))
-	platform = models.SmallIntegerField(default=0, choices=((0, 'none'), (1, '3ds'), (2, 'wii u'), (3, 'switch'), (4, 'both'), (5, 'PC'), (6, 'Xbox'), (7, 'Playstation')))
+	platform = models.SmallIntegerField(default=0, choices=((0, 'None'), (1, '3DS'), (2, 'Wii U'), (3, 'Switch'), (4, '3DS and Wii U'), (5, 'PC'), (6, 'Xbox'), (7, 'Playstation')))
 	tags = models.CharField(blank=True, help_text='Provides special functionality for specific communities.', null=True, max_length=255, choices=(('announcements', 'main announcement community'), ('changelog', 'main changelog'), ('activity', 'Activity Feed posting community'), ('general', 'General Discussion Community')))
 	created = models.DateTimeField(auto_now_add=True)
 	updated = models.DateTimeField(auto_now=True)

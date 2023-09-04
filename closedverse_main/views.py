@@ -310,7 +310,7 @@ def signup_page(request):
 				return HttpResponseBadRequest("please do not use a vpn ok thanks")
 		if request.POST.get('origin_id'):
 			if not request.POST.get('mh'):
-			  return HttpResponseBadRequest("sorry didn't get the mii image attribute. you might need to wait or just refresh, sorry")
+				return HttpResponseBadRequest("sorry didn't get the mii image attribute. you might need to wait or just refresh, sorry")
 			if User.nnid_in_use(request.POST['origin_id']):
 				return HttpResponseBadRequest("That Nintendo Network ID is already in use, that would cause confusion.")
 			#mii = get_mii(request.POST['origin_id'])
@@ -497,7 +497,7 @@ def user_view(request, username):
 				user.avatar =  ('s' if getrandbits(1) else '')
 			else:
 				if not request.POST.get('mh'):
-				  return json_response('i think you gotta wait for the nnid to retrieve')
+					return json_response('i think you gotta wait for the nnid to retrieve')
 				user.has_mh = True
 				#getmii = get_mii(request.POST.get('origin_id'))
 				#if not getmii:
@@ -992,8 +992,10 @@ def community_tools(request, community):
 	can_edit = the_community.can_edit_community(request)
 	if not can_edit:
 		raise Http404()
+	form = CommunitySettingForm(instance=the_community)
 	return render(request, 'closedverse_main/community_tools.html', {
 	'title': 'Community tools',
+	'form': form,
 	'community': the_community,
 	'activity_feed': activity_feed,
 	})
@@ -1006,22 +1008,11 @@ def community_tools_set(request, community):
 		can_edit = the_community.can_edit_community(request)
 		if not can_edit:
 			return HttpResponseForbidden()
-		form = CommunitySettingForm(request.POST, request.FILES, request , instance=the_community)
+		form = CommunitySettingForm(request.POST, request.FILES, instance=the_community)
 		if not form.is_valid():
 			return json_response(form.errors.as_text())
-		community = form.save(commit=False)
-		community.name = form.cleaned_data.get('community_name')
-		community.description = form.cleaned_data.get('community_description')
-		community.platform = form.cleaned_data.get('community_platform')
-		community.require_auth = True if form.cleaned_data.get('force_login') else False
-		if form.cleaned_data.get('community_icon'):
-			upload = util.image_upload(form.cleaned_data.get('community_icon'), True, icon=True)
-			community.ico = upload
-		if form.cleaned_data.get('community_banner'):
-			upload = util.image_upload(form.cleaned_data.get('community_banner'), True, banner=True)
-			community.banner = upload
-		community.save()
-		AuditLog.objects.create(type=4, community=community, user=community.creator, by=request.user)
+		form.save()
+		AuditLog.objects.create(type=4, community=the_community, user=the_community.creator, by=request.user)
 		return HttpResponse()
 	else:
 		raise Http404()
@@ -1032,28 +1023,28 @@ def community_create(request):
 		raise Http404()
 	if request.user.c_tokens < 1:
 		raise Http404()
+	form = CommunitySettingForm()
 	return render(request, 'closedverse_main/community_create.html', {
 	'title': 'Create a community',
+	'form': form,
 	'tokens': request.user.c_tokens,
 	})
 def community_create_action(request):
-	user = request.user
 	if request.method == 'POST':
 		if not request.user.is_authenticated:
-			raise Http404()
-		if user.c_tokens < 1:
-			return json_response("You don't have any tokens left")
-		if len(request.POST.get('community_name')) == 0 or len(request.POST.get('community_name')) >= 100:
-			return json_response('Your community name is either too short or too long.')
-		if len(request.POST.get('community_description')) >= 1024:
-			return json_response('Your community description is too long.')
-		if int(request.POST.get('community_platform')) >= 8:
-			return json_response('Invalid Platform type.')
-		get = request.POST.get
-		user.c_tokens -= 1
-		user.save()
-		community = Community.objects.create(name=get('community_name'), description=get('community_description'), type=3, platform=get('community_platform'), creator=user)
+			return HttpResponseForbidden()
+		if request.user.c_tokens < 1:
+			return HttpResponseForbidden()
+		form = CommunitySettingForm(request.POST, request.FILES)
+		if not form.is_valid():
+			return json_response(form.errors.as_text())
+		community = form.save()
+		community.type = 3
+		community.creator = request.user
+		community.save()
 		return json_response('Community has been created, check the front page!', 'Done')
+	else:
+		raise Http404()
 @login_required
 def post_create(request, community):
 	if request.method == 'POST':
