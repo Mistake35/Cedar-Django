@@ -50,15 +50,24 @@ def compress_and_resize_content(image):
 # I do want to move each and every form over to here. Not only will this trivialize making new forms, this will also make it more secure or something.
 class CommunitySettingForm(forms.ModelForm):
 	description	 = forms.CharField(max_length = 2200,required=False, widget=forms.Textarea(attrs={'class': 'textarea'}))
+		
+	def __init__(self, *args, **kwargs):
+		super(CommunitySettingForm, self).__init__(*args, **kwargs)
+		# Store the initial values of the image fields
+		self.initial_ico = self.instance.ico
+		self.initial_banner = self.instance.banner
+
 	def clean_ico(self):
 		ico = self.cleaned_data.get('ico')
-		if ico:
+		# Check if the image has changed
+		if ico and ico != self.initial_ico:
 			return compress_and_resize_icon(image=ico)
 		return ico
 
-	def clean_banner(self):	
+	def clean_banner(self):    
 		banner = self.cleaned_data.get('banner')
-		if banner:
+		# Check if the image has changed
+		if banner and banner != self.initial_banner:
 			return compress_and_resize_content(image=banner)
 		return banner
 

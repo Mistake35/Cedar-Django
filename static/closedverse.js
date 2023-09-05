@@ -3606,11 +3606,12 @@ mode_post = 0;
 	*/
 	b.router.connect("^/communities/[0-9]+/(tools)$", function(c, d, e) {
         function f(c) {
-            var d = a(this)
-              , e = d.closest("form");
+            var d = a(this),
+                e = d.closest("form");
             b.Form.isDisabled(d) || c.isDefaultPrevented() || (c.preventDefault(),
             b.Form.submit(e, d).done(function(a) {
-                b.Net.reload()
+                var communityId = window.location.pathname.split('/')[2];
+                window.location = "/communities/" + communityId;
             }))
         }
         a(document).on("click", ".apply-button", f),
@@ -3620,13 +3621,13 @@ mode_post = 0;
     }),
 	b.router.connect("^/c/create$", function(c, d, e) {
         function f(c) {
-            var d = a(this)
-              , e = d.closest("form");
+            var d = a(this),
+                e = d.closest("form");
             b.Form.isDisabled(d) || c.isDefaultPrevented() || (c.preventDefault(),
             b.Form.submit(e, d).done(function(a) {
-                b.Net.reload()
-            }))
-        }
+                window.location = "/";
+             }))
+         }
         a(document).on("click", ".apply-button", f),
         e.done(function() {
             a(document).off("click", ".apply-button", f)

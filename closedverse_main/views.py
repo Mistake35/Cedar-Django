@@ -1013,7 +1013,7 @@ def community_tools_set(request, community):
 			return json_response(form.errors.as_text())
 		form.save()
 		AuditLog.objects.create(type=4, community=the_community, user=the_community.creator, by=request.user)
-		return HttpResponse()
+		return redirect(reverse('main:community-view', args=[the_community.id]))
 	else:
 		raise Http404()
 		
@@ -1042,7 +1042,7 @@ def community_create_action(request):
 		community.type = 3
 		community.creator = request.user
 		community.save()
-		return json_response('Community has been created, check the front page!', 'Done')
+		return redirect('/')
 	else:
 		raise Http404()
 @login_required
