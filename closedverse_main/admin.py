@@ -88,8 +88,13 @@ class ConversationAdmin(admin.ModelAdmin):
 class CommentsInline(admin.TabularInline):
 	model = models.Comment
 	extra = 0
-	fields = ('creator', 'body', 'is_rm')
-	raw_id_fields = ('creator',)
+	fields = ('creator', 'body', 'is_rm', )
+	readonly_fields = ('creator', )
+	def has_add_permission(self, request, obj=None):
+		return False
+	def has_delete_permission(self, request, obj=None):
+		return False
+
 
 class PostAdmin(admin.ModelAdmin):
 	inlines = [CommentsInline]
