@@ -681,12 +681,11 @@ class Community(models.Model):
 	objects = PostManager()
 	real = models.Manager()
 	def popularity(self):
-		if self.creator:
-			# don't count posts from the community owner.
-			popularity = Post.objects.filter(community=self).exclude(creator=self.creator).count()
-		else:
-			popularity = Post.objects.filter(community=self).count()
-		return popularity
+		# Get the date 7 days ago from today
+		start_date = timezone.now() - timedelta(days=7)
+		popularity = Post.objects.filter(community=self, created__gte=start_date)
+		return popularity.count()
+	
 	def __str__(self):
 		return self.name
 	def icon(self):

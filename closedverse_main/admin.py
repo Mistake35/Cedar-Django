@@ -85,19 +85,7 @@ class ConversationAdmin(admin.ModelAdmin):
 	search_fields = ('id', )
 	raw_id_fields = ('source', 'target', )
 
-class CommentsInline(admin.TabularInline):
-	model = models.Comment
-	extra = 0
-	fields = ('creator', 'body', 'is_rm', )
-	readonly_fields = ('creator', )
-	def has_add_permission(self, request, obj=None):
-		return False
-	def has_delete_permission(self, request, obj=None):
-		return False
-
-
 class PostAdmin(admin.ModelAdmin):
-	inlines = [CommentsInline]
 	raw_id_fields = ('creator', 'poll', )
 	search_fields = ('id', 'body', 'creator__username', )
 	list_display = ('id', 'creator', 'body', 'is_rm', )
