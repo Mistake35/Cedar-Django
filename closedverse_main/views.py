@@ -54,6 +54,11 @@ def community_list(request):
 	"""Lists communities / main page."""
 	#popularity = Community.popularity
 	obj = Community.objects
+	# if there are no featured communities, sort by popularity instead.
+	if not obj.filter(is_feature=True).exists():
+		feature = sorted(obj.filter(type=3), key=lambda x: x.popularity(), reverse=True)[0:4]
+	else:
+		feature = obj.filter(is_feature=True).order_by('-created')
 	if request.user.is_authenticated:
 		classes = ['guest-top']
 		favorites = request.user.community_favorites()
@@ -83,7 +88,7 @@ def community_list(request):
 		'special': obj.filter(type=2).order_by('-created')[0:12],
 		'user_communities': sorted(obj.filter(type=3), key=lambda x: x.popularity(), reverse=True)[0:12],
 		'my_communities': my_communities,
-		'feature': obj.filter(is_feature=True).order_by('-created'),
+		'feature': feature,
 		'favorites': favorites,
 		'settings': settings,
 		'ogdata': {
