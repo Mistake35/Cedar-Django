@@ -56,7 +56,7 @@ def community_list(request):
 	obj = Community.objects
 	# if there are no featured communities, sort by popularity instead.
 	if not obj.filter(is_feature=True).exists():
-		feature = sorted(obj.filter(), key=lambda x: x.popularity(), reverse=True)[0:4]
+		feature = sorted(obj.filter().exclude(type=4), key=lambda x: x.popularity(), reverse=True)[0:4]
 	else:
 		feature = obj.filter(is_feature=True).order_by('-created')
 	if request.user.is_authenticated:
