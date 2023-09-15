@@ -46,12 +46,6 @@ def Disable_user(modeladmin, request, queryset):
 def Enable_user(modeladmin, request, queryset):
 	queryset.update(is_active = True)
 
-@admin.action(description='Demote user', permissions=["change"])
-def Demote_user(modeladmin, request, queryset):
-	queryset.update(is_superuser = False)
-	queryset.update(is_staff = False)
-	queryset.update(level = 0)
-
 class UserAdmin(BaseUserAdmin):
 	search_fields = ('id', 'username', 'nickname', 'email', 'addr', 'signup_addr')
 	list_display = ('id', 'username', 'nickname', 'level', 'is_active', 'is_staff', 'is_superuser')
