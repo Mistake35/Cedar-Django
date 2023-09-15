@@ -393,7 +393,7 @@ def forgot_passwd(request):
 
 def logout_page(request):
 	"""Password email page / post endpoint."""
-	if not request.user.is_authenticated or not request.user.is_active():
+	if not request.user.is_authenticated or not request.user.is_active:
 		if not request.user.is_authenticated:
 			logout(request)
 			r = HttpResponseForbidden("You are not logged in, so how can you possibly log out? You will be redirected to Wario Land 4 momentarily.", content_type='text/plain')
