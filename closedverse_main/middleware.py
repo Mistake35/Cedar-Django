@@ -89,7 +89,7 @@ class ClosedMiddleware(object):
 		"""
 		if request.user.is_authenticated:
 			"""
-			if not request.user.is_active():
+			if not request.user.is_active:
 				if request.user.warned_reason:
 					ban_msg = request.user.warned_reason
 				else:
@@ -97,7 +97,7 @@ class ClosedMiddleware(object):
 				return HttpResponseForbidden(ban_msg)
 			"""
 			# can just forbid post requests for the time being (but leav our funny logout message :3)
-			if not request.user.is_active() and request.method != 'GET' and request.get_full_path() != '/logout/':
+			if not request.user.is_active and request.method != 'GET' and request.get_full_path() != '/logout/':
 				return HttpResponseForbidden()
 		response = self.get_response(request)
 		if request.user.is_authenticated:

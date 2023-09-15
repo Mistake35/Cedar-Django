@@ -125,7 +125,7 @@ class LoginForm(forms.Form):
 			raise forms.ValidationError("Invalid password.", code='invalid')
 		elif user[1] == 2:
 			raise forms.ValidationError("This account's password needs to be reset. Contact an admin or reset by email.", code='required_reset')
-		elif not user[0].is_active():
+		elif not user[0].is_active:
 			raise forms.ValidationError("This account was disabled.", code='disabled')
 		return cleaned_data
 
@@ -136,7 +136,7 @@ class User_tools_Form(forms.ModelForm):
 
 	class Meta:
 		model = User
-		fields = ['username', 'nickname', 'role', 'c_tokens', 'hide_online', 'active', 'can_invite', 'has_mh', 'avatar']
+		fields = ['username', 'nickname', 'role', 'c_tokens', 'hide_online', 'can_invite', 'has_mh', 'avatar']
 
 	def clean_username(self):
 		username = self.cleaned_data.get('username')

@@ -9,7 +9,7 @@
 			<h3>General account information:</h3>
 				<p>IP address: <span>{% if user.addr %}{{ user.addr }}{% else %}Data missing{% endif %}
 				<p>Signup IP address: <span>{% if user.signup_addr %}{{ user.signup_addr }}{% else %}Data missing{% endif %}</p>
-				<p>Rank: <span>{% if user.staff %}You are a staff member.{% elif not user.level <= 0 %}You are a moderator. (Level {{ user.level }}){% else %}You are a regular user.{% endif %}
+				<p>Rank: <span>{% if user.is_staff %}You are a staff member.{% elif not user.level <= 0 %}You are a moderator. (Level {{ user.level }}){% else %}You are a regular user.{% endif %}
 				<h3>My content:</h3>
 				<p>Your account has existed for {{ user.created|timesince }}! During that time, we've collected:</p>
 				<ul>
@@ -20,16 +20,12 @@
 				<li>My notifications: <span> {{ notifications }}
 				</ul>
 			<h3>Restrictions:</h3>
-				{% if request.user.active %}
 				<ul>
 				<li>Sending images and creating new accounts: <span> {% if user.has_freedom %}Good standing{% else %}Restricted{% endif %}
 				<li>Post limit: <span> {% if request.user.profile.limit_post == 0 %}Good standing{% else %}{{ user.profile.limit_post }}{% endif %}
 				<li>Editing your profile: <span> {% if not user.profile.cannot_edit %}Good standing{% else %}Restricted{% endif %}
 				<li>Creating invites: <span> {% if user.can_invite %}Good standing{% else %}Restricted{% endif %}
 				</ul>
-				{% else %}
-				<p class='center'>You've been fucking banned lmao</p>
-				{% endif %}
 			<h3>Collected data:</h3>
 			<div class="user-data">
 				<p class="label">Account login history:</p>

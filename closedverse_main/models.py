@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 from django.db import models
-from django.contrib.auth.base_user import AbstractBaseUser
-from django.contrib.auth.models import BaseUserManager
+from django.contrib.auth.base_user import BaseUserManager
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db.models import Q, Max, F, Count, Exists, OuterRef, Subquery #, QuerySet, Case, When,
 from django.utils import timezone
 from django.http import Http404
@@ -68,10 +68,12 @@ class UserManager(BaseUserManager):
 	def create_superuser(self, username, password):
 		user = self.model(
 			username=username,
+			nickname=username,
 		)
 		user.set_password(password)
-		user.staff = True
-		user.level = 99 # added because some admin funcs are missing otherwise
+		user.is_staff = True
+		user.is_superuser = True
+		user.level = 999 # added because some admin funcs are missing otherwise
 		user.save()
 		profile = Profile.objects.model()
 		profile.user = user
@@ -134,11 +136,9 @@ class Role(models.Model):
 # as of writing, mii-secure is unstable, nintendo please do not f*ck me for this
 mii_domain = 'https://s3.us-east-1.amazonaws.com/mii-images.account.nintendo.net/'
 
-class User(AbstractBaseUser):
+class User(AbstractBaseUser, PermissionsMixin):
 	id = models.AutoField(primary_key=True)
 	username = models.CharField(max_length=32, unique=True)
-	# Todo: Don't allow nickname to be null (once this is fixed, un-str-ify line 357 of views; the one with ogdata description)
-	# Also don't let lots of other strings to be null
 	nickname = models.CharField(max_length=64, null=True)
 	password = models.CharField(max_length=128)
 	email = models.EmailField(null=True, blank=True, default='')
@@ -146,7 +146,7 @@ class User(AbstractBaseUser):
 	avatar = models.CharField(max_length=1200, blank=True, default='')
 	theme = ColorField(blank=True, null=True)
 	# LEVEL: 0-1 is default, everything else is just levels
-	level = models.SmallIntegerField(default=0, help_text='The rank of the user, \"0\" is by default. Users with a high enough rank will be able to manage users.')
+	level = models.SmallIntegerField(default=0, help_text='This is the level of authority. People with a lower level cannot edit those with a higher level. This also grants additional permissions outside of the Django Admin Panel.')
 	role = models.ForeignKey(Role, blank=True, null=True, on_delete=models.SET_NULL, help_text='This will show a funny badge and text on this user\'s profile. This does not grant the user any additional power and is only visual.')
 	addr = models.CharField(max_length=64, null=True, blank=True)
 	signup_addr = models.CharField(max_length=64, null=True, blank=True)
@@ -157,11 +157,10 @@ class User(AbstractBaseUser):
 	hide_online = models.BooleanField(default=False, help_text='If this is ticked, the user has opted to hide their online status.')
 	color = ColorField(default='', null=True, blank=True)
 	
-	staff = models.BooleanField(default=False, help_text='Allow this user to access the admin panel you\'re using right now?')
-	active = models.BooleanField(default=True, help_text='If this is off, the user is basically banned and can\'t do shit here')
+	is_staff = models.BooleanField(default=False, help_text='Allow this user to access the admin panel you\'re using right now?')
+	is_active = models.BooleanField(default=True, help_text='If this is off, the user is basically banned and can\'t do shit here')
+	is_superuser = models.BooleanField(default=False, help_text='Overrides django groups. This also allows you to change people\'s perms.')
 	can_invite = models.BooleanField(default=True, help_text='Can this user invite new users? This does not matter unless the invite system is turned on.')
-	warned = models.BooleanField(default=False, help_text='Shows an annoying fucking warning box on the front page.')
-	warned_reason = models.CharField(blank=True, null=True, max_length=600, help_text='This string will show if the user is banned, or warned.')
 	bg_url = models.CharField(max_length=300, null=True, blank=True)
 	
 	is_anonymous = False
@@ -175,6 +174,11 @@ class User(AbstractBaseUser):
 	
 	objects = UserManager()
 	
+	class Meta:
+		permissions = [
+			("Can_alter_level_and_Perms", "Allow this user to change Level, Groups and Permissions?"),
+		]
+	
 	def __str__(self):
 		return self.username
 	def get_full_name(self):
@@ -185,16 +189,6 @@ class User(AbstractBaseUser):
 		return self.username
 	def has_module_perms(self, a):
 		return True
-	def has_perm(self, a):
-		return self.staff
-	def is_staff(self):
-		return self.staff
-	def is_active(self):
-		return self.active
-	def is_warned(self):
-		return self.warned
-	def get_warned_reason(self):
-		return self.warned_reason
 	def profile(self, attr=None):
 		# If attr is specified, that field is retrieved
 		if attr:
@@ -425,7 +419,7 @@ class User(AbstractBaseUser):
 			
 	# Admin can-manage
 	def can_manage(self):
-		if self.level >= settings.level_needed_to_man_users or self.staff:
+		if self.level >= settings.level_needed_to_man_users or self.is_staff:
 			can_manage = True 
 		else:
 			can_manage = False
@@ -433,7 +427,7 @@ class User(AbstractBaseUser):
 	# Does self have authority over user?
 	def has_authority(self, user):
 		if user.is_authenticated:
-			if self.staff and not user.staff:
+			if self.is_staff and not user.is_staff:
 				return True
 			if self.level >= user.level:
 				return True 
@@ -761,13 +755,13 @@ class Community(models.Model):
 		return False
 
 	def post_perm(self, request):
-		if not request.user.active:
+		if not request.user.is_active:
 			return False
 		if self.Community_block(request):
 			return False
 		if request.user.level >= self.rank_needed_to_post:
 			return True
-		elif request.user.staff == True:
+		elif request.user.is_staff == True:
 			return True
 		# If the community is made by you, you should be able to post in there regardless.
 		elif request.user == self.creator:
@@ -779,12 +773,12 @@ class Community(models.Model):
 		if not request.user.is_authenticated:
 			return False
 		# If the user is a mod but can't post in one community, the user should not edit it either.
-		if not request.user.level >= self.rank_needed_to_post and not request.user.staff == True:
+		if not request.user.level >= self.rank_needed_to_post and not request.user.is_staff == True:
 			return False
 			
 		if request.user == self.creator:
 			return True
-		elif request.user.level >= settings.level_needed_to_man_communities or request.user.staff == True:
+		elif request.user.level >= settings.level_needed_to_man_communities or request.user.is_staff == True:
 			return True
 		else:
 			return False
@@ -821,7 +815,7 @@ class Community(models.Model):
 				return 5
 		if not request.user.has_freedom() and (request.POST.get('url') or request.FILES.get('screen') or request.FILES.get('video')):
 			return 6
-		if not request.user.is_active():
+		if not request.user.is_active:
 			return 6
 		if request.user.unread_warning():
 			return 13
@@ -955,7 +949,7 @@ class Post(models.Model):
 	def can_yeah(self, request):
 		if not request.user.is_authenticated:
 			return False
-		if not request.user.is_active():
+		if not request.user.is_active:
 			return False
 		if self.community.Community_block(request):
 			return False
@@ -988,7 +982,7 @@ class Post(models.Model):
 	def can_comment(self, request):
 		if self.number_comments() > 500:
 			return False
-		if not request.user.active:
+		if not request.user.is_active:
 			return False
 		# yeah this is fucking nuts. It's basically a ban from an entire community.
 		if self.community.Community_block(request):
@@ -1063,7 +1057,7 @@ class Post(models.Model):
 		for c in request.POST['body']:
 			if unicodedata.combining(c):
 				return 12
-		if not request.user.is_active():
+		if not request.user.is_active:
 			return 6
 		if len(request.POST['body']) > 2200 or (len(request.POST['body']) < 1 and not request.POST.get('_post_type') == 'painting'):
 			return 1
@@ -1206,7 +1200,7 @@ class Comment(models.Model):
 		else:
 			return False
 	def can_yeah(self, request):
-		if not request.user.is_authenticated or not request.user.is_active():
+		if not request.user.is_authenticated or not request.user.is_active:
 			return False
 		if self.is_mine(request.user) or UserBlock.find_block(self.creator, request.user):
 			return False

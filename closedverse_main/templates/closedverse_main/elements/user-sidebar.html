@@ -122,6 +122,9 @@
 	    <a href={% url "main:user-tools-bans" user.username %} class="sidebar-admin-bans symbol{% if selection == 9 %} selected{% endif %}">
         <span>Ban User</span>
       </a>
+	    <a href={% url "main:user-tools-meta" user.username %} class="sidebar-admin-meta symbol{% if selection == 10 %} selected{% endif %}">
+	    <span>View Metadata</span> <!--Too lazy to hide this for now. It will error out if you don't have a high enough level.-->
+      </a>
     </div>
   </div>
   {% endif %}

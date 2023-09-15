@@ -1628,8 +1628,6 @@ def user_tools(request, username):
 	user_form = User_tools_Form(instance=user)
 	profile_form = Profile_tools_Form(instance=profile)
 	purge_form = PurgeForm()
-	seen_by = MetaViews.objects.filter(target_user=user).distinct().order_by('-id')[:10]
-	has_seen = MetaViews.objects.filter(from_user=user).distinct().order_by('-id')[:10]
 	
 	accountmatch = User.objects.filter(
 	Q(addr=user.addr) | Q(addr=user.signup_addr)
@@ -1641,8 +1639,6 @@ def user_tools(request, username):
 	'user_form': user_form,
 	'purge_form': purge_form,
 	'profile_form': profile_form,
-	'seen_by': seen_by,
-	'has_seen': has_seen,
 	'profile': profile,
 	'accountmatch': accountmatch,
 	'min_lvl_metadata_perms': settings.min_lvl_metadata_perms,
@@ -1668,9 +1664,6 @@ def user_tools_meta(request, username):
 			MetaViews.objects.create(target_user=user, from_user=request.user)
 	except:
 		MetaViews.objects.create(target_user=user, from_user=request.user)
-	
-	seen_by = MetaViews.objects.filter(target_user=user).distinct().order_by('-id')[:50]
-	#has_seen = MetaViews.objects.filter(from_user=user).distinct().order_by('-id')[:50]
 	log_attempt = LoginAttempt.objects.filter(user=user).order_by('-id')[:50]
 	accountmatch = User.objects.filter(
 	Q(addr=user.addr) | Q(addr=user.signup_addr)
@@ -1685,7 +1678,6 @@ def user_tools_meta(request, username):
 	return render(request, 'closedverse_main/man/usertoolsmeta.html', {
 	'title': 'Admin tools',
 	'user': user,
-	'seen_by': seen_by,
 	'accountmatch': accountmatch,
 	'log_attempt': log_attempt,
 	'profile': profile,
