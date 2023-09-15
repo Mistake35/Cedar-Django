@@ -304,10 +304,10 @@ def signup_page(request):
 		check_others = Profile.objects.filter(user__addr=request.META['REMOTE_ADDR'], let_freedom=False).exists()
 		if check_others:
 			return HttpResponseBadRequest("Unfortunately, you cannot make any accounts at this time. This restriction was set for a reason, please contact the administration. Please don't bypass this, as if you do, you are just being ignorant. If you have not made any accounts, contact the administration and this restriction will be removed for you.")
-		check_othersban = User.objects.filter(addr=request.META['REMOTE_ADDR'], active=False).exists()
+		check_othersban = User.objects.filter(addr=request.META['REMOTE_ADDR'], is_active=False).exists()
 		if check_othersban:
 			return HttpResponseBadRequest("You cannot sign up while banned.")
-		check_signupban = User.objects.filter(signup_addr=request.META['REMOTE_ADDR'], active=False).exists()
+		check_signupban = User.objects.filter(signup_addr=request.META['REMOTE_ADDR'], is_active=False).exists()
 		if check_signupban:
 			return HttpResponseBadRequest("Get on your hands and knees")
 		if iphub(request.META['REMOTE_ADDR']):
