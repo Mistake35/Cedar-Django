@@ -49,7 +49,7 @@ def Enable_user(modeladmin, request, queryset):
 class UserAdmin(BaseUserAdmin):
 	search_fields = ('id', 'username', 'nickname', 'email', 'addr', 'signup_addr')
 	list_display = ('id', 'username', 'nickname', 'level', 'is_active', 'is_staff', 'is_superuser')
-	actions = [Disable_user, Enable_user, Demote_user]
+	actions = [Disable_user, Enable_user]
 	raw_id_fields = ('role', )
 	readonly_fields = ('last_login', 'created', )
 	fieldsets = (
