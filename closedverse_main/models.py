@@ -157,7 +157,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 	hide_online = models.BooleanField(default=False, help_text='If this is ticked, the user has opted to hide their online status.')
 	color = ColorField(default='', null=True, blank=True)
 	
-	is_staff = models.BooleanField(default=False, help_text='Allow this user to access the admin panel you\'re using right now?')
+	is_staff = models.BooleanField(default=False, help_text='Allow this user to access the admin panel you\'re using right now? Don\'t forget to specify the permissions.')
 	is_active = models.BooleanField(default=True, help_text='If this is off, the user is basically banned and can\'t do shit here')
 	is_superuser = models.BooleanField(default=False, help_text='Overrides django groups. This also allows you to change people\'s perms.')
 	can_invite = models.BooleanField(default=True, help_text='Can this user invite new users? This does not matter unless the invite system is turned on.')
@@ -173,11 +173,6 @@ class User(AbstractBaseUser, PermissionsMixin):
 	REQUIRED_FIELDS = []
 	
 	objects = UserManager()
-	
-	class Meta:
-		permissions = [
-			("Can_alter_level_and_Perms", "Allow this user to change Level, Groups and Permissions?"),
-		]
 	
 	def __str__(self):
 		return self.username
@@ -755,19 +750,13 @@ class Community(models.Model):
 		return False
 
 	def post_perm(self, request):
-		if not request.user.is_active:
-			return False
 		if self.Community_block(request):
 			return False
 		if request.user.level >= self.rank_needed_to_post:
 			return True
 		elif request.user.is_staff == True:
 			return True
-		# If the community is made by you, you should be able to post in there regardless.
-		elif request.user == self.creator:
-			return True
-		else:
-			return False
+		return False
 	def can_edit_community(self, request):
 		# yanderedev moment
 		if not request.user.is_authenticated:

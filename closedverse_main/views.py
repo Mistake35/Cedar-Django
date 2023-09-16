@@ -60,6 +60,11 @@ def community_list(request):
 	else:
 		feature = obj.filter(is_feature=True).order_by('-created')
 	if request.user.is_authenticated:
+		# If no profile exists for request.user, make one automatically.
+		profile_exists = Profile.objects.filter(user=request.user).exists()
+		if not profile_exists:
+			print("Profile does not exist. Creating one...")
+			Profile.objects.create(user=request.user)
 		classes = ['guest-top']
 		favorites = request.user.community_favorites()
 	else:
@@ -307,9 +312,6 @@ def signup_page(request):
 		check_othersban = User.objects.filter(addr=request.META['REMOTE_ADDR'], is_active=False).exists()
 		if check_othersban:
 			return HttpResponseBadRequest("You cannot sign up while banned.")
-		check_signupban = User.objects.filter(signup_addr=request.META['REMOTE_ADDR'], is_active=False).exists()
-		if check_signupban:
-			return HttpResponseBadRequest("Get on your hands and knees")
 		if iphub(request.META['REMOTE_ADDR']):
 			if settings.DISALLOW_PROXY:
 				return HttpResponseBadRequest("please do not use a vpn ok thanks")
@@ -393,13 +395,9 @@ def forgot_passwd(request):
 
 def logout_page(request):
 	"""Password email page / post endpoint."""
-	if not request.user.is_authenticated or not request.user.is_active:
-		if not request.user.is_authenticated:
-			logout(request)
-			r = HttpResponseForbidden("You are not logged in, so how can you possibly log out? You will be redirected to Wario Land 4 momentarily.", content_type='text/plain')
-		else:
-			r = HttpResponseForbidden("You can't log out while you're inactive. According to me and God, you'll just have to sit here and suffer for now. Go contemplate your actions. You will be redirected to Wario Land 4 momentarily.", content_type='text/plain')
-		r['Refresh'] = '7; url=https://gba.js.org/player#warioland4'
+	if not request.user.is_authenticated:
+		logout(request)
+		r = HttpResponseForbidden("You are not logged in, so how can you possibly log out? You will be redirected to Wario Land 4 momentarily.", content_type='text/plain')
 		return r
 	logout(request)
 	if request.GET.get('next'):
@@ -1047,6 +1045,8 @@ def community_create_action(request):
 		community.type = 3
 		community.creator = request.user
 		community.save()
+		request.user.c_tokens -= 1
+		request.user.save()
 		return redirect('/')
 	else:
 		raise Http404()

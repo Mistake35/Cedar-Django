@@ -47,7 +47,7 @@ def Enable_user(modeladmin, request, queryset):
 	queryset.update(is_active = True)
 
 class UserAdmin(BaseUserAdmin):
-	search_fields = ('id', 'username', 'nickname', 'email', 'addr', 'signup_addr')
+	search_fields = ('id', 'username', 'nickname', )
 	list_display = ('id', 'username', 'nickname', 'level', 'is_active', 'is_staff', 'is_superuser')
 	actions = [Disable_user, Enable_user]
 	raw_id_fields = ('role', )
@@ -111,56 +111,75 @@ class InvitesAdmin(admin.ModelAdmin):
 	actions = [Void_invite, Restore_invite]
 
 class ComplaintAdmin(admin.ModelAdmin):
-	search_fields = ('id', 'body', )
+	search_fields = ('body', 'creator__username', )
 	raw_id_fields = ('creator', )
+	list_display = ('creator', 'type', 'body', )
 
 class ConversationAdmin(admin.ModelAdmin):
-	search_fields = ('id', )
+	search_fields = ('id', 'source__username', 'target__username')
 	raw_id_fields = ('source', 'target', )
+	list_display = ('source', 'target', )
 
 class PostAdmin(admin.ModelAdmin):
 	raw_id_fields = ('creator', 'poll', )
 	search_fields = ('id', 'body', 'creator__username', )
 	list_display = ('id', 'creator', 'body', 'is_rm', )
 	actions = [Hide_content, Show_content, Disable_comments, Enable_comments]
-	def get_queryset(self, request):
-		return models.Post.real.get_queryset()
 
 class CommentAdmin(admin.ModelAdmin):
 	raw_id_fields = ('creator', 'original_post', )
 	search_fields = ('id', 'body', 'creator__username', )
 	list_display = ('id', 'creator', 'body', 'original_post', 'is_rm', )
 	actions = [Hide_content, Show_content]
-	def get_queryset(self, request):
-		return models.Comment.real.get_queryset()
 
 class CommunityAdmin(admin.ModelAdmin):
 	raw_id_fields = ('creator', )
 	list_display = ('id', 'name', 'description', 'type', 'creator', 'popularity', 'is_rm', 'is_feature', 'require_auth')
 	search_fields = ('id', 'name', 'description', )
 	actions = [Hide_content, Show_content, Feature_community, Unfeature_community, force_login, unforce_login]
-	def get_queryset(self, request):
-		return models.Community.real.get_queryset()
+	list_filter = ('type', 'is_rm', 'is_feature', 'require_auth')
 
 class MessageAdmin(admin.ModelAdmin):
 	raw_id_fields = ('creator', 'conversation', )
 	search_fields = ('id', 'body', 'creator__username', )
-	list_display = ('id', 'creator', 'conversation', 'body', )
+	list_display = ('created', 'creator', 'conversation', 'body', 'is_rm', )
 	actions = [Hide_content, Show_content]
-	def get_queryset(self, request):
-		return models.Message.real.get_queryset()
 
 class NotificationAdmin(admin.ModelAdmin):
+	def combined_display(self, obj):
+		# not needed but it looks cool
+		parts = []
+		if obj.context_post:
+			parts.append(f"Post: {obj.context_post}")
+		if obj.context_comment:
+			parts.append(f"Comment: {obj.context_comment}")
+		if obj.context_warning:
+			parts.append(f"Warning: {obj.context_warning.reason}")
+		return ', '.join(parts) or 'No content found, Warning this will throw an error.'
+	combined_display.short_description = 'Content'
 	raw_id_fields = ('to', 'source', 'context_post', 'context_comment',)
 	search_fields = ('to__username', 'source__username', 'context_post__body', 'context_comment__body',)
-	list_display = ('id', 'to', 'source', 'context_post', 'context_comment',)
+	list_display = ('id', 'to', 'source', 'combined_display',)
 
 class AuditAdmin(admin.ModelAdmin):
+	def combined_display(self, obj):
+		# not needed but it looks cool
+		parts = []
+		if obj.post:
+			parts.append(f"Post: {obj.post}")
+		if obj.comment:
+			parts.append(f"Comment: {obj.comment}")
+		if obj.community:
+			parts.append(f"Community: {obj.community}")
+		return ', '.join(parts) or 'N/A'
+	combined_display.short_description = 'Affected content'
 	raw_id_fields = ('by', 'user', 'post', 'comment', 'community', 'reversed_by', )
+	list_display = ('by', 'user', 'type', 'combined_display', )
 	search_fields = ('by__username', 'user__username', 'post__body', 'comment__body', 'community__name', )
 
 class AdsAdmin(admin.ModelAdmin):
-	raw_id_fileds = ('id', 'created', 'url', 'imageurl')
+	list_display = ('url', 'imageurl', )
+	search_fields = ('url', 'imageurl', )
 
 class YeahAdmin(admin.ModelAdmin):
 	raw_id_fields = ('by', 'post', 'comment', )
@@ -200,6 +219,11 @@ class LoginAdmin(admin.ModelAdmin):
 	list_display = ('user', 'addr', 'user_agent', )
 	search_fields = ('user__username', 'addr', 'user_agent', )
 
+class WarningAdmin(admin.ModelAdmin):
+	raw_id_fields = ('by', 'to')
+	list_display = ('by', 'to', 'reason', )
+	search_fields = ('by__username', 'to__username', 'reason', )
+
 admin.site.register(models.Role, RoleAdmin)
 admin.site.register(models.User, UserAdmin)
 admin.site.register(models.Profile, ProfileAdmin)
@@ -214,14 +238,15 @@ admin.site.register(models.UserBlock)
 admin.site.register(models.AuditLog, AuditAdmin)
 admin.site.register(models.ProfileHistory, HistoryAdmin)
 
-admin.site.register(models.Yeah)
+admin.site.register(models.Yeah, YeahAdmin)
 admin.site.register(models.Follow)
 admin.site.register(models.FriendRequest)
 admin.site.register(models.Post, PostAdmin)
 admin.site.register(models.Comment, CommentAdmin)
 admin.site.register(models.Ads, AdsAdmin)
 admin.site.register(models.Ban, BanAdmin)
-admin.site.register(models.Warning)
+admin.site.register(models.Warning, WarningAdmin)
+
 
 # This will show fucking everything, just don't give other people perms to see content types, sessions, and all that shit.
 # This is so the superuser, owner of the site can see everything.

@@ -3406,6 +3406,10 @@ body.masked {
   content: "x";
   color: var(--theme, #ff4159);
 }
+.sidebar-setting .sidebar-admin-meta:before {
+  content: "l";
+  color: var(--theme, #ff4159);
+}
 .sidebar-setting .sidebar-menu-replies:before {
   content: "r";
   color: var(--theme, #ff4159);
