@@ -90,11 +90,11 @@ Let's build the database
 `python3 manage.py makemigrations closedverse_main`
 `python3 manage.py migrate`
 
-11.
+10.
 Do the static files or no CSS or JS.
 `python3 manage.py collectstatic`
 
-12.
+11.
 Test the server!
 Be sure to replace "IP-HERE" with your public IP and make sure it's running on port 80.
 `python3 manage.py runserver IP-HERE:80`
