@@ -125,12 +125,16 @@ class PostAdmin(admin.ModelAdmin):
 	search_fields = ('id', 'body', 'creator__username', )
 	list_display = ('id', 'creator', 'body', 'is_rm', )
 	actions = [Hide_content, Show_content, Disable_comments, Enable_comments]
+	def get_queryset(self, request):
+		return models.Post.real.get_queryset()
 
 class CommentAdmin(admin.ModelAdmin):
 	raw_id_fields = ('creator', 'original_post', )
 	search_fields = ('id', 'body', 'creator__username', )
 	list_display = ('id', 'creator', 'body', 'original_post', 'is_rm', )
 	actions = [Hide_content, Show_content]
+	def get_queryset(self, request):
+		return models.Comment.real.get_queryset()
 
 class CommunityAdmin(admin.ModelAdmin):
 	raw_id_fields = ('creator', )
@@ -138,12 +142,16 @@ class CommunityAdmin(admin.ModelAdmin):
 	search_fields = ('id', 'name', 'description', )
 	actions = [Hide_content, Show_content, Feature_community, Unfeature_community, force_login, unforce_login]
 	list_filter = ('type', 'is_rm', 'is_feature', 'require_auth')
+	def get_queryset(self, request):
+		return models.Community.real.get_queryset()
 
 class MessageAdmin(admin.ModelAdmin):
 	raw_id_fields = ('creator', 'conversation', )
 	search_fields = ('id', 'body', 'creator__username', )
 	list_display = ('created', 'creator', 'conversation', 'body', 'is_rm', )
 	actions = [Hide_content, Show_content]
+	def get_queryset(self, request):
+		return models.Message.real.get_queryset()
 
 class NotificationAdmin(admin.ModelAdmin):
 	def combined_display(self, obj):
