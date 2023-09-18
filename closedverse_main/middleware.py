@@ -1,6 +1,6 @@
 from django.http import HttpResponseForbidden
 from closedverse import settings
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from .models import Ban
 from django.utils import timezone
 from re import compile
@@ -52,19 +52,19 @@ class CheckForBanMiddleware:
 		active_user_ban = Ban.objects.filter(
 			to=request.user,
 			active=True,
-			expiry_date__gte=timezone.now()
-		).first()
-		if active_user_ban:		   
-			return HttpResponseForbidden('You are banned from this site. Reason: ' + active_user_ban.reason)
+			expiry_date__gte=timezone.now()).first()
+		if active_user_ban:
+			context = {'ban': active_user_ban}
+			return render(request, 'ban.html', context)
 		# Get one active ban that is not expired for the IP address
 		ip_address = request.META.get('REMOTE_ADDR')
 		active_ip_ban = Ban.objects.filter(
-			ip_address=ip_address,
-			active=True,
-			expiry_date__gte=timezone.now(),
-		).first()
+		ip_address=ip_address,
+		active=True,
+		expiry_date__gte=timezone.now(),).first()
 		if active_ip_ban:
-			return HttpResponseForbidden('Your IP address is banned from this site. Reason: ' + active_ip_ban.reason)
+			context = {'ban': active_ip_ban}
+			return render(request, 'ban.html', context)
 		return None
 
 class ClosedMiddleware(object):

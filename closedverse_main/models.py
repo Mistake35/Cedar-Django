@@ -750,27 +750,31 @@ class Community(models.Model):
 		return False
 
 	def post_perm(self, request):
+		if not request.user.is_authenticated:
+			return False
+		if request.user.has_perm('closedverse_main.change_community') or request.user.has_perm('closedverse_main.add_post'):
+			# if you have editing or post perms in /admin, you can override shit.
+			# oh god this will become a clusterfuck of logic...
+			return True
 		if self.Community_block(request):
 			return False
 		if request.user.level >= self.rank_needed_to_post:
 			return True
-		elif request.user.is_staff == True:
+		return False
+	def can_edit_community(self, user):
+		# i hate how I have to include this shit
+		if not user.is_authenticated:
+			return False
+		if user.has_perm('closedverse_main.change_community'):
+			# if you have editing perms, you can edit whatever community you want.
+			return True
+		if not user.level >= self.rank_needed_to_post:
+			return False
+		if user == self.creator:
+			return True
+		if user.level >= settings.level_needed_to_man_communities and self.creator:
 			return True
 		return False
-	def can_edit_community(self, request):
-		# yanderedev moment
-		if not request.user.is_authenticated:
-			return False
-		# If the user is a mod but can't post in one community, the user should not edit it either.
-		if not request.user.level >= self.rank_needed_to_post and not request.user.is_staff == True:
-			return False
-			
-		if request.user == self.creator:
-			return True
-		elif request.user.level >= settings.level_needed_to_man_communities or request.user.is_staff == True:
-			return True
-		else:
-			return False
 	def has_favorite(self, request):
 		if request.user.communityfavorite_set.filter(community=self).exists():
 			return True
@@ -1681,19 +1685,6 @@ class Message(models.Model):
 			raise ValueError
 		return json.dumps(ls)
 
-class ConversationInvite(models.Model):
-	id = models.AutoField(primary_key=True)
-	conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
-	source = models.ForeignKey(User, related_name='convinvite_source', on_delete=models.CASCADE)
-	target = models.ForeignKey(User, related_name='convinvite_target', on_delete=models.CASCADE)
-	body = models.TextField(blank=True, null=True, default='')
-	read = models.BooleanField(default=False)
-	finished = models.BooleanField(default=False)
-	created = models.DateTimeField(auto_now_add=True)
-	
-	def __str__(self):
-		return "Invite to conversation " + str(self.conversation) + " from " + str(self.source) + " to " + str(self.target)
-
 class Poll(models.Model):
 	id = models.AutoField(primary_key=True)
 	able_vote = models.BooleanField(default=True)
@@ -1815,12 +1806,6 @@ class AuditLog(models.Model):
 		else:
 			return False
 
-class UserRequest(User):
-	# USER AGENT
-	ua = models.TextField(default='', null=True, blank=True)
-	latest = models.DateTimeField(auto_now=True)
-	status = models.SmallIntegerField(default=0, choices=((0, 'submitted'), (1, 'viewed'), (2, 'accepted'), (3, 'decline'), (4, 'ignore'), ))
-
 class Ads(models.Model):
 	id = models.AutoField(primary_key=True)
 	created = models.DateTimeField(auto_now_add=True)
@@ -1847,6 +1832,7 @@ class Ads(models.Model):
 		return "Ad with id " + str(self.id) + ", created at " + str(self.created) + ", with url " + str(self.url) + ", and imageurl " + str(self.imageurl)
 		
 # thing will log changes to your bio or nickname
+# i should get rid of this, its worthless.
 class ProfileHistory(models.Model):
 	id = models.AutoField(primary_key=True)
 	created = models.DateTimeField(auto_now_add=True)

@@ -1,8 +1,5 @@
 {% extends "closedverse_main/layout.html" %}
 {% block main-body %}{% load closedverse_user %}{% load closedverse_tags %}{% load closedverse_community %}
-{% if not request.user == community.creator %}<div class='notice'>
-<p>Mods and staff members can edit communities.</p>
-</div>{% endif %}
 {% community_sidebar community request %}
 <div class="main-column"><div class="post-list-outline">
 <h2 class="label">Change settings for {% if community.creator %}{{ community.creator }}'s{% else %}this{% endif %} community</h2>

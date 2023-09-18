@@ -5,7 +5,7 @@ register = template.Library()
 def community_sidebar(community, request):
 	return {
 		'community': community,
-		'can_edit': community.can_edit_community(request),
+		'can_edit': community.can_edit_community(request.user),
 		'Community_block': community.Community_block(request),
 		'request': request,
 	}

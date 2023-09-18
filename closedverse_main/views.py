@@ -54,11 +54,7 @@ def community_list(request):
 	"""Lists communities / main page."""
 	#popularity = Community.popularity
 	obj = Community.objects
-	# if there are no featured communities, sort by popularity instead.
-	if not obj.filter(is_feature=True).exists():
-		feature = sorted(obj.filter().exclude(type=4), key=lambda x: x.popularity(), reverse=True)[0:4]
-	else:
-		feature = obj.filter(is_feature=True).order_by('-created')
+	feature = obj.filter(is_feature=True).order_by('-created')
 	if request.user.is_authenticated:
 		# If no profile exists for request.user, make one automatically.
 		profile_exists = Profile.objects.filter(user=request.user).exists()
@@ -123,7 +119,7 @@ def community_all(request, category):
 	category_type = category_enum[0]
 	communities = Community.get_all(category_type, offset)
 	# Closedverse was NEVER meant to have 20000000 communities.
-	if communities.count() > 11:
+	if communities.count() > 12:
 		has_next = True
 	else:
 		has_next = False
@@ -438,7 +434,7 @@ def user_view(request, username):
 		nickname_old = user.nickname
 		if profile.cannot_edit:
 			return json_response("Not allowed.")
-		if len(request.POST.get('screen_name')) is 0 or len(request.POST['screen_name']) > 32:
+		if len(request.POST.get('screen_name')) == 0 or len(request.POST['screen_name']) > 32:
 			return json_response('Nickname is too long or too short (length '+str(len(request.POST.get('screen_name')))+', max 32)')
 		if len(request.POST.get('profile_comment')) > 2200:
 			return json_response('Profile comment is too long (length '+str(len(request.POST.get('profile_comment')))+', max 2200)')
@@ -936,7 +932,6 @@ def community_view(request, community):
 	"""View an individual community"""
 	communities = get_object_or_404(Community, id=community)
 	communities.setup(request)
-	can_edit = communities.can_edit_community(request)
 	if not communities.clickable():
 		return HttpResponseForbidden()
 	if not request.user.is_authenticated and communities.require_auth:
@@ -989,10 +984,9 @@ def community_favorite_rm(request, community):
 	
 def community_tools(request, community):
 	the_community = get_object_or_404(Community, id=community)
-	activity_feed = True if the_community.type == 4 else False
 	if not request.user.is_authenticated:
 		raise Http404()
-	can_edit = the_community.can_edit_community(request)
+	can_edit = the_community.can_edit_community(request.user)
 	if not can_edit:
 		raise Http404()
 	form = CommunitySettingForm(instance=the_community)
@@ -1000,7 +994,6 @@ def community_tools(request, community):
 	'title': 'Community tools',
 	'form': form,
 	'community': the_community,
-	'activity_feed': activity_feed,
 	})
 
 def community_tools_set(request, community):
@@ -1008,14 +1001,15 @@ def community_tools_set(request, community):
 		the_community = get_object_or_404(Community, id=community)
 		if not request.user.is_authenticated:
 			return HttpResponseForbidden()
-		can_edit = the_community.can_edit_community(request)
+		can_edit = the_community.can_edit_community(request.user)
 		if not can_edit:
 			return HttpResponseForbidden()
 		form = CommunitySettingForm(request.POST, request.FILES, instance=the_community)
 		if not form.is_valid():
 			return json_response(form.errors.as_text())
 		form.save()
-		AuditLog.objects.create(type=4, community=the_community, user=the_community.creator, by=request.user)
+		if not request.user == the_community.creator:
+			AuditLog.objects.create(type=4, community=the_community, user=the_community.creator, by=request.user)
 		return redirect(reverse('main:community-view', args=[the_community.id]))
 	else:
 		raise Http404()
