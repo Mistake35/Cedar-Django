@@ -101,46 +101,36 @@ def community_list(request):
 	})
 def community_all(request, category):
 	"""All communities, with pagination"""
+	PAGE_SIZE = 12
 	try:
 		offset = int(request.GET.get('offset', '0'))
 	except ValueError:
 		offset = 0
-	if request.user.is_authenticated:
-		classes = ['guest-top']
-	else:
-		classes = []
-	g = [0, "General Communities"]
 	category_enum = {
-		'gen': g,
+		'gen': [0, "General Communities"],
 		'game': [1, "Game Communities"],
 		'special': [2, "Special Communities"],
 		'usr': [3, "User Communities"],
-	}.get(category, g)
-	category_type = category_enum[0]
-	communities = Community.get_all(category_type, offset)
-	# Closedverse was NEVER meant to have 20000000 communities.
-	if communities.count() > 12:
-		has_next = True
-	else:
-		has_next = False
-	if communities.count() < 1:
-		has_back = True
-	else:
-		has_back = False
-	back = offset - 12
-	next = offset + 12
+	}
+	category_type, category_text = category_enum.get(category, category_enum['gen'])
+	# Fetch PAGE_SIZE + 1 communities to determine if there's a next page
+	communities = Community.get_all(category_type, offset, limit=PAGE_SIZE + 1)
+	total_communities = len(communities)
+	has_next = total_communities > PAGE_SIZE
+	has_back = offset > 0
+	# Only display PAGE_SIZE communities on the current page
+	communities = communities[:PAGE_SIZE]
 	return render(request, 'closedverse_main/community_all.html', {
 		'title': 'All Communities',
-		'classes': classes,
+		'classes': ['guest-top'] if request.user.is_authenticated else [],
 		'communities': communities,
 		'category': category,
-		'text': category_enum[1],
+		'text': category_text,
 		'has_next': has_next,
 		'has_back': has_back,
-		'next': next,
-		'back': back,
+		'next': offset + PAGE_SIZE,
+		'back': max(offset - PAGE_SIZE, 0),
 	})
-
 def community_search(request):
 	"""Community searching"""
 	query = request.GET.get('query')
