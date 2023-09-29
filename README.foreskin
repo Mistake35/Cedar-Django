@@ -2,38 +2,33 @@ Stuff that is done:
 - Disable comments button
 - Prevent users from posting in communities created by blocked users.
 - Hide email password reset form if no SMTP server is set up. (done by Arian Kordi)
+- We are now using django groups.
+- Admins have a better interface.
+- Post limit shows publicly, with indication on how many posts are left.
 
 Stuff that is in progress
 - New Warning system.
-	Warnings are here, And there's an interface for warning users.
-	When a warning is made, a notification is also made.
-	Replaced the 5th notification type with warnings instead of announcements.
-	A check is made to make sure request.user does not have unread warnings before they can post.
-	There's no javascript for the form page yet.
 	Audit logs are not set up, but the Warning model shows who warned each user.
 
-- User friendly interface for admins
-	Admins should be able to manage users quickly and effectively without having to worry about a clusterfuck interface.
-	Primary actions like warning users, banning users, and whatnot should be an easy few clicks away.
-
-- New Ban system.
-	Bans are here also with its own interface.
-	Admins can unban or edit existing bans from the same page.
-	Instead of entering a datetime field manually, Admins are provided with choises for different ban lengths when using the ban page unless the ban is being edited.
-	IP bans are here but range bans are not added yet.
-	IPs are banned automatically when using the ban page.
-	A proper ban page is not added yet and simply shows a 403 error.
-	There's no javascript for the form page yet.
-
-- Removing shitty code.
-- moving to forms.py.
-	The login page, admin tools, and community tools are using forms.py.
+Todo:
+- Users should not be able to delete warning notifications.
+- Refine the invite system.
+	Make the invite page look better.
+	When banning someone, add the option to ban or revoke invites for whoever invited that person.
+- FIX THE FUCKING CONTACT PAGE (nah not doing that lmao)
+- also, CONTINUE MOVING OVER TO FORMS.PY
+	Profile settings
+	Email reset form
+	Post forms
+	Signup page
+	A bunch of other forms I haven't thought about.
 
 Ideas:
+- An account approval system, we really need one. "is_new" exists in the user model, we just have to put that to use.
+- "Muting" feature to replace "active"
 - Image and video file boxes in one.
-- A new user metadata page that does not suck.
 - Make it, so you need to enter your current password to change your email address.
-- Ways for mods to view who invited who.
+- Ways for mods to view who invited who easily.
 - Full ImageField integration.
 - Filefield may have to be used for both photos and videos.
 - remove the useless feedback thing. (You can just make a bug reporting community)

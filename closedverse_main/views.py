@@ -73,7 +73,7 @@ def community_list(request):
 	else:
 		ad = "no ads"
 	# announcements within the past week-ish
-	announcements = Post.objects.filter(community__tags='announcements', created__gte=Now()-timedelta(days=5)).order_by('-created')[:6]
+	announcements = Post.objects.filter(community__tags='announcements', spoils=False, created__gte=Now()-timedelta(days=5)).order_by('-created')[:6]
 	if request.user.is_authenticated:
 		my_communities = obj.filter(creator=request.user).order_by('-created')[0:12]
 	else:
@@ -295,8 +295,8 @@ def signup_page(request):
 		check_others = Profile.objects.filter(user__addr=request.META['REMOTE_ADDR'], let_freedom=False).exists()
 		if check_others:
 			return HttpResponseBadRequest("Unfortunately, you cannot make any accounts at this time. This restriction was set for a reason, please contact the administration. Please don't bypass this, as if you do, you are just being ignorant. If you have not made any accounts, contact the administration and this restriction will be removed for you.")
-		check_othersban = User.objects.filter(addr=request.META['REMOTE_ADDR'], is_active=False).exists()
-		if check_othersban:
+		check_bans = User.objects.filter(addr=request.META['REMOTE_ADDR'], is_active=False).exists()
+		if check_bans:
 			return HttpResponseBadRequest("You cannot sign up while banned.")
 		if iphub(request.META['REMOTE_ADDR']):
 			if settings.DISALLOW_PROXY:

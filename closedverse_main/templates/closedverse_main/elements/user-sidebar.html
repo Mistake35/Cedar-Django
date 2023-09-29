@@ -4,17 +4,27 @@
 		{% if user.banned %}
 		<div class="notice" style="background-color: #ff9797;border: 1px solid #ff5252;">
 			<b>Notice</b>: This user is banned.
-			<div> 
 		{% if user.active_ban.reason %}
 		<p>Reason: "{{ user.active_ban.reason }}"</p>
 		{% endif %}
 		</div>
+		{% endif %}
+
+		{% if not user.is_active %}
+		<div class="notice" style="background-color: #ff9797;border: 1px solid #ff5252;">
+			<b>Notice</b>: This account has been disabled indefinitely.
+		</div>
+		{% endif %}
+
+		{% if profile.limit_post and user.limit_remaining <= 0 and not user.active_ban %}
+		<div class="notice">
+			<b>Notice</b>: This user is out of posts for today.
 		</div>
 		{% endif %}
 
   <div class="sidebar-container">
       {% if profile.favorite.screenshot %}
-	  <a href="{% url "main:post-view" profile.favorite_id %}" id="sidebar-cover" style="background-image:url({{ profile.favorite.screenshot }})">
+	  <a href="{% url "main:post-view" profile.favorite_id %}" id="sidebar-cover">
         <img src="{{ profile.favorite.screenshot }}" class="sidebar-cover-image">
       </a>
 	  {% endif %}
@@ -158,6 +168,14 @@
 				<span>#{{ user.id }}</span>
 			</div>
 		</div>
+		{% if profile.limit_post and request.user.can_manage %}
+		<div class="data-content">
+			<h4><span>Post Limit</span></h4>
+			<div class="note">
+				<span>{{ profile.limit_post }} ({{ user.limit_remaining }} left)</span>
+			</div>
+		</div>
+		{% endif %}
 		<div class="data-content">
 			<h4><span>Date Joined</span></h4>
 			<div class="note">

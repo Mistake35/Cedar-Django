@@ -31,9 +31,6 @@
     <div class="user-name-content">
 		{% if post.creator.get_class.1 %}<p class="user-organization">{% user_level post.creator %}</p>{% endif %}
       {% p_username post.creator %}
-	  {% if not post.creator.is_active %}
-		  <p style="color: #f00;">Banned</p>
-		  {% endif %}
       <p class="timestamp-container">
         <span class="timestamp">{% time post.created %}</span>
 			{% if post.drawing %}

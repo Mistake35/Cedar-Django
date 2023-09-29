@@ -46,6 +46,15 @@ class CheckForBanMiddleware:
 		return response
 
 	def process_view(self, request, view_func, view_args, view_kwargs):
+		# Get one active ban that is not expired for the IP address
+		ip_address = request.META.get('REMOTE_ADDR')
+		active_ip_ban = Ban.objects.filter(
+		ip_address=ip_address,
+		active=True,
+		expiry_date__gte=timezone.now(),).first()
+		if active_ip_ban:
+			context = {'ban': active_ip_ban}
+			return render(request, 'ban.html', context)
 		if not request.user.is_authenticated:
 			return None
 		# Get one active ban that is not expired for the user
@@ -55,15 +64,6 @@ class CheckForBanMiddleware:
 			expiry_date__gte=timezone.now()).first()
 		if active_user_ban:
 			context = {'ban': active_user_ban}
-			return render(request, 'ban.html', context)
-		# Get one active ban that is not expired for the IP address
-		ip_address = request.META.get('REMOTE_ADDR')
-		active_ip_ban = Ban.objects.filter(
-		ip_address=ip_address,
-		active=True,
-		expiry_date__gte=timezone.now(),).first()
-		if active_ip_ban:
-			context = {'ban': active_ip_ban}
 			return render(request, 'ban.html', context)
 		return None
 

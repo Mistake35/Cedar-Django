@@ -48,10 +48,11 @@ def Enable_user(modeladmin, request, queryset):
 
 class UserAdmin(BaseUserAdmin):
 	search_fields = ('id', 'username', 'nickname', )
-	list_display = ('id', 'username', 'nickname', 'level', 'is_active', 'is_staff', 'is_superuser')
+	list_display = ('id', 'created', 'username', 'nickname', 'level', 'is_active', 'is_staff', 'is_superuser')
 	actions = [Disable_user, Enable_user]
 	raw_id_fields = ('role', )
 	readonly_fields = ('last_login', 'created', )
+	list_filter = ('is_active', 'is_staff', 'can_invite', 'role', 'created', )
 	fieldsets = (
 		(None, {'fields': ('nickname', 'username', 'password')}),
 		('Personal info', {'fields': ('email', ('addr', 'signup_addr'))}),
@@ -103,27 +104,31 @@ class ProfileAdmin(admin.ModelAdmin):
 	search_fields = ('id', 'user__username__icontains', 'comment', 'origin_id',)
 	raw_id_fields = ('user', 'favorite',)
 	list_display = ('id', 'user', 'comment', 'let_freedom',)
+	list_filter = ('let_freedom', 'is_new', )
 
 class InvitesAdmin(admin.ModelAdmin):
 	search_fields = ('creator__username', 'used_by__username', 'code', )
 	raw_id_fields = ('creator', 'used_by', )
-	list_display = ('creator', 'used_by', 'code', 'used', 'void', )
+	list_display = ('created', 'creator', 'used_by', 'code', 'used', 'void', )
+	list_filter = ('used', 'void', 'created', )
 	actions = [Void_invite, Restore_invite]
 
 class ComplaintAdmin(admin.ModelAdmin):
 	search_fields = ('body', 'creator__username', )
 	raw_id_fields = ('creator', )
-	list_display = ('creator', 'type', 'body', )
+	list_display = ('created', 'creator', 'type', 'body', )
+	list_filter = ('type', 'created', )
 
 class ConversationAdmin(admin.ModelAdmin):
 	search_fields = ('id', 'source__username', 'target__username')
 	raw_id_fields = ('source', 'target', )
-	list_display = ('source', 'target', )
+	list_display = ('created', 'source', 'target', )
 
 class PostAdmin(admin.ModelAdmin):
 	raw_id_fields = ('creator', 'poll', )
 	search_fields = ('id', 'body', 'creator__username', )
-	list_display = ('id', 'creator', 'body', 'is_rm', )
+	list_display = ('id', 'created', 'creator', 'body', 'is_rm', )
+	list_filter = ('is_rm', 'created', )
 	actions = [Hide_content, Show_content, Disable_comments, Enable_comments]
 	def get_queryset(self, request):
 		return models.Post.real.get_queryset()
@@ -131,24 +136,26 @@ class PostAdmin(admin.ModelAdmin):
 class CommentAdmin(admin.ModelAdmin):
 	raw_id_fields = ('creator', 'original_post', )
 	search_fields = ('id', 'body', 'creator__username', )
-	list_display = ('id', 'creator', 'body', 'original_post', 'is_rm', )
+	list_display = ('id', 'created', 'creator', 'body', 'original_post', 'is_rm', )
+	list_filter = ('is_rm', 'created', )
 	actions = [Hide_content, Show_content]
 	def get_queryset(self, request):
 		return models.Comment.real.get_queryset()
 
 class CommunityAdmin(admin.ModelAdmin):
 	raw_id_fields = ('creator', )
-	list_display = ('id', 'name', 'description', 'type', 'creator', 'popularity', 'is_rm', 'is_feature', 'require_auth')
+	list_display = ('id', 'created', 'name', 'description', 'type', 'creator', 'popularity', 'is_rm', 'is_feature', 'require_auth')
 	search_fields = ('id', 'name', 'description', 'creator__username')
 	actions = [Hide_content, Show_content, Feature_community, Unfeature_community, force_login, unforce_login]
-	list_filter = ('type', 'is_rm', 'is_feature', 'require_auth')
+	list_filter = ('type', 'is_rm', 'is_feature', 'require_auth', 'created', )
 	def get_queryset(self, request):
 		return models.Community.real.get_queryset()
 
 class MessageAdmin(admin.ModelAdmin):
 	raw_id_fields = ('creator', 'conversation', )
 	search_fields = ('id', 'body', 'creator__username', )
-	list_display = ('created', 'creator', 'conversation', 'body', 'is_rm', )
+	list_display = ('id', 'created', 'creator', 'conversation', 'body', 'read', 'is_rm', )
+	list_filter = ('is_rm', 'read', 'created', )
 	actions = [Hide_content, Show_content]
 	def get_queryset(self, request):
 		return models.Message.real.get_queryset()
@@ -167,7 +174,8 @@ class NotificationAdmin(admin.ModelAdmin):
 	combined_display.short_description = 'Content'
 	raw_id_fields = ('to', 'source', 'context_post', 'context_comment',)
 	search_fields = ('to__username', 'source__username', 'context_post__body', 'context_comment__body',)
-	list_display = ('id', 'to', 'source', 'combined_display',)
+	list_display = ('id', 'created', 'to', 'source', 'combined_display',)
+	list_filter = ('read', 'created', )
 
 class AuditAdmin(admin.ModelAdmin):
 	def combined_display(self, obj):
@@ -184,10 +192,12 @@ class AuditAdmin(admin.ModelAdmin):
 	raw_id_fields = ('by', 'user', 'post', 'comment', 'community', 'reversed_by', )
 	list_display = ('by', 'user', 'type', 'combined_display', )
 	search_fields = ('by__username', 'user__username', 'post__body', 'comment__body', 'community__name', )
+	list_filter = ('type', 'created', )
 
 class AdsAdmin(admin.ModelAdmin):
-	list_display = ('url', 'imageurl', )
+	list_display = ('id', 'created', 'url', 'imageurl', )
 	search_fields = ('url', 'imageurl', )
+	list_filter = ('created', )
 
 class YeahAdmin(admin.ModelAdmin):
 	raw_id_fields = ('by', 'post', 'comment', )
@@ -204,6 +214,7 @@ class RoleAdmin(admin.ModelAdmin):
 class BanAdmin(admin.ModelAdmin):
 	raw_id_fields = ('to', 'by')
 	list_display = ('by', 'to', 'reason', 'expiry_date', 'active')
+	list_filter = ('expiry_date', 'active', 'created', )
 
 	def save_model(self, request, obj, form, change):
 		# Set the 'by' field to the currently logged-in user
@@ -224,13 +235,22 @@ class BanAdmin(admin.ModelAdmin):
 
 class LoginAdmin(admin.ModelAdmin):
 	raw_id_fields = ('user',)
-	list_display = ('user', 'addr', 'user_agent', )
+	list_display = ('id', 'created', 'user', 'addr', 'user_agent', )
 	search_fields = ('user__username', 'addr', 'user_agent', )
+	list_filter = ('created', )
+
 
 class WarningAdmin(admin.ModelAdmin):
 	raw_id_fields = ('by', 'to')
 	list_display = ('by', 'to', 'reason', )
 	search_fields = ('by__username', 'to__username', 'reason', )
+	list_filter = ('created', )
+
+class BlockAdmin(admin.ModelAdmin):
+	raw_id_fields = ('source', 'target')
+	list_display = ('id', 'created', 'source', 'target', )
+	search_fields = ('created__username', 'source__username', )
+	list_filter = ('created', )
 
 admin.site.register(models.Role, RoleAdmin)
 admin.site.register(models.User, UserAdmin)
@@ -242,7 +262,7 @@ admin.site.register(models.Message, MessageAdmin)
 admin.site.register(models.Conversation, ConversationAdmin)
 admin.site.register(models.Notification, NotificationAdmin)
 admin.site.register(models.LoginAttempt, LoginAdmin)
-admin.site.register(models.UserBlock)
+admin.site.register(models.UserBlock, BlockAdmin)
 admin.site.register(models.AuditLog, AuditAdmin)
 admin.site.register(models.ProfileHistory, HistoryAdmin)
 

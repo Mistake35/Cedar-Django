@@ -109,7 +109,7 @@ class PurgeForm(forms.Form):
 	restore_all = forms.BooleanField(required=False, label='Restore purged content', help_text='Restore everything that was purged, this will not apply to posts deleted manually.')
 
 class LoginForm(forms.Form):
-	username = forms.CharField(max_length=255, widget=forms.TextInput(attrs={'class': 'auth-input', 'placeholder': 'Username'}))
+	username = forms.CharField(max_length=255, widget=forms.TextInput(attrs={'class': 'auth-input', 'placeholder': 'Username / Email'}))
 	password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'auth-input', 'placeholder': 'Password'}))
 
 	def clean(self):
@@ -127,6 +127,10 @@ class LoginForm(forms.Form):
 			raise forms.ValidationError("This account's password needs to be reset. Contact an admin or reset by email.", code='required_reset')
 		elif not user[0].is_active:
 			raise forms.ValidationError("This account was disabled.", code='disabled')
+		# Check for active user ban
+		active_user_ban = Ban.objects.filter(to=user[0], active=True, expiry_date__gte=timezone.now()).first()
+		if active_user_ban:
+			raise forms.ValidationError("This account has been banned until {}. Reason: {}".format(active_user_ban.expiry_date, active_user_ban.reason), code='banned')
 		return cleaned_data
 
 class User_tools_Form(forms.ModelForm):

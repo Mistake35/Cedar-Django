@@ -130,7 +130,7 @@ class Role(models.Model):
 	organization = models.CharField(max_length=255, blank=True, null=True, help_text='Text that shows above one\'s username')
 
 	def __str__(self):
-		return "role \"" + str(self.organization) + "\", name " + str(self.image)
+		return str(self.organization)
 
 #mii_domain = 'https://mii-secure.cdn.nintendo.net'
 # as of writing, mii-secure is unstable, nintendo please do not f*ck me for this
@@ -414,18 +414,17 @@ class User(AbstractBaseUser, PermissionsMixin):
 			
 	# Admin can-manage
 	def can_manage(self):
-		if self.level >= settings.level_needed_to_man_users or self.is_staff:
+		if self.level >= settings.level_needed_to_man_users:
 			can_manage = True 
 		else:
 			can_manage = False
 		return can_manage
 	# Does self have authority over user?
 	def has_authority(self, user):
-		if user.is_authenticated:
-			if self.is_staff and not user.is_staff:
-				return True
-			if self.level >= user.level:
-				return True 
+		if not user.is_authenticated:
+			return False
+		if self.level >= user.level:
+			return True 
 		return False
 	def friend_state(self, other):
 		# Todo: return -1 for cannot, 0 for nothing, 1 for my friend pending, 2 for their friend pending, 3 for friends
@@ -642,7 +641,9 @@ class Invites(models.Model):
 	def is_valid(self):
 		if self.used or self.void:
 			return False
-		if not self.creator.can_invite:
+		if not self.creator.can_invite or not self.creator.is_active:
+			return False
+		if self.creator.active_ban():
 			return False
 		return True
 		
@@ -693,13 +694,14 @@ class Community(models.Model):
 			5: 'PC Game',
 			6: 'Xbox Game',
 			7: 'Playstation Game',
+			8: 'Cross-platform Game',
 			}.get(self.platform)
 		else:
 			return {
 			0: "General community",
 			1: "Game community",
 			2: "Special community",
-			3: "User owned community",
+			3: "User-created community",
 			}.get(self.type)
 	def type_platform(self):
 		thing = {
@@ -711,7 +713,7 @@ class Community(models.Model):
 			5: 'pc',
 			6: 'xbox',
 			7: 'ps',
-			8: 'youre-mom',
+			8: 'cross-platform',
 			}.get(self.platform)
 		if not thing:
 			return None
@@ -838,7 +840,7 @@ class Community(models.Model):
 		# Check for spam using our OWN ALGO!!!!!!!!!
 		if request.user.has_postspam(body, upload, drawing):
 			return 7
-		for keyword in ['faggot', 'fag', 'nigger', 'nigga', 'hitler']:
+		for keyword in ['faggot', 'fag', 'nigger', 'nigga']:
 			if keyword in body.lower():
 				return 9
 		if body.isspace() and not drawing:
@@ -906,15 +908,6 @@ class Post(models.Model):
 		except:
 			return False
 		return thing
-	def discord_vid(self):
-		try:
-			thing = re.search('(https?://)?(www\.)?(cdn)?(discordapp)\.(com)/attachments/([a-zA-Z0-9]+)/([a-zA-Z0-9]+)/(.+)', self.url).group(8)
-			if thing.endswith(".mp4") or thing.endswith(".webm"):
-				return thing
-			else:
-				return False
-		except:
-			return False
 	def has_line_trun(self):
 		if self.body and len(self.body.splitlines()) > 10:
 			return True
