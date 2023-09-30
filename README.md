@@ -17,18 +17,12 @@ You can have your users make communities. Each user by default can make one comm
 **You can set `invite_only` to `True` if you want your site to be invite only** If you choose to make your website invite only, users can create invite codes and send them to others as a means of inviting new people to the website.  Upon signing up, users are required to input a valid invite code in order to create an account. This can be useful for closed off communities or as a ditch effort to stop raids or whatever.
 Moderators and staff will be able to revoke a user's ability to add new users if need be.
 
-### Announcements appear on the side of the main page.
-If you have an announcement community, each post will appear there.
-
-`welcomemsgs` are visible on the front page when you aren't signed in.
-
 ## Other features include:
 - Mods can warn users.
 - Better audit logging system.
 - Purging is much easier now.
 - You can fucking ban people now without the Django panel.
 - Users and admins can turn off comments on posts.
-- Each and every ban is an IP ban automatically.
 - A page where every user can view collected data tied to their account.
 
 # YOU NEED
@@ -50,6 +44,7 @@ If you have an announcement community, each post will appear there.
 # Install time
 
 Should probably say that this is a lazy way to do it. You should use a reverse proxy to deploy the server up for prod.
+fr don't do this if you're hosting in prod.
 
 1.
 SSH into your server.
