@@ -54,6 +54,7 @@
     darkColor = rgb2hex(mainColorR / 4, mainColorG / 4, mainColorB / 4);
     lightColor = rgb2hex(lightColorR, lightColorG, lightColorB);
     slightlyDarkColor = rgb2hex(mainColorR / 1.4, mainColorG / 1.4, mainColorB / 1.4);
+    darkerButNotThatDark = rgb2hex(mainColorR / 6, mainColorG / 6, mainColorB / 6);
     darkerColor = rgb2hex(mainColorR / 8, mainColorG / 8, mainColorB / 8);
 
     // Set CSS variables
@@ -61,8 +62,8 @@
     document.documentElement.style.setProperty("--theme-dark", darkColor);
     document.documentElement.style.setProperty("--theme-slightly-dark", slightlyDarkColor);
     document.documentElement.style.setProperty("--theme-darker", darkerColor);
+    document.documentElement.style.setProperty("--theme-a-bit-darker", darkerButNotThatDark);
     document.documentElement.style.setProperty("--theme-light", lightColor);
-	{% if not request.user.bg_url %}document.documentElement.style.setProperty("--background", "url('img/indigo-pattern.png')");{% endif %}
   }
 
   // hex -> rgb
@@ -85,8 +86,8 @@
     document.documentElement.style.setProperty("--theme-dark", "initial");
     document.documentElement.style.setProperty("--theme-slightly-dark", "initial");
     document.documentElement.style.setProperty("--theme-darker", "initial");
+    document.documentElement.style.setProperty("--theme-a-bit-darker", "initial");
     document.documentElement.style.setProperty("--theme-light", "initial");
-    document.documentElement.style.setProperty("--background", "");
   }
 
   changeThemeColor();
