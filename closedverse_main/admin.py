@@ -52,7 +52,7 @@ class UserAdmin(BaseUserAdmin):
 	actions = [Disable_user, Enable_user]
 	raw_id_fields = ('role', )
 	readonly_fields = ('last_login', 'created', )
-	list_filter = ('is_active', 'is_staff', 'can_invite', 'role', 'created', )
+	list_filter = ('is_active', 'is_staff', 'can_invite', 'role', 'groups', 'created', )
 	fieldsets = (
 		(None, {'fields': ('nickname', 'username', 'password')}),
 		('Personal info', {'fields': ('email', ('addr', 'signup_addr'))}),
@@ -106,6 +106,12 @@ class ProfileAdmin(admin.ModelAdmin):
 	list_display = ('id', 'user', 'comment', 'let_freedom',)
 	list_filter = ('let_freedom', 'is_new', )
 
+class CommunityFavoriteAdmin(admin.ModelAdmin):
+	raw_id_fields = ('by', 'community',)
+	search_fields = ('by__username', 'community', )
+	list_display = ('created', 'by', 'community', )
+	list_filter = ('created', )
+
 class InvitesAdmin(admin.ModelAdmin):
 	search_fields = ('creator__username', 'used_by__username', 'code', )
 	raw_id_fields = ('creator', 'used_by', )
@@ -125,7 +131,7 @@ class ConversationAdmin(admin.ModelAdmin):
 	list_display = ('created', 'source', 'target', )
 
 class PostAdmin(admin.ModelAdmin):
-	raw_id_fields = ('creator', 'poll', )
+	raw_id_fields = ('creator', 'poll', 'community', )
 	search_fields = ('id', 'body', 'creator__username', )
 	list_display = ('id', 'created', 'creator', 'body', 'is_rm', )
 	list_filter = ('is_rm', 'created', )
@@ -134,7 +140,7 @@ class PostAdmin(admin.ModelAdmin):
 		return models.Post.real.get_queryset()
 
 class CommentAdmin(admin.ModelAdmin):
-	raw_id_fields = ('creator', 'original_post', )
+	raw_id_fields = ('creator', 'original_post', 'community', )
 	search_fields = ('id', 'body', 'creator__username', )
 	list_display = ('id', 'created', 'creator', 'body', 'original_post', 'is_rm', )
 	list_filter = ('is_rm', 'created', )
@@ -257,6 +263,7 @@ admin.site.register(models.User, UserAdmin)
 admin.site.register(models.Profile, ProfileAdmin)
 admin.site.register(models.Invites, InvitesAdmin)
 admin.site.register(models.Community, CommunityAdmin)
+admin.site.register(models.CommunityFavorite, CommunityFavoriteAdmin)
 admin.site.register(models.Complaint, ComplaintAdmin)
 admin.site.register(models.Message, MessageAdmin)
 admin.site.register(models.Conversation, ConversationAdmin)
