@@ -108,7 +108,6 @@ class ProfileAdmin(admin.ModelAdmin):
 
 class CommunityFavoriteAdmin(admin.ModelAdmin):
 	raw_id_fields = ('by', 'community',)
-	search_fields = ('by__username', 'community', )
 	list_display = ('created', 'by', 'community', )
 	list_filter = ('created', )
 
