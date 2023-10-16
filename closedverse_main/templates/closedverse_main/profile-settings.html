@@ -7,11 +7,6 @@
 <form class="setting-form" method="post" action="{% url "main:user-view" user.username %}">
 <ul class="settings-list">
 
-	{% if profile.cannot_edit %}
-	<p>You cannot change user settings for this account</p>
-	{% endif %}
-
-		{% if not profile.cannot_edit %}
       <li class="setting-nickname">
         <p class="settings-label">Nickname</p>
         <div class="center center-input">
@@ -25,20 +20,13 @@
 
         <p class="note">Anything you write here will appear on your profile. Remember to keep it brief. Please don't write anything that'll violate <a href="{% url "main:help-rules" %}">{{ brand_name }}'s rules</a>.</p>
       </li>
-	  <!--
-      <li>
-        <p class="settings-label"><label for="relationship_visibility">Who should be able to see your friends, followers and following lists?</label></p>
-        <div class="select-content">
-          <div class="select-button">
-            <select name="relationship_visibility" id="relationship_visibility">
-              <option value="0"{% if profile.relationship_visibility == 0 %} selected{% endif %}>Everyone</option>
-              <option value="1"{% if profile.relationship_visibility == 1 %} selected{% endif %}>My friends</option>
-              <option value="2"{% if profile.relationship_visibility == 2 %} selected{% endif %}>Only me</option>
-            </select>
-          </div>
-        </div>
+      <li class="setting-pronoun">
+        <p class="settings-label">What are your pronouns?</p>
+        <div class="center center-input">
+			<input type="text" name="pronouns" maxlength="16" placeholder="Pronouns" value="{{ profile.pronoun_is }}">
+		</div>
+        <p class="note">Enter your pronouns here. </p>
       </li>
-	  -->
       <li class="setting-country">
         <p class="settings-label">Region</p>
         <div class="center center-input">
@@ -55,18 +43,6 @@
 			<input type="text" name="email" maxlength="255" placeholder="Email address" value="{{ user.email|default_if_none:"" }}">
 		</div>
         <p class="note">Please note that your email can be a fake one, however if you need to reset your password, this must be accessible. You can't share emails.</p>
-		{% if user.email %}
-		<p class="settings-label"><label for="email_login">Allow logging in to your account with your e-mail address?</label></p>
-        <div class="select-content">
-          <div class="select-button">
-            <select name="email_login" id="email_login">
-              <option value="0"{% if profile.email_login == 0 %} selected{% endif %}>Do not allow (username login only)</option>
-              <option value="1"{% if profile.email_login == 1 %} selected{% endif %}>Allow</option>
-              <option value="2"{% if profile.email_login == 2 %} selected{% endif %}>Only allow (email login only)</option>
-            </select>
-          </div>
-        </div>
-		{% endif %}
       </li>
       <li class="setting-website">
         <p class="settings-label">Web URL</p>
@@ -98,9 +74,8 @@
         <p class="note">This is the color your nickname will appear as. Set it to white (#ffffff) and it will return to the default. It will appear like so.</p>
 		{% user_sidebar_info user %}
       </li>
-	  	  {% if profile.origin_id %}
       <li>
-        <p class="settings-label"><label for="id_visibility">Who should be able to see your Nintendo Network ID? ({{ profile.origin_id }})</label></p>
+        <p class="settings-label"><label for="id_visibility">{% if profile.origin_id %}Who should be able to see your Nintendo Network ID? ({{ profile.origin_id }}){% else %}You have not entered a Nintendo Network ID yet, If you do, who should be able to see it?{% endif %}</label></p>
         <div class="select-content">
           <div class="select-button">
             <select name="id_visibility" id="id_visibility">
@@ -111,7 +86,6 @@
           </div>
         </div>
       </li>
-	  {% endif %}
       <li>
         <p class="settings-label"><label for="let_friendrequest">Who should be able to send you friend requests?</label></p>
         <div class="select-content">
@@ -120,21 +94,6 @@
               <option value="0"{% if profile.let_friendrequest == 0 %} selected{% endif %}>Everyone</option>
               <option value="1"{% if profile.let_friendrequest == 1 %} selected{% endif %}>People I'm following</option>
               <option value="2"{% if profile.let_friendrequest == 2 %} selected{% endif %}>Nobody</option>
-            </select>
-          </div>
-        </div>
-      </li>
-      <li>
-        <p class="settings-label"><label for="pronoun_dot_is">What's your preferred pronoun?</label></p>
-        <div class="select-content">
-          <div class="select-button">
-            <select name="pronoun_dot_is" id="pronoun_dot_is">
-		<option value="0"{% if profile.pronoun_is == 0 %} selected{% endif %}>I don't know</option>
-		<option value="1"{% if profile.pronoun_is == 1 %} selected{% endif %}>He/him</option>
-		<option value="2"{% if profile.pronoun_is == 2 %} selected{% endif %}>She/her</option>
-		<option value="3"{% if profile.pronoun_is == 3 %} selected{% endif %}>He/she</option>
-		<option value="4"{% if profile.pronoun_is == 4 %} selected{% endif %}>It</option>
-		<option value="5"{% if profile.pronoun_is == 5 %} selected{% endif %}>They/Them</option>
             </select>
           </div>
         </div>
@@ -165,16 +124,12 @@
       </li>
 	  <li class="setting-background">
         <p class="settings-label">Website theme:</p>
-        <div class="center center-input">
-			<input type="text" name="bg_url" maxlength="300" placeholder="Background URL" value="{% if user.bg_url %}{{ user.bg_url }}{% endif %}">
-		</div>
-        <p class="note">To set an image as the background for this site, paste its URL into the box above. Note: this change will only be visible to you.</p>
 		<div class="center center-input">
 			<input type="hidden" name="theme" maxlength="7" placeholder="Enter a hex color value here" value="{{ user.theme }}">
 			<button class="button color-thing2">Open color picker</button>
 		</div>
 		<p class="current-theme" style="color:{{ user.theme }}">Remember to save and refresh the page.</p>
-		{% if user.theme %}<input type="checkbox" name="reset-theme">Reset to default{% endif %}
+		{% if user.theme %}<input type="checkbox" name="reset_theme">Reset to default{% endif %}
 		{% if settings.site_wide_theme_hex %}<p class="note">Default theme: "{{ settings.site_wide_theme_hex }}"</p>{% endif %}
       </li>
 		<li class="setting-background">
@@ -195,18 +150,18 @@
               </li>
               <li class="setting-avatar">
                 <div class="icon-container">
-                    <img class="icon nnid-icon mii{% if not user.has_mh %} none{% endif %}" src="{% miionly user.mh %}">
-					<img class="icon nnid-icon gravatar{% if user.has_mh or user.has_plain_avatar %} none{% endif %}" src="{{ user.gravatar }}">
+                    <img class="icon nnid-icon mii{% if not user.avatar_type == 2 %} none{% endif %}" src="{% miionly user.mh %}">
+					<img class="icon nnid-icon gravatar{% if not user.avatar_type == 1 %} none{% endif %}" src="{{ user.gravatar }}">
 					{% if user.has_freedom %}
-					<img class="icon nnid-icon custom{% if not user.has_plain_avatar %} none{% endif %}" src="{{ user.do_avatar }}">
+					<img class="icon nnid-icon custom{% if not user.avatar_type == 0 %} none{% endif %}" src="{{ user.do_avatar }}">
 					{% endif %}
                   </div>
                 <p class="settings-label">Do you want the avatar shown beside your content to use the Mii from your Nintendo Network ID or a Gravatar or a custom avatar the way God intended?</p>
-                <label><input type="radio" name="avatar" value="0"{% if user.has_mh %} checked{% endif %}>Mii</label>
-                <label><input type="radio" name="avatar" value="1"{% if not user.has_mh %} checked{% endif %}>Gravatar</label>
+                <label><input type="radio" name="avatar" value="0"{% if user.avatar_type == 2 %} checked{% endif %}>Mii</label>
+                <label><input type="radio" name="avatar" value="1">Use Gravatar</label>
                 {% if user.has_freedom %}
-                <label><input type="radio" name="avatar" value="2"{% if user.has_plain_avatar%} checked{% endif %}>Custom</label>
-                <span id="upload-thing"{% if not user.has_plain_avatar %} class="none"{% endif %}>{% file_button %}</span>
+                <label><input type="radio" name="avatar" value="2"{% if user.avatar_type == 0 %} checked{% endif %}>Custom</label>
+                <span id="upload-thing"{% if not user.avatar_type == 0 %} class="none"{% endif %}>{% file_button %}</span>
                 <style>
                 	.setting-avatar div.file-button-container { display: none; }
 								</style>
@@ -220,7 +175,6 @@
 	<div class="form-buttons">
 	<input type="submit" class="black-button apply-button" value="Save these settings">
 	</div>
-	{% endif %}
 
 </ul></form></div></div>
 {% endblock %}

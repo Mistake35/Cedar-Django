@@ -73,11 +73,15 @@ def community_list(request):
 	else:
 		ad = "no ads"
 	# announcements within the past week-ish
-	announcements = Post.objects.filter(community__tags='announcements', spoils=False, created__gte=Now()-timedelta(days=5)).order_by('-created')[:6]
 	if request.user.is_authenticated:
+		if request.user.show_announcements:
+			announcements = Post.objects.filter(community__tags='announcements', spoils=False, created__gte=Now()-timedelta(days=5)).order_by('-created')[:6]
+		else:
+			announcements = None
 		my_communities = obj.filter(creator=request.user).order_by('-created')[0:12]
 	else:
 		my_communities = None
+		announcements = None
 	return render(request, 'closedverse_main/community_list.html', {
 		'title': 'Communities',
 		'ad': ad,
@@ -180,25 +184,21 @@ def community_favorites(request):
 	})
 
 def login_page(request):
-	# rn the password form does not take into account if you have the old password format or not.
 	if request.user.is_authenticated:
 		return redirect('/')
 	if request.method == 'POST':
-		incorrect_password = False
-		form = LoginForm(request.POST)
+		form = sign_in(request.POST)
 		if form.is_valid():
-			user = User.objects.get(username__iexact=form.cleaned_data['username'])
-			# no longer logs failed logins
-			# do I really want to fix that?
-			LoginAttempt.objects.create(user=user,success=True, user_agent=request.META.get('HTTP_USER_AGENT'),addr=request.META.get('REMOTE_ADDR'))
-			request.session['passwd'] = user.password
-			login(request, user)
+			authenticated_user, status = form.user
+			LoginAttempt.objects.create(user=authenticated_user, success=True, user_agent=request.META.get('HTTP_USER_AGENT'), addr=request.META.get('REMOTE_ADDR'))
+			request.session['passwd'] = authenticated_user.password
+			login(request, authenticated_user)
 			location = request.GET.get('next', '/')
 			if request.headers.get('x-requested-with') == 'XMLHttpRequest':
 				return HttpResponse(location)
 			return redirect(location)
 	else:
-		form = LoginForm()
+		form = sign_in()
 
 	return render(request, 'closedverse_main/login_page.html', {
 		'title': 'Log in',
@@ -420,159 +420,21 @@ def user_view(request, username):
 		user = request.user
 		profile = user.profile()
 		profile.setup(request)
-		comment_old = profile.comment
-		nickname_old = user.nickname
-		if profile.cannot_edit:
-			return json_response("Not allowed.")
-		if len(request.POST.get('screen_name')) == 0 or len(request.POST['screen_name']) > 32:
-			return json_response('Nickname is too long or too short (length '+str(len(request.POST.get('screen_name')))+', max 32)')
-		if len(request.POST.get('profile_comment')) > 2200:
-			return json_response('Profile comment is too long (length '+str(len(request.POST.get('profile_comment')))+', max 2200)')
-		if len(request.POST.get('country')) > 255:
-			return json_response('Region is too long (length '+str(len(request.POST.get('country')))+', max 255)')
-		if len(request.POST.get('website')) > 255:
-			return json_response('Web URL is too long (length '+str(len(request.POST.get('website')))+', max 255)')
-		if len(request.POST.get('bg_url')) > 300:
-			return json_response('Background URL is too long (length '+str(len(request.POST.get('bg_url')))+', max 300)')
-		if len(request.POST.get('whatareyou')) > 300:
-			return json_response('"What Are You" is too long (length '+str(len(request.POST.get('whatareyou')))+', max 300)')
-		if len(request.POST.get('external')) > 255:
-			return json_response('Discord Tag is too long (length '+str(len(request.POST.get('external')))+', max 300)')
-		if len(request.POST.get('email')) > 500:
-			return json_response('Email is too long (length '+str(len(request.POST.get('email')))+', max 500)')
-		# Kinda unneeded but gdsjkgdfsg
-		if request.POST.get('website') == 'Web URL' or request.POST.get('country') == 'Region' or request.POST.get('external') == 'Discord Tag':
-			return json_response("I'm laughing right now.")
+		form = profile_settings_page(request.POST, request.FILES)
+
+		if form.is_valid():
+			email = form.cleaned_data.get('email')
+			file = form.cleaned_data.get('file')
+			if email and User.objects.exclude(pk=user.pk).filter(email__iexact=email).exists():
+				return json_response('Email is taken already.')
+			if file and not profile.let_freedom:
+				return json_response('You aren\'t allowed to upload images.')
+			# custom save function, because I am clinically insane
+			form.save(user=request.user)
+			return HttpResponse()
+		else:
+			return json_response(form.errors.as_text())
 		
-		if len(request.POST.get('avatar')) > 255:
-			return json_response('Avatar is too long (length '+str(len(request.POST.get('avatar')))+', max 255)')
-		if request.POST.get('email') and not request.POST.get('email') == 'None':
-			if User.email_in_use(request.POST['email'], request):
-				return HttpResponseBadRequest("That email address is already in use, that can't happen.")
-			try:
-				EmailValidator()(value=request.POST['email'])
-			except ValidationError:
-				return json_response("Your e-mail address is invalid. Input an e-mail address, or input nothing.")
-		if User.nnid_in_use(request.POST.get('origin_id'), request):
-			return json_response("That Nintendo Network ID is already in use, that would cause confusion.")
-		#if user.has_plain_avatar():
-		#	user.avatar = request.POST.get('avatar') or ''
-		# custom handler
-		if request.POST.get('avatar') == '2':
-			if request.FILES.get('screen'):
-				if not request.user.has_freedom():
-					return json_response("Not allowed.")
-				upload = None
-				if request.FILES.get('screen'):
-					# worth noting that the file for the avatar is never cleaned up after the user changes it
-					upload = util.image_upload(request.FILES['screen'], True, avatar=True)
-					if upload == 1:
-						return json_response("sorry, we are racist to the image you uploaded, you have to choose another one")
-				user.avatar = upload
-				user.has_mh = False
-		elif request.POST.get('avatar') == '1':
-			if not request.POST.get('origin_id'):
-				user.has_mh = False
-				profile.origin_id = None
-				profile.origin_info = None
-				user.avatar =  ('s' if getrandbits(1) else '')
-			user.avatar = get_gravatar(user.email) or ('s' if getrandbits(1) else '')
-			user.has_mh = False
-		elif request.POST.get('avatar') == '0':
-			if not request.POST.get('origin_id'):
-				user.has_mh = False
-				profile.origin_id = None
-				profile.origin_info = None
-				user.avatar =  ('s' if getrandbits(1) else '')
-			else:
-				if not request.POST.get('mh'):
-					return json_response('i think you gotta wait for the nnid to retrieve')
-				user.has_mh = True
-				#getmii = get_mii(request.POST.get('origin_id'))
-				#if not getmii:
-				#	return json_response('NNID not found')
-				user.avatar = request.POST.get('mh')
-				#profile.origin_id = getmii[2]
-				profile.origin_id = request.POST['origin_id']
-				profile.origin_info = json.dumps([request.POST.get('mh'), 'if you see this then something is wrong', request.POST['origin_id']])
-		# set the username color
-		if request.POST.get('color'):
-			try:
-				validate_color(request.POST['color'])
-			except ValidationError:
-				user.color = None
-			else:
-				dark = True if user.color == '#000000' else False
-				light = True if user.color == '#ffffff' else False
-				if dark:
-					return json_response("Too dark")
-				elif light:
-					user.color = None
-				else:
-					if request.POST['color'] == '#ffffff':
-						user.color = None
-					else:
-						user.color = request.POST['color']
-		else:
-			user.color = None
-			
-		# set the theme
-		if request.POST.get('theme'):
-			reset_theme = False if request.POST.get('reset-theme') is None else True
-			try:
-				validate_color(request.POST['theme'])
-			except ValidationError:
-				user.theme = None
-			else:
-				light = True if request.POST['theme'] == '#ffffff' else False
-				if light:
-					user.theme = None
-				elif reset_theme:
-					user.theme = None
-				else:
-					user.theme = request.POST['theme']
-		else:
-			user.theme = None
-			
-		if request.POST.get('email') == 'None':
-			user.email = None
-		else:
-			user.email = request.POST.get('email')
-		profile.country = request.POST.get('country')
-		website = request.POST.get('website')
-		if ' ' in website or not '.' in website:
-			profile.weblink = ''
-		else:
-			profile.weblink = website
-		profile.comment = request.POST.get('profile_comment')
-		profile.external = request.POST.get('external')
-		profile.whatareyou = request.POST.get('whatareyou')
-		profile.relationship_visibility = (request.POST.get('relationship_visibility') or 0)
-		profile.id_visibility = (request.POST.get('id_visibility') or 0)
-		profile.yeahs_visibility = (request.POST.get('yeahs_visibility') or 0)
-		profile.pronoun_is = (request.POST.get('pronoun_dot_is') or 0)
-		profile.gender_is = (request.POST.get('gender_select') or 0)
-		profile.comments_visibility = (request.POST.get('comments_visibility') or 0)
-		profile.let_friendrequest = (request.POST.get('let_friendrequest') or 0)
-		user.bg_url = (request.POST.get('bg_url') or None)
-		user.nickname = filterchars(request.POST.get('screen_name'))
-		# Maybe todo?: Replace all "not .. == .." with ".. != .." etc
-		# If the user cannot edit and their nickname/avatar is different than what they had, don't let it happen.
-		
-		if request.POST.get('profile_comment') != comment_old or request.POST.get('screen_name') != nickname_old:
-			ProfileHistory.objects.create(user=user,
-			old_nickname=nickname_old,
-			old_comment=comment_old,
-			new_nickname=request.POST.get('screen_name'),
-			new_comment=request.POST.get('profile_comment'))
-		
-		if not user.email:
-			profile.email_login = 1
-		else:
-			profile.email_login = (request.POST.get('email_login') or 1)
-		profile.save()
-		user.save()
-		return HttpResponse()
 	posts = user.get_posts(3, 0, request, timezone.now())
 	yeahed = user.get_yeahed(0, 3, 0, request.user)
 	for yeah in yeahed:
@@ -979,7 +841,7 @@ def community_tools(request, community):
 	can_edit = the_community.can_edit_community(request.user)
 	if not can_edit:
 		raise Http404()
-	form = CommunitySettingForm(instance=the_community)
+	form = edit_community(instance=the_community)
 	return render(request, 'closedverse_main/community_tools.html', {
 	'title': 'Community tools',
 	'form': form,
@@ -994,7 +856,7 @@ def community_tools_set(request, community):
 		can_edit = the_community.can_edit_community(request.user)
 		if not can_edit:
 			return HttpResponseForbidden()
-		form = CommunitySettingForm(request.POST, request.FILES, instance=the_community)
+		form = edit_community(request.POST, request.FILES, instance=the_community)
 		if not form.is_valid():
 			return json_response(form.errors.as_text())
 		form.save()
@@ -1010,7 +872,7 @@ def community_create(request):
 		raise Http404()
 	if request.user.c_tokens < 1:
 		raise Http404()
-	form = CommunitySettingForm()
+	form = edit_community()
 	return render(request, 'closedverse_main/community_create.html', {
 	'title': 'Create a community',
 	'form': form,
@@ -1022,7 +884,7 @@ def community_create_action(request):
 			return HttpResponseForbidden()
 		if request.user.c_tokens < 1:
 			return HttpResponseForbidden()
-		form = CommunitySettingForm(request.POST, request.FILES)
+		form = edit_community(request.POST, request.FILES)
 		if not form.is_valid():
 			return json_response(form.errors.as_text())
 		community = form.save()
@@ -1043,29 +905,28 @@ def post_create(request, community):
 			community = Community.objects.get(id=community)
 		except (Community.DoesNotExist, ValueError):
 			return HttpResponseNotFound()
-		# Method of Community
-		new_post = community.create_post(request)
-		if not new_post:
-			return HttpResponseBadRequest()
-		if isinstance(new_post, int):
-			# If post limit 
-			if new_post == 8:
-				# then do meme
-				return json_response("You have already exceeded the number of posts that you can contribute in a single day. Please try again tomorrow.", 1215919)
-			return json_response({
-			1: "Your post is too long ("+str(len(request.POST['body']))+" characters, 2200 max).",
-			2: "The image you've uploaded is invalid.",
-			3: "You're posting too quickly, wait a few seconds and try again.",
-			4: "Apparently, you're not allowed to post here.",
-			5: "Uh-oh, that URL wasn't valid..",
-			6: "Not allowed.",
-			7: "Please don't spam.",
-			9: "You're very funny. Unfortunately your funniness blah blah blah fuck off.",
-			10: "No mr white, you can't make a post entirely consistant of spaces",
-			11: "The video you've uploaded is invalid.",
-			12: "Please don't post Zalgo text.",
-			13: "Please check your notifications.",
-			}.get(new_post))
+		
+		if not community.post_perm(request):
+			return json_response('You are not allowed to post here.')
+		if request.user.unread_warning():
+			return json_response('Please check your notifications.')
+		limit = request.user.limit_remaining()
+		if not limit is False and not limit > 0:
+			return json_response('You are out of posts for today.')
+		del(limit)
+		if Post.real.filter(creator=request.user, created__gt=timezone.now() - timedelta(seconds=10)).exists():
+			return json_response('Please slow down.')
+		
+		form = post_form(request.POST, request.FILES)
+		if form.is_valid():
+			if not request.user.has_freedom() and form.cleaned_data.get('file'):
+				return json_response('You\'re not allowed to post files.')
+			new_post = form.save(commit=False)
+			new_post.creator = request.user
+			new_post.community = community
+			new_post.save()
+		else:
+			return json_response(form.errors.as_text())
 		# Render correctly whether we're posting to Activity Feed
 		if community.is_activity():
 			return render(request, 'closedverse_main/elements/community_post.html', {
@@ -1183,23 +1044,30 @@ def post_comments(request, post):
 	if request.method == 'POST':
 		# Wake
 		request.user.wake(request.META['REMOTE_ADDR'])
-		# Method of Post
-		new_post = post.create_comment(request)
-		if not new_post:
-			return HttpResponseBadRequest()
-		if isinstance(new_post, int):
-			# If post limit 
-			if new_post == 8:
-				# then do meme
-				return json_response("You have already exceeded the number of posts that you can contribute in a single day. Please try again tomorrow.", 1215919)
-			return json_response({
-			1: "Your comment is too long ("+str(len(request.POST['body']))+" characters, 2200 max).",
-			2: "The image you've uploaded is invalid.",
-			3: "You're making comments too fast, wait a few seconds and try again.",
-			6: "Not allowed.",
-			12: "Please don't post Zalgo text.",
-			13: "Please check your notifications.",
-			}.get(new_post))
+		# using forms now
+
+		if not post.can_comment(request):
+			return json_response('You are not allowed to comment here.')
+		if request.user.unread_warning():
+			return json_response('Please check your notifications.')
+		limit = request.user.limit_remaining()
+		if not limit is False and not limit > 0:
+			return json_response('You are out of posts for today.')
+		del(limit)
+		if Comment.real.filter(creator=request.user, created__gt=timezone.now() - timedelta(seconds=10)).exists():
+			return json_response('Please slow down.')
+
+		form = comment_form(request.POST, request.FILES)
+		if form.is_valid():
+			if not request.user.has_freedom() and form.cleaned_data.get('file'):
+				return json_response('You\'re not allowed to post files.')
+			new_comment = form.save(commit=False)
+			new_comment.creator = request.user
+			new_comment.community = post.community
+			new_comment.original_post = post
+			new_comment.save()
+		else:
+			return json_response(form.errors.as_text())
 		# Give the notification!
 		if post.is_mine(request.user):
 			users = []
@@ -1211,7 +1079,7 @@ def post_comments(request, post):
 				Notification.give_notification(request.user, 3, user, post)
 		else:
 			Notification.give_notification(request.user, 2, post.creator, post)
-		return render(request, 'closedverse_main/elements/post-comment.html', { 'comment': new_post })
+		return render(request, 'closedverse_main/elements/post-comment.html', { 'comment': new_comment })
 	else:
 		comment_count = post.number_comments()
 		if comment_count > 20:
@@ -1517,19 +1385,24 @@ def messages_view(request, username):
 	if request.method == 'POST':
 		# Wake
 		request.user.wake(request.META['REMOTE_ADDR'])
-		new_post = conversation.make_message(request)
-		if not new_post:
-			return HttpResponseBadRequest()
-		if isinstance(new_post, int):
-			return json_response({
-			1: "Your message is too long ("+str(len(request.POST['body']))+" characters, 2200 max).",
-			2: "The image you've uploaded is invalid.",
-			3: "Sorry, but you're sending messages too fast.",
-			4: "Please check your notifications.",
-			6: "Not allowed.",
-			}.get(new_post))
+
+		if request.user.unread_warning():
+			return json_response('Please check your notifications.')
+		if Post.real.filter(creator=request.user, created__gt=timezone.now() - timedelta(seconds=3)).exists():
+			return json_response('Please slow down.')
+
+		form = message_form(request.POST, request.FILES)
+		if form.is_valid():
+			if not request.user.has_freedom() and form.cleaned_data.get('file'):
+				return json_response('You\'re not allowed to post files.')
+			new_message = form.save(commit=False)
+			new_message.creator = request.user
+			new_message.conversation = conversation
+			new_message.save()
+		else:
+			return json_response(form.errors.as_text())
 		friendship.update()
-		return render(request, 'closedverse_main/elements/message.html', { 'message': new_post })
+		return render(request, 'closedverse_main/elements/message.html', { 'message': new_message })
 	else:
 		if request.GET.get('offset'):
 			messages = conversation.messages(request, 20, int(request.GET['offset']))
@@ -1591,11 +1464,15 @@ def prefs(request):
 			request.user.hide_online = True
 		else:
 			request.user.hide_online = False
+		if request.POST.get('c'):
+			request.user.show_announcements = True
+		else:
+			request.user.show_announcements = False
 		profile.save()
 		request.user.save()
 		return HttpResponse()
 	lights = not (request.session.get('lights', False))
-	arr = [profile.let_yeahnotifs, lights, request.user.hide_online]
+	arr = [profile.let_yeahnotifs, lights, request.user.hide_online, request.user.show_announcements]
 	return JsonResponse(arr, safe=False)
 	
 @login_required
@@ -1609,9 +1486,9 @@ def user_tools(request, username):
 	# check if the requesting user is allowed to change someone
 	if user.has_authority(request.user):
 		return HttpResponseForbidden()
-	user_form = User_tools_Form(instance=user)
-	profile_form = Profile_tools_Form(instance=profile)
-	purge_form = PurgeForm()
+	user_form = manage_user(instance=user)
+	profile_form = manage_profile(instance=profile)
+	purge_form = purge_user()
 	
 	accountmatch = User.objects.filter(
 	Q(addr=user.addr) | Q(addr=user.signup_addr)
@@ -1678,7 +1555,7 @@ def user_tools_warnings(request, username):
 	if user.has_authority(request.user):
 		return HttpResponseForbidden()
 	if request.method == 'POST':
-		form = Give_warning_form(request.POST)
+		form = give_warning(request.POST)
 		if form.is_valid():
 			warning = form.save(commit=False)
 			warning.to = user
@@ -1687,7 +1564,7 @@ def user_tools_warnings(request, username):
 			return redirect('main:user-view', user)
 	unread_warnings = Notification.objects.filter(type=5, to=user, read=False)[:3]
 	all_warnings = Warning.objects.filter(to=user).order_by('-id')[:8]
-	form = Give_warning_form()
+	form = give_warning()
 	return render(request, 'closedverse_main/man/manage_warnings.html', {
 	'user': user,
 	'unread_warnings': unread_warnings,
@@ -1707,7 +1584,7 @@ def user_tools_bans(request, username):
 		return HttpResponseForbidden()
 	if request.method == 'POST':
 		if not user.banned(): 
-			form = Give_Ban_Form(request.POST)
+			form = give_ban(request.POST)
 			if form.is_valid():
 				ban = form.save(commit=False)
 				ban.to = user
@@ -1717,15 +1594,15 @@ def user_tools_bans(request, username):
 				AuditLog.objects.create(type=5, user=user, by=request.user)
 				return redirect('main:user-view', user)
 		else:
-			form = Give_Ban_Form_Edit(request.POST, instance=user.active_ban())
+			form = edit_ban(request.POST, instance=user.active_ban())
 			ban = form.save(commit=False)
 			ban.save()
 			AuditLog.objects.create(type=6, user=user, by=request.user)
 			return redirect('main:user-view', user)
 	if not user.banned():
-		form = Give_Ban_Form()
+		form = give_ban()
 	else:
-		form = Give_Ban_Form_Edit(instance=user.active_ban())
+		form = edit_ban(instance=user.active_ban())
 	return render(request, 'closedverse_main/man/manage_bans.html', {
 	'user': user,
 	'banned': user.banned(),
@@ -1746,9 +1623,9 @@ def user_tools_set(request, username):
 		if user.has_authority(request.user):
 			return HttpResponseForbidden()
 
-		user_form = User_tools_Form(request.POST, instance=user)
-		profile_form = Profile_tools_Form(request.POST, instance=profile)
-		purge_form = PurgeForm(request.POST)
+		user_form = manage_user(request.POST, instance=user)
+		profile_form = manage_profile(request.POST, instance=profile)
+		purge_form = purge_user(request.POST)
 		
 		if purge_form.is_valid():
 			purge_posts = purge_form.cleaned_data["purge_posts"]
@@ -1762,9 +1639,9 @@ def user_tools_set(request, username):
 					Post.real.filter(creator=user, status=5, is_rm=True).update(is_rm=False, status=0)
 					Comment.real.filter(creator=user, status=5, is_rm=True).update(is_rm=False, status=0)
 			if purge_posts == True:
-				Post.real.filter(creator=user).update(is_rm=True, status=5)
+				Post.real.filter(creator=user, is_rm=False).update(is_rm=True, status=5)
 			if purge_comments == True:
-				Comment.real.filter(creator=user).update(is_rm=True, status=5)
+				Comment.real.filter(creator=user, is_rm=False).update(is_rm=True, status=5)
 		
 		if user_form.is_valid() and profile_form.is_valid():
 			user_form.save()
@@ -1876,7 +1753,7 @@ def my_data(request):
 def change_password(request):
 	user = request.user
 	if request.method == 'POST':
-		form = Settomgs_Change_Password(request.POST)
+		form = set_password(request.POST)
 		if form.is_valid():
 			old = form.cleaned_data.get('Old_Password')
 			new = form.cleaned_data.get('New_Password')
@@ -1888,7 +1765,7 @@ def change_password(request):
 			return json_response("Success! Now you can log in with your new password!", "Finished")
 		return json_response(form.errors.as_text())
 	else:
-		form = Settomgs_Change_Password(request.POST)
+		form = set_password(request.POST)
 		return render(request, 'closedverse_main/change-password.html', {
 			'user': user,
 			'form': form,

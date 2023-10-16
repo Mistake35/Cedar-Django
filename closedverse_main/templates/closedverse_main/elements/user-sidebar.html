@@ -23,9 +23,9 @@
 		{% endif %}
 
   <div class="sidebar-container">
-      {% if profile.favorite.screenshot %}
+      {% if profile.favorite.file %}
 	  <a href="{% url "main:post-view" profile.favorite_id %}" id="sidebar-cover">
-        <img src="{{ profile.favorite.screenshot }}" class="sidebar-cover-image">
+        <img src="{{ profile.favorite.file.url }}" class="sidebar-cover-image">
       </a>
 	  {% endif %}
 	{% user_sidebar_info user profile %}
@@ -150,12 +150,14 @@
       </div>
     {% endif %}
 	<div class="user-data">
+		{% if profile.country %}
 		<div class="data-content">
 			<h4><span>Region</span></h4>
 			<div class="note">
-				<span>{% if profile.country %}{{ profile.country }}{% else %}Not Set{% endif %}</span>
+				<span>{{ profile.country }}</span>
 			</div>
 		</div>
+		{% endif %}
 		<div class="data-content">
 			<h4><span>NNID</span></h4>
 			<div class="note">
@@ -192,9 +194,9 @@
 		{% endif %}
 		{% if profile.pronoun_is %}
 		<div class="data-content">
-			<h4><span>Preferred Pronoun</span></h4>
+			<h4><span>Pronouns</span></h4>
 			<div class="note">
-				<span>{{ profile.get_pronoun_is_display }}</span>
+				<span>{{ profile.pronoun_is }}</span>
 			</div>
 		</div>
 		{% endif %}
@@ -214,12 +216,14 @@
 			</div>
 		</div>
 		{% endif %}
+		{% if profile.weblink %}
 		<div class="favorite-game-genre">
 			<h4><span>Web URL</span></h4>
 			<div class="note">
-				<span>{% if profile.weblink %}<a class="link-confirm" href="{% if not profile.got_fullurl %}http://{% endif %}{{ profile.weblink }}">{{ profile.weblink }}</a>{% else %}Not Set{% endif %}</span>
+				<span><a class="link-confirm" href="{% if not profile.got_fullurl %}http://{% endif %}{{ profile.weblink }}">{{ profile.weblink }}</a></span>
 			</div>
 		</div>
+		{% endif %}
 	</div>
   </div>
   {% if user.community_favorites %}

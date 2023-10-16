@@ -5,9 +5,6 @@
       <p class="user-name"><a {% if comment.creator.color %}style=color:{{ comment.creator.color }}{% endif %} href="{% url "main:user-view" comment.creator.username %}">{{ comment.creator.nickname }}</a></p>
 	  <p class="timestamp-container">
         <a class="timestamp" {% if comment.spoils and not comment.is_mine %}data-href-hidden{% else %}href{% endif %}="{% url "main:comment-view" comment.id %}">{% time comment.created %}</a>
-				{% if comment.drawing %}
-				<span class="spoiler">(handwritten)</span>
-				{% endif %}
 		{% if comment.has_edit %}
 			<span class="spoiler">· Edited</span>
 		{% endif %}
@@ -15,13 +12,13 @@
       </p>
     </div>
 
-    {% if comment.drawing %}
-    <p class="reply-content-memo"><img src="{{ comment.drawing }}"></p>
-	{% else %}
     <div class="reply-content-text">{{ comment.body|linebreaksbr }}</div>
+	{% if comment.file %}
+	{% if comment.file_type == 1 %}<div class="screenshot-container still-image"><img src="{{ comment.file.url }}"></div>
+	{% elif comment.file_type == 2 %}<div class="screenshot-container"><video controls src="{{ comment.file.url }}" style="max-width:100%;max-height: 450px;"></video></div>
+	{% elif comment.file_type == 3 %}<div class="screenshot-container"><audio controls src="{{ comment.file.url }}"></audio></div>
+	{% else %}<a>File attached</a>
 	{% endif %}
-	{% if comment.screenshot %}
-	<div class="screenshot-container still-image"><img src="{{ comment.screenshot }}"></div>
 	{% endif %}
 	{% if comment.spoils and not comment.is_mine and not comment.creator.banned %}
 		<div class="hidden-content"><p>This comment contains spoilers.</p>

@@ -29,7 +29,7 @@ DEBUG = False
 # Do not include 127.0.0.1 or localhost
 # in production for security reasons.
 ALLOWED_HOSTS = [
-    '',
+    '127.0.0.1',
 ]
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
@@ -48,6 +48,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'markdown_deux',
     'closedverse_main',
+    # Comment this out to disable file cleanup.
+    'django_cleanup.apps.CleanupConfig',
 ]
 X_FRAME_OPTIONS='SAMEORIGIN'
 
@@ -229,12 +231,11 @@ LOGIN_EXEMPT_URLS = {
     r'^help/rules$',
     r'^help/contact$',
     r'^help/login$',
+    r'^s/.*$',
 }
 
-# Action to perform on images belonging to posts/
-# comments when they are deleted
-# 0: keep, 1: move to 'rm' folder, 2: delete
-IMAGE_DELETE_SETTING = 2
+# The max file size allowed. (default: 10*1024*1024")
+max_file_size = 10*1024*1024
 
 # allow sign ups.
 allow_signups = True
@@ -253,14 +254,8 @@ level_needed_to_man_communities = 5
 # if someone's level is equal or above this, they can edit any user with a lower level on your clone.
 level_needed_to_man_users = 5
 
-# minimum_password_length is removed as the AUTH_PASSWORD_VALIDATORS work as of 08/2023
-
-# The hard limit for uploading, Will cause an error if this is exceeded. This is set to 15MB by default (15728640)
-DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800
-
 # Set the default theme here! Set this to None to use the normal Closedverse theme.
-# TODO, make this work for users who aren't logged in.
-site_wide_theme_hex = 'ff4159'
+site_wide_theme_hex = None
 
 # age (minimal 13 due to C.O.P.P.A)
 age_allowed = "13"

@@ -60,13 +60,13 @@
 		</div>
 		{% endif %}
 	  	<div id="the-post">
-            {% if comment.drawing %}
-			<p class="reply-content-memo"><img src="{{ comment.drawing }}" class="post-memo"></p>
-			{% else %}
 			<p class="reply-content-text">{{ comment.body|linebreaksbr }}</p>
+		{% if comment.file %}
+			{% if comment.file_type == 1 %}<div class="screenshot-container still-image"><img src="{{ comment.file.url }}"></div>
+			{% elif comment.file_type == 2 %}<div class="screenshot-container video"><video controls src="{{ comment.file.url }}" style="max-width:100%;max-height: 450px;"></video></div>
+			{% elif comment.file_type == 3 %}<div class="screenshot-container audio"><audio controls src="{{ comment.file.url }}"></audio></div>
+			{% elif comment.file_type == 0 %}<a class="button download-confirm" href="{{ comment.file.url }}">Download {{ comment.file }}</a>
 			{% endif %}
-		{% if comment.screenshot %}
-		<div class="screenshot-container still-image"><img src="{{ comment.screenshot }}"></div>
 		{% endif %}
         <div class="post-meta">
 		<button type="button"{% if not comment.can_yeah %} disabled{% endif %} class="symbol submit yeah-button

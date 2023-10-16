@@ -16,7 +16,7 @@
 	  {% if post.is_mine and not post.has_edit %}
 	  <button type="button" class="symbol button edit-button edit-post-button"><span class="symbol-label">Edit</span></button>
 	  {% endif %}
-	  {% if post.is_mine and post.screenshot %}
+	  {% if post.is_mine and post.file_type == 1 %}
 	  <button type="button" class="symbol button edit-button profile-post-button{% if post.is_favorite %} done {% endif %}" data-action="{% if post.is_favorite %}{% url "main:post-unset-profile" post.id %}{% else %}{% url "main:post-set-profile" post.id %}{% endif %}"><span class="symbol-label">Set as profile post</span></button>
 	  {% endif %}
 	  {% if post.can_lock_comments %}
@@ -33,9 +33,6 @@
       {% p_username post.creator %}
       <p class="timestamp-container">
         <span class="timestamp">{% time post.created %}</span>
-			{% if post.drawing %}
-			<span class="spoiler">(drawing)</span>
-			{% endif %}
         <span class="spoiler-status{% if post.spoils %} spoiler{% endif %}">·Spoilers</span>
 		{% if post.has_edit %}
 		· <span class="spoiler">Edited ({% time post.edited %})</span>
@@ -62,30 +59,17 @@
 		</div>
 		{% endif %}
 		<div id="the-post">
-		  {% if post.drawing %}
-		  <p class="post-content-memo"><img src="{{ post.drawing }}" class="post-memo"></p>
-		  {% else %}
           <p class="post-content-text">{{ post.body }}</p>
-	      {% endif %}
 		  
-		  {% if post.poll %}
-		  <div class="post-poll{% if post.poll.has_vote %} selected{% endif %}" data-action="{% url "main:poll-vote" post.poll.id %}" data-action-unvote="{% url "main:poll-unvote" post.poll.id %}">
-			<a class="poll-votes">{{ post.poll.num_votes }} vote{% if not post.poll.num_votes == 1 %}s{% endif %}</a>
-				<div class="poll-options{% if post.screenshot %} with-background" style="background-image:url('{{ post.screenshot }}')"
-<div class="poll-background" style="width:50%"></div>{% else %}">{% endif %}
-						{% for choice in post.poll.choices %}
-					<a class="poll-option{% if post.poll.has_vote and post.poll.has_vote.1 == choice %} selected{% endif %}" votes="{{ choice.num_votes }}">
-						{{ choice }}<span class="percentage">%</span>
-					</a>
-						{% endfor %}
-				</div>
-			</div>
-		  {% elif post.screenshot %}<div class="screenshot-container still-image"><img src="{{ post.screenshot }}"></div>{% endif %}
-
+		  {% if post.file %}
+		  	{% if post.file_type == 1 %}<div class="screenshot-container still-image"><img src="{{ post.file.url }}"></div>
+		  	{% elif post.file_type == 2 %}<div class="screenshot-container video"><video controls src="{{ post.file.url }}" style="max-width:100%;max-height: 450px;"></video></div>
+		  	{% elif post.file_type == 3 %}<div class="screenshot-container audio"><audio controls src="{{ post.file.url }}"></audio></div>
+			{% elif post.file_type == 0 %}<a class="button download-confirm" href="{{ post.file.url }}">Download {{ post.file }}</a>
+		  	{% endif %}
+		  {% endif %}
 			{% if post.yt_vid %}
 			<div class="screenshot-container video"><iframe class="youtube-player" type="text/html" style="max-width:100%;max-height: 450px;" src="https://www.youtube.com/embed/{{ post.yt_vid }}?rel=0&modestbranding=1&iv_load_policy=3" frameborder="0"></iframe></div>
-			{% elif post.video %}
-			<div class="screenshot-container video"><video controls src="{{ post.video }}" style="max-width:100%;max-height: 450px;"></video></div>
 			{% elif post.discord_vid %}
      		<div class="DiscordCDN-container video">
      		<video class="discord-player" src="{{ post.url }}" style="max-width:100%;max-height: 450px;" controls></video>

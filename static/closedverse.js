@@ -10,218 +10,6 @@ var pjax_container = '#container';
 // Edit: This used to match 'WebKit' but it's now Gecko because WebKit will have that in here anyway
 var webkit = navigator.userAgent.indexOf('WebKit') > 0 || navigator.userAgent.indexOf('Firefox') > 0;
 
-
-function setupDrawboard() {
-var canvas = document.getElementById("artwork-canvas");
-var ctx = canvas.getContext('2d');
-
-	var haval = $("input[type=hidden][name=painting]");
-	if(haval.length) {
-		dds = new Image();
-		dds.src = "data:image/png;base64," + haval.val();
-		dds.onload = function() {
-		    ctx.drawImage(dds,0,0);
-		};
-	}
-
-var undoCanvas = document.getElementById('artwork-canvas-undo');
-var undoCtx = undoCanvas.getContext('2d');
-var redoCanvas = document.getElementById('artwork-canvas-redo');
-var redoCtx = redoCanvas.getContext('2d');
-undoCanvas.width = 320; undoCanvas.height = 120; 
-redoCanvas.width = 320; redoCanvas.height = 120; 
-canvas.width = 320; canvas.height = 120; 
-var mousePosOld = 0;
-var artworkTool = {type: 0, size: 1};
-var sizeSmall = 1;
-var sizeMedium = 2;
-var sizeLarge = 4;
-var artworkColor = "#000000";
-var artworkZoomFactor = 1;
-function getMousePos(evt) {
-	var rect = canvas.getBoundingClientRect();
-if(evt.type == 'touchmove') {
-	var clientX = evt.touches[0].clientX;
-	var clientY = evt.touches[0].clientY;
-} else {
-var clientX = evt.clientX;
-var clientY = evt.clientY;
-}
-  return {
-		x: (clientX - rect.left) / artworkZoomFactor,
-		y: (clientY - rect.top) / artworkZoomFactor
-  };
-}
-function drawLineNoAliasing(ctx, sx, sy, tx, ty) {
-    var dist = Math.sqrt((tx-sx)*(tx-sx)+(ty-sy)*(ty-sy));
-		var ang = Math.atan((ty-sy)/((tx-sx)==0?0.01:(tx-sx)))+((tx-sx)<0?Math.PI:0);
-    for(var i=0;i<dist;i++) {
-        ctx.fillRect(Math.round(sx + Math.cos(ang)*i),
-                     Math.round(sy + Math.sin(ang)*i),
-                     artworkTool.size, artworkTool.size);
-    }
-}
-function artworkUpdate(evt) {
-	//console.log('artworkUpdate()');
-	var mousePos = getMousePos(evt);
-	if(artworkTool.type < 2) {
-	if(mousePosOld == 0) mousePosOld = mousePos;
-	if(evt.originalEvent.buttons == 1 || evt.type == 'touchmove') {
-		if(artworkTool.type == 0) {
-			ctx.fillStyle = artworkColor;
-		} else {
-    	ctx.fillStyle = "#fff";
-    }
-  	drawLineNoAliasing(ctx, mousePosOld.x,mousePosOld.y,mousePos.x,mousePos.y);
-  }
-	mousePosOld = mousePos;
-	}
-}
-function artworkDrawOnce(evt) {
-	//console.log('artworkDrawOnce()');
-	var mousePos = getMousePos(evt);
-	if(artworkTool.type < 2) {
-	if(evt.which == 1) {
-		if(artworkTool.type == 0) {
-			ctx.fillStyle = artworkColor;
-		} else {
-    	ctx.fillStyle = "#fff";
-    }
-		ctx.fillRect(Math.round(mousePos.x), Math.round(mousePos.y), artworkTool.size, artworkTool.size);
-  }
-	} else {
-  	ctx.fillStyle = artworkColor;
-    ctx.fillFlood(mousePos.x, mousePos.y, 0);
-  }
-}
-function artworkClear() {
-doTheThing();
-	//console.log('artworkClear()');
-
-artworkUndoDown();
-	//console.log('artworkUndoDown()');
-ctx.fillStyle = "#fff";
-ctx.fillRect(0, 0, 320, 120);
-}
-function artworkUndoDown() {
-undoCtx.drawImage(canvas, 0, 0);
-}
-function artworkUndo() {
-redoCtx.drawImage(canvas, 0, 0);
-ctx.drawImage(undoCanvas, 0, 0);
-undoCtx.drawImage(redoCanvas, 0, 0);
-}
-function artworkToolUpdate() {
-	//console.log('artworkToolUpdate()');
-	if($(this).hasClass('artwork-eraser')) {
-		var toolType = 1;
-	} else if($(this).hasClass('artwork-fill')) {
-		var toolType = 2;
-	} else {
-		var toolType = 0;
-	}
-	if($(this).hasClass('selected')) {
-		if($(this).hasClass('small')) {
-			artworkTool = {type: toolType, size: sizeMedium};
-			$(this).removeClass('small');
-			$(this).addClass('medium');
-		} else if ($(this).hasClass('medium')) {
-artworkTool = {type: toolType, size: sizeLarge};
-$(this).removeClass('medium');
-$(this).addClass('large');
-} else if ($(this).hasClass('large')) {
-artworkTool = {type: toolType, size: sizeSmall};
-$(this).removeClass('large');
-$(this).addClass('small');
-} else {
-artworkTool = {type: toolType};
-}
-} else {
-$('.memo-buttons button').removeClass('selected');
-$(this).addClass('selected');
-if($(this).hasClass('small')) {
-artworkTool = {type: toolType, size: sizeSmall};
-} else if ($(this).hasClass('medium')) {
-artworkTool = {type: toolType, size: sizeMedium};
-} else if ($(this).hasClass('large')) {
-artworkTool = {type: toolType, size: sizeLarge};
-} else {
-artworkTool = {type: toolType};
-}
-}
-}
-function artworkZoomUpdate(evt) {
-	//console.log('artworkZoomUpdate()');
-	if(artworkZoomFactor == 1) {
-  	artworkZoomFactor = 2;
-		$('#artwork-canvas').css('width', '640px');
-  } else if(artworkZoomFactor == 2) {
-  	artworkZoomFactor = 4;
-		$('#artwork-canvas').css('width', '1280px');
-		$(this).addClass('out');
-  } else {
-  	artworkZoomFactor = 1;
-		$('#artwork-canvas').css('width', '320px');
-		$(this).removeClass('out');
-  }
-}
-artworkClear();
-$(document).on('mousemove', artworkUpdate);
-$(document).on('touchstart', function(){
-	mousePosOld = 0;
-});
-$(document).on('touchmove', artworkUpdate);
-$('#artwork-canvas').on('mousedown', artworkDrawOnce);
-$('#artwork-canvas').on('mousedown', artworkUndoDown);
-$('button').contextmenu(function() { $(this).click(); return false });
-$('.artwork-clear').click(artworkClear);
-$('.artwork-undo').click(artworkUndo);
-$('.artwork-pencil, .artwork-eraser, .artwork-fill').click(artworkToolUpdate);
-$(".artwork-color").spectrum({
-    color: "#000000",
-		preferredFormat: "hex",
-    showInput: true,
-    showPalette: true,
-    change: function(color) {
-        artworkColor = color;
-    },
-    palette: [["#000000", "#808080"], ["#ff0000",
-        "#804000"], ["#ff8000", "#c08000"], ["#ffff00",
-        "#fff8dc"], ["#00c700", "#008000"], ["#00ffff",
-        "#00a0a0"], ["#0000ff", "#0080ff"], ["#ff00ff",
-        "#800080"]]
-});
-$('.artwork-zoom').click(artworkZoomUpdate);
-function doTheThing(){
-var canvas = document.getElementById("artwork-canvas");
-var ctx = canvas.getContext('2d');
-  //console.log('doing the thing');
-	var pixelArray = [];
-	for(var i = 0; i < canvas.clientHeight; i++) {
-		pixelArray[i] = [];
-		for(var j = 0; j < canvas.clientWidth; j++) {
-			var data = ctx.getImageData(j, i, 1, 1).data;
-			if(data[0] + data[1] + data[2] < 382) {
-				pixelArray[i].push(0);
-      } else {
-				pixelArray[i].push(1);
-      }
-		}
-	}
-}
-$('.memo-finish-btn').on('click',function(){
-	var dataURL = canvas.toDataURL();
-        if(typeof dataURL !== undefined) {
-			var img = dataURL.split(",")[1];
-        //$("input[type=hidden][name=painting]").val(b.Closed.chksum(img) + img);
-		$("input[type=hidden][name=painting]").val(img);
-		}
-	$("#drawing").remove();
-	$(".textarea-memo").append("<img id=\"drawing\" src=\"" + dataURL + "\" style=\"background:white;\"></img>");
-	$("#memo-drawboard-page button").off('click');
-	$('body').css('overflow', '');
-});
-}
 var fixe = false;
 function openDrawboardModal() {
 		if(innerWidth <= 800) {
@@ -441,6 +229,10 @@ var Olv = Olv || {};
             }
 			var g = new Olv.ModalWindow($('.linkc'));g.open();
 		},
+        dlConf: function() {
+            $('#container').prepend('<div class="dialog linkc none"><div class=dialog-inner><div class=window><h1 class=window-title>Download file?</h1><div class=window-body><p class=window-body-content>You are about to download a file.<br>Are you sure you want to download <b>'+ass+'</b>?</p><div class=form-buttons><button class="olv-modal-close-button gray-button" type=button data-event-type=ok onclick="$(\'.linkc\').remove()">No</button><button class="olv-modal-close-button black-button" type=button onclick="Olv.Net.lo(\''+ass+'\');$(\'.linkc\').remove()">Yes</button></div></div></div></div></div>');
+			var g = new Olv.ModalWindow($('.linkc'));g.open();
+		},
 		changesel: function(a) {
 			$("li#global-menu-" + a).addClass("selected");
 		}
@@ -503,6 +295,11 @@ var Olv = Olv || {};
 				return {
 				error_code: "Not Allowed (Forbidden)",
 				message: "Try refreshing the page or logging back in.\n"
+				}
+            case 413:
+				return {
+				error_code: "File size too large.",
+				message: "Big brother it's too big, I can't take it!\n"
 				}
 			break;
 			case 500:
@@ -1473,6 +1270,11 @@ var Olv = Olv || {};
 			g.preventDefault();
 			b.Closed.prlinkConf();
 		});
+        a('.download-confirm').on('click', function(g) {
+			ass = a(this).attr('href');
+			g.preventDefault();
+			b.Closed.dlConf();
+		});
     }
     ,
     b.Entry.toggleEmpathy = function(a) {
@@ -2350,12 +2152,55 @@ var Olv = Olv || {};
 		$('.my-menu-account-setting').on('click', function(e) {
 			e.preventDefault();
 				$.ajax({url: '/pref',
-					success: function(a) {
-						yeah_notifications = a[0] ? ' checked' : '';
-						lights_off = a[1] ? ' checked' : '';
-						online_status = a[2] ? ' checked' : '';
-						
-						$('#wrapper').prepend('<div class="dialog acc-set none"><div class=dialog-inner><div class=window><h1 class=window-title>Account preferences</h1><div class=window-body><form id=feedback-form><p class=window-body-content> These are your account\'s preferences, pretty self-explanatory.</p><br> <input type=checkbox value=1 name=a'+ yeah_notifications +'> Enable notifications for Yeahs<br><input type=checkbox onclick=Olv.Closed.lights()'+ lights_off +'> Enable dark mode<br> <input type=checkbox value=1 name=b'+ online_status +'> Hide my latest time seen and online status from others</form><div class=form-buttons><button class="olv-modal-close-button gray-button" type=button data-event-type=ok onclick="$(\'.acc-set\').remove()">Cancel</button><button class="black-button ac-send" type="button">Save</button></div></div></div></div></div>');
+                    success: function(a) {
+                        // Assigning 'checked' attribute based on the response array 'a'
+                        yeah_notifications = a[0] ? ' checked' : '';
+                        lights_off = a[1] ? ' checked' : '';
+                        online_status = a[2] ? ' checked' : '';    
+                        show_announcements = a[3] ? ' checked' : '';    
+                    
+                        // Prepending the form HTML to the '#wrapper' element
+                        $('#wrapper').prepend(`
+                            <div class="dialog acc-set none">
+                                <div class="dialog-inner">
+                                    <div class="window">
+                                        <h1 class="window-title">Account preferences</h1>
+                                        <div class="window-body">
+                                            <form id="feedback-form">
+                                                <p class="window-body-content">
+                                                    These are your account's preferences, pretty self-explanatory.
+                                                </p>
+                                                <br> 
+                                                <input type="checkbox" value="1" name="a"${yeah_notifications}>
+                                                    Enable notifications for Yeahs
+                                                <br>
+                                                <input type="checkbox" onclick="Olv.Closed.lights()"${lights_off}>
+                                                    Enable dark mode
+                                                <br> 
+                                                <input type="checkbox" value="1" name="b"${online_status}>
+                                                    Hide my latest time seen and online status from others
+                                                <br> 
+                                                <input type="checkbox" value="1" name="c"${show_announcements}>
+                                                    Show the announcements list on the front page.
+                                            </form>
+                                            <div class="form-buttons">
+                                                <button 
+                                                    class="olv-modal-close-button gray-button" 
+                                                    type="button" 
+                                                    data-event-type="ok" 
+                                                    onclick="$('.acc-set').remove()"
+                                                >
+                                                    Cancel
+                                                </button>
+                                                <button class="black-button ac-send" type="button">
+                                                    Save
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `);
 						var g = new b.ModalWindow($('.acc-set'));g.open();
 						$('.ac-send').on('click',function() {
 							b.Form.post('/pref', $('#feedback-form').serializeArray())
@@ -2734,6 +2579,11 @@ mode_post = 0;
 				msg_rm_load();
 			});
 		});
+        $('.download-confirm').on('click', function(g) {
+            ass = $(this).attr('href');
+            g.preventDefault();
+            b.Closed.dlConf();
+        });
 	}),
     b.router.connect("^/communities/(?:favorites|played)$", function(a, c, d) {
 		b.Closed.changesel("community");
@@ -2926,16 +2776,8 @@ $('.post-poll .poll-votes').on('click', function() {
 		$('.cancel-button').on('click',function(){et()})
 				b.EntryForm.setupFormStatus(t, e);
 		$('.edit-post-button').on('click',function(){
-			if($('.post-content-memo').length) {
-				b.showMessage("", "You can't edit a drawing, sorry.");
-            } if($('.screenshot-container > video').length) {
-                b.showMessage("", "You can't edit your uploaded video, sorry. But you can edit the contents of the post.");
-                et();
-                b.Form.toggleDisabled(submit_btn, true);
-			} else {
-					et();
-					b.Form.toggleDisabled(submit_btn, true);
-			}
+			et();
+			b.Form.toggleDisabled(submit_btn, true);
 		})
 		submit_btn.on('click',function(a) {
 			a.preventDefault();
@@ -3045,12 +2887,8 @@ mode_post = 0;
 			$('.cancel-button').on('click',function(){et()})
 					b.EntryForm.setupFormStatus(t, e);
 			$('.edit-post-button').on('click',function(){
-				if($('.reply-content-memo').length) {
-					b.showMessage("", "You can't edit a drawing, sorry.")
-				} else {
 						et();
 						b.Form.toggleDisabled(submit_btn, true)
-				}
 			})
 			submit_btn.on('click',function(a) {
 				a.preventDefault()
@@ -3061,6 +2899,11 @@ mode_post = 0;
 				})
 			})
 		}
+        a('.download-confirm').on('click', function(g) {
+            ass = a(this).attr('href');
+            g.preventDefault();
+            b.Closed.dlConf();
+        });
 			rm_btn = $('.rm-post-button')
 			if(rm_btn.length) {
 				rm_btn.on('click',function(){

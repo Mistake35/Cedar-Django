@@ -56,7 +56,7 @@ class UserAdmin(BaseUserAdmin):
 	fieldsets = (
 		(None, {'fields': ('nickname', 'username', 'password')}),
 		('Personal info', {'fields': ('email', ('addr', 'signup_addr'))}),
-		('Cosmetic', {'fields': (('role', 'avatar', 'has_mh'), 'color', 'theme', 'bg_url',)}),
+		('Cosmetic', {'fields': (('role', 'avatar_type', 'avatar_input', 'avatar_upload'), 'color', 'theme')}),
 		('Data', {'fields': ('last_login', 'created', 'hide_online')}),
 		('Permissions', {'fields': (('is_active', 'is_staff', 'is_superuser', 'can_invite'), 'level', 'c_tokens', 'groups', 'user_permissions')}),
 	)
@@ -132,7 +132,7 @@ class ConversationAdmin(admin.ModelAdmin):
 class PostAdmin(admin.ModelAdmin):
 	raw_id_fields = ('creator', 'poll', 'community', )
 	search_fields = ('id', 'body', 'creator__username', )
-	list_display = ('id', 'created', 'creator', 'body', 'is_rm', )
+	list_display = ('id', 'created', 'creator', 'body', 'file', 'is_rm', )
 	list_filter = ('is_rm', 'created', )
 	actions = [Hide_content, Show_content, Disable_comments, Enable_comments]
 	def get_queryset(self, request):
@@ -141,7 +141,7 @@ class PostAdmin(admin.ModelAdmin):
 class CommentAdmin(admin.ModelAdmin):
 	raw_id_fields = ('creator', 'original_post', 'community', )
 	search_fields = ('id', 'body', 'creator__username', )
-	list_display = ('id', 'created', 'creator', 'body', 'original_post', 'is_rm', )
+	list_display = ('id', 'created', 'creator', 'body', 'file', 'original_post', 'is_rm', )
 	list_filter = ('is_rm', 'created', )
 	actions = [Hide_content, Show_content]
 	def get_queryset(self, request):
@@ -159,7 +159,7 @@ class CommunityAdmin(admin.ModelAdmin):
 class MessageAdmin(admin.ModelAdmin):
 	raw_id_fields = ('creator', 'conversation', )
 	search_fields = ('id', 'body', 'creator__username', )
-	list_display = ('id', 'created', 'creator', 'conversation', 'body', 'read', 'is_rm', )
+	list_display = ('id', 'created', 'creator', 'conversation', 'body', 'file', 'read', 'is_rm', )
 	list_filter = ('is_rm', 'read', 'created', )
 	actions = [Hide_content, Show_content]
 	def get_queryset(self, request):

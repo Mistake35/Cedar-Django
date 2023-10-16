@@ -17,7 +17,7 @@ import uuid, json, base64
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.urls import reverse
-from django.db.models.signals import pre_delete
+import mimetypes
 import re
 import unicodedata
 import random
@@ -52,14 +52,14 @@ class UserManager(BaseUserManager):
 		)
 		profile = Profile.objects.model()
 		if nn:
-			user.avatar = nn[0]
+			user.avatar_input = nn[0]
 			profile.origin_id = nn[2]
 			profile.origin_info = json.dumps(nn)
-			user.has_mh = True
+			user.avatar_type = 2
 		else:
-			user.avatar = util.get_gravatar(email) or ('s' if getrandbits(1) else '')
+			user.avatar_input = util.get_gravatar(email) or ('s' if getrandbits(1) else '')
 			
-			user.has_mh = False
+			user.avatar_type = 1
 		user.set_password(password)
 		user.save(using=self._db)
 		profile.user = user
@@ -88,10 +88,6 @@ class UserManager(BaseUserManager):
 		user = user.first()
 		# If the user is an admin, say that they don't exist, actually no...
 		# Or, if the user doesn't want username login, don't let them if they didn't enter their email
-		if user.profile('email_login') == 2 and not user.email == username:
-			return None
-		elif user.profile('email_login') == 0 and user.email == username:
-			return None
 		try:
 			passwd = user.check_password(password)
 		# Check if the password is a valid bcrypt
@@ -136,15 +132,17 @@ class Role(models.Model):
 # as of writing, mii-secure is unstable, nintendo please do not f*ck me for this
 mii_domain = 'https://s3.us-east-1.amazonaws.com/mii-images.account.nintendo.net/'
 
+studiomii_domain = 'https://studio.mii.nintendo.com/'
+
 class User(AbstractBaseUser, PermissionsMixin):
 	id = models.AutoField(primary_key=True)
 	username = models.CharField(max_length=32, unique=True)
 	nickname = models.CharField(max_length=64, null=True)
 	password = models.CharField(max_length=128)
-	email = models.EmailField(null=True, blank=True, default='')
-	has_mh = models.BooleanField(default=False, help_text='Don\'t touch this. This is if the user\'s avatar is set to a Mii.')
-	avatar = models.CharField(max_length=1200, blank=True, default='')
-	theme = ColorField(blank=True, null=True)
+	email = models.EmailField(null=True, blank=True)
+	avatar_type = models.SmallIntegerField(default=False, help_text='Determines the type of avatar this user has.', choices=((0, 'ImageField'), (1, 'URL / Gravatar'), (2, 'Mii Hash'), (3, 'Mii Studio')))
+	avatar_input = models.CharField(max_length=1200, null=True, blank=True, help_text='Input a Mii Hash, or URL depending on what "Avatar type" is set to..')
+	avatar_upload = models.ImageField(blank=True, null=True, upload_to='avatars/', help_text='Note this only works if you have "Avatar type" set to "ImageField"')
 	# LEVEL: 0-1 is default, everything else is just levels
 	level = models.SmallIntegerField(default=0, help_text='This is the level of authority. People with a lower level cannot edit those with a higher level. This also grants additional permissions outside of the Django Admin Panel.')
 	role = models.ForeignKey(Role, blank=True, null=True, on_delete=models.SET_NULL, help_text='This will show a funny badge and text on this user\'s profile. This does not grant the user any additional power and is only visual.')
@@ -153,15 +151,16 @@ class User(AbstractBaseUser, PermissionsMixin):
 	# C Tokens are things that let you make communities and shit.
 	c_tokens = models.IntegerField(default=1, help_text='How many communities should this user be allowed to make?')
 	
-	# Things that don't have to do with auth lol
+	# Personalization stuff
 	hide_online = models.BooleanField(default=False, help_text='If this is ticked, the user has opted to hide their online status.')
-	color = ColorField(default='', null=True, blank=True)
+	color = ColorField(null=True, blank=True)
+	theme = ColorField(blank=True, null=True)
+	show_announcements = models.BooleanField(default=True)
 	
 	is_staff = models.BooleanField(default=False, help_text='Allow this user to access the admin panel you\'re using right now? Don\'t forget to specify the permissions.')
 	is_active = models.BooleanField(default=True, help_text='If this is off, the user is basically banned and can\'t do shit here')
 	is_superuser = models.BooleanField(default=False, help_text='Overrides django groups. This also allows you to change people\'s perms.')
 	can_invite = models.BooleanField(default=True, help_text='Can this user invite new users? This does not matter unless the invite system is turned on.')
-	bg_url = models.CharField(max_length=300, null=True, blank=True)
 	
 	is_anonymous = False
 	is_authenticated = True
@@ -217,11 +216,10 @@ class User(AbstractBaseUser, PermissionsMixin):
 		return infodecode[0]
 	def unread_warning(self):
 		return Notification.objects.filter(type=5, to=self, read=False).exists()
-	def has_plain_avatar(self):
-		if not self.has_mh and '/' in self.avatar and not 'gravatar.com' in self.avatar:
-			return True
 	def has_avatar(self):
-		if not self.avatar or len(self.avatar) == 1:
+		if self.avatar_type == 0 and not self.avatar_upload:
+			return False
+		if not self.avatar_type == 0 and not self.avatar_input:
 			return False
 		return True
 	def let_yeahnotifs(self):
@@ -233,10 +231,12 @@ class User(AbstractBaseUser, PermissionsMixin):
 			return False
 		today_min = timezone.datetime.combine(timezone.datetime.today(), time.min)
 		today_max = timezone.datetime.combine(timezone.datetime.today(), time.max)
-		# recent_posts =
-		# Posts made by the user today + posts made by the IP today +
-		# same thing except with comments
-		recent_posts = Post.real.filter(Q(creator=self.id, created__range=(today_min, today_max)) | Q(creator__addr=self.addr, created__range=(today_min, today_max))).count() + Comment.real.filter(Q(creator=self.id, created__range=(today_min, today_max)) | Q(creator__addr=self.addr, created__range=(today_min, today_max))).count()
+		# recent_posts
+		recent_posts = Post.real.filter(
+			Q(creator=self) & Q(created__range=(today_min, today_max))
+		).count() + Comment.real.filter(
+			Q(creator=self) & Q(created__range=(today_min, today_max))
+		).count()
 		
 		# Posts remaining
 		return int(limit) - recent_posts
@@ -268,24 +268,46 @@ class User(AbstractBaseUser, PermissionsMixin):
 		else:
 			return True
 	def do_avatar(self, feeling=0):
-		if self.has_mh and self.avatar:
-			feeling = {
-			0: 'normal',
-			1: 'happy',
-			2: 'like',
-			3: 'surprised',
-			4: 'frustrated',
-			5: 'puzzled',
-			}.get(feeling, "normal")
-			url = '{2}{0}_{1}_face.png'.format(self.avatar, feeling, mii_domain)
-			return url
-		elif not self.avatar:
-			return settings.STATIC_URL + 'img/anonymous-mii.png'
-		elif self.avatar == 's':
-			return settings.STATIC_URL + 'img/anonymous-mii-sad.png'
-		else:
-			return self.avatar
-
+		anon = settings.STATIC_URL + 'img/anonymous-mii.png'
+		match self.avatar_type:
+			case 3:
+				if self.avatar_input:
+					feeling = {
+					0: 'normal',
+					1: 'smile_open_mouth',	
+					2: 'like_wink_left',
+					3: 'surprise_open_mouth',
+					4: 'frustrated',
+					5: 'sorrow',
+					}.get(feeling, "normal")
+					url = '{2}miis/image.png?data={0}&type=face&expression={1}&width=128'.format(self.avatar_input, feeling, studiomii_domain)
+					return url
+				else:
+					return anon
+			case 2:
+				if self.avatar_input:
+					feeling = {
+					0: 'normal',
+					1: 'happy',
+					2: 'like',
+					3: 'surprised',
+					4: 'frustrated',
+					5: 'puzzled',
+					}.get(feeling, "normal")
+					url = '{2}{0}_{1}_face.png'.format(self.avatar_input, feeling, mii_domain)
+					return url
+				else:
+					return anon
+			case 1:
+				if self.avatar_input:
+					return self.avatar_input
+				else:
+					return anon
+			case 0:
+				if self.avatar_upload:
+					return self.avatar_upload.url
+				else:
+					return anon
 	def num_yeahs(self):
 		return self.yeah_set.count()
 	def num_posts(self):
@@ -519,18 +541,12 @@ class User(AbstractBaseUser, PermissionsMixin):
 			return self.save(update_fields=['addr', 'last_login'])
 		return self.save(update_fields=['last_login'])
 
-	def has_postspam(self, body, screenshot=None, drawing=None):
+	def has_postspam(self, body, file=None):
 		latest_post = self.post_set.order_by('-created')[:1]
 		if not latest_post:
 			return False
 		latest_post = latest_post.first()
-		if drawing and latest_post.drawing:
-			if drawing == latest_post.drawing:
-				return True
-		elif latest_post.screenshot and screenshot and not drawing:
-			if latest_post.screenshot == screenshot and latest_post.body == body:
-				return True
-		elif latest_post.body and body and not latest_post.screenshot and not latest_post.drawing:
+		if latest_post.body and body and not latest_post.file:
 			if latest_post.body == body:
 				return True
 		return False
@@ -654,8 +670,8 @@ class Community(models.Model):
 	id = models.AutoField(primary_key=True)
 	name = models.CharField(max_length=255)
 	description = models.TextField(blank=True)
-	ico = models.ImageField(null=True, blank=True)
-	banner = models.ImageField(null=True, blank=True)
+	ico = models.ImageField(null=True, blank=True, upload_to='community_icons/')
+	banner = models.ImageField(null=True, blank=True, upload_to='community_banners/')
 	# Type: 0 - general, 1 - game, 2 - special 
 	type = models.SmallIntegerField(default=0, help_text='The category the community belongs in, setting this to None will remove the community.', choices=((0, 'General'), (1, 'Game'), (2, 'Special'), (3, 'User Community'), (4, 'Hide')))
 	platform = models.SmallIntegerField(default=0, choices=((0, 'None'), (1, '3DS'), (2, 'Wii U'), (3, 'Switch'), (4, '3DS and Wii U'), (5, 'PC'), (6, 'Xbox'), (7, 'Playstation')))
@@ -788,66 +804,10 @@ class Community(models.Model):
 		if self.has_favorite(request):
 			return request.user.communityfavorite_set.filter(community=self).delete()
 
-
 	def setup(self, request):
 		if request.user.is_authenticated:
 			self.post_perm = self.post_perm(request)
 			self.has_favorite = self.has_favorite(request)
-
-	def create_post(self, request):
-		if not self.post_perm(request):
-			return 4
-		limit = request.user.limit_remaining()
-		if not limit is False and not limit > 0:
-			return 8
-		del(limit)
-		#if Post.real.filter(Q(creator=request.user) | Q(creator__addr=request.user.addr), created__gt=timezone.now() - timedelta(seconds=10)).exists():
-		#	return 3
-		if request.POST.get('url'):
-			try:
-				URLValidator()(value=request.POST['url'])
-			except ValidationError:
-				return 5
-		if not request.user.has_freedom() and (request.POST.get('url') or request.FILES.get('screen') or request.FILES.get('video')):
-			return 6
-		if not request.user.is_active:
-			return 6
-		if request.user.unread_warning():
-			return 13
-		if len(request.POST['body']) > 2200 or (len(request.POST['body']) < 1 and not request.POST.get('_post_type') == 'painting'):
-			return 1
-		upload = None
-		drawing = None
-		video = None
-		body = request.POST.get('body')
-		for c in body:
-			if unicodedata.combining(c):
-				return 12
-		if request.FILES.get('screen'):
-			upload = util.image_upload(request.FILES['screen'], True)
-			if upload == 1:
-				return 2
-		if request.FILES.get('video'):
-			video = util.video_upload(request.FILES['video'])
-			if video == 1:
-				return 11
-		if request.POST.get('_post_type') == 'painting':
-			if not request.POST.get('painting'):
-				return 2
-			drawing = util.image_upload(request.POST['painting'], False, True)
-			if drawing == 1:
-				return 2
-		# Check for spam using our OWN ALGO!!!!!!!!!
-		if request.user.has_postspam(body, upload, drawing):
-			return 7
-		for keyword in ['faggot', 'fag', 'nigger', 'nigga']:
-			if keyword in body.lower():
-				return 9
-		if body.isspace() and not drawing:
-			return 10
-		new_post = self.post_set.create(body=body, creator=request.user, community=self, feeling=int(request.POST.get('feeling_id', 0)), spoils=bool(request.POST.get('is_spoiler')), screenshot=upload, drawing=drawing, url=request.POST.get('url'), video=video)
-		new_post.is_mine = True
-		return new_post
 
 	def search(query='', limit=50, offset=0, request=None):
 		return Community.objects.filter(Q(name__icontains=query) | Q(description__contains=query)).exclude(type=4).order_by('-created')[offset:offset + limit]
@@ -872,9 +832,7 @@ class Post(models.Model):
 	community = models.ForeignKey(Community, null=True, on_delete=models.CASCADE)
 	feeling = models.SmallIntegerField(default=0, choices=feelings)
 	body = models.TextField(null=True)
-	drawing = models.CharField(max_length=200, null=True, blank=True)
-	screenshot = models.CharField(max_length=1200, null=True, blank=True, default='')
-	video = models.CharField(max_length=256, null=True, blank=True, default='')
+	file = models.FileField(max_length=1024, null=True, blank=True, upload_to='post_file/%Y/%m/%d/')
 	url = models.URLField(max_length=1200, null=True, blank=True, default='')
 	spoils = models.BooleanField(default=False)
 	disable_yeah = models.BooleanField(default=False)
@@ -898,8 +856,6 @@ class Post(models.Model):
 	def trun(self):
 		if self.is_rm:
 			return 'deleted'
-		if self.drawing:
-			return 'drawing'
 		else:
 			return self.body
 	def yt_vid(self):
@@ -917,6 +873,26 @@ class Post(models.Model):
 			return (self.creator == user)
 		else:
 			return False
+	def file_type(self):
+		mimetypes.add_type("image/webp", ".webp")
+		# Get the file MIME type
+		if not self.file:
+			return None
+		mime_type, encoding = mimetypes.guess_type(self.file.name)
+		if mime_type:
+			# Determine the type of file
+			type_main, type_sub = mime_type.split('/')
+			if type_main == 'image':
+				return 1
+			elif type_main == 'video':
+				return 2
+			elif type_main == 'audio':
+				return 3
+			else:
+				return 0
+		else:
+			return 0
+
 	#def yeah_notification(self, request):
 	# ???? What is this
 	#Notification.give_notification
@@ -1027,43 +1003,6 @@ class Post(models.Model):
 			for post in comments:
 				post.setup(request)
 		return comments
-	def create_comment(self, request):
-		if not self.can_comment(request):
-			return False
-		limit = request.user.limit_remaining()
-		if not limit is False and not limit > 0:
-			return 8
-		del(limit)
-		if self.is_mine(request.user) and Comment.real.filter(creator=request.user, created__gt=timezone.now() - timedelta(seconds=2)).exists():
-			return 3
-		elif not self.is_mine(request.user) and Comment.real.filter(creator=request.user, created__gt=timezone.now() - timedelta(seconds=10)).exists():
-			return 3
-		if not request.user.has_freedom() and (request.POST.get('url') or request.FILES.get('screen')):
-			return 6
-		for c in request.POST['body']:
-			if unicodedata.combining(c):
-				return 12
-		if not request.user.is_active:
-			return 6
-		if len(request.POST['body']) > 2200 or (len(request.POST['body']) < 1 and not request.POST.get('_post_type') == 'painting'):
-			return 1
-		if request.user.unread_warning():
-			return 13
-		upload = None
-		drawing = None
-		if request.FILES.get('screen'):
-			upload = util.image_upload(request.FILES['screen'], True)
-			if upload == 1:
-				return 2
-		if request.POST.get('_post_type') == 'painting':
-			if not request.POST.get('painting'):
-				return 2
-			drawing = util.image_upload(request.POST['painting'], False, True)
-			if drawing == 1:
-				return 2
-		new_post = self.comment_set.create(body=request.POST.get('body'), creator=request.user, community=self.community, original_post=self, feeling=int(request.POST.get('feeling_id', 0)), spoils=bool(request.POST.get('is_spoiler')), drawing=drawing, screenshot=upload)
-		new_post.is_mine = True
-		return new_post
 	def recent_comment(self):
 		if self.number_comments() < 1:
 			return False
@@ -1118,12 +1057,6 @@ class Post(models.Model):
 		else:
 			self.status = 2
 			AuditLog.objects.create(type=0, post=self, user=self.creator, by=request.user)
-		if self.screenshot:
-			util.image_rm(self.screenshot)
-			self.screenshot = None
-		if self.drawing:
-			util.image_rm(self.drawing)
-			self.drawing = None
 		self.save()
 	def setup(self, request):
 		self.has_yeah = self.has_yeah(request)
@@ -1143,8 +1076,7 @@ class Comment(models.Model):
 	community = models.ForeignKey(Community, on_delete=models.CASCADE)
 	feeling = models.SmallIntegerField(default=0, choices=feelings)
 	body = models.TextField(null=True)
-	screenshot = models.CharField(max_length=1200, null=True, blank=True, default='')
-	drawing = models.CharField(max_length=200, null=True, blank=True)
+	file = models.FileField(max_length=1024, null=True, blank=True, upload_to='comment_file/%Y/%m/%d/')
 	spoils = models.BooleanField(default=False)
 	created = models.DateTimeField(auto_now_add=True)
 	edited = models.DateTimeField(auto_now=True)
@@ -1164,10 +1096,27 @@ class Comment(models.Model):
 	def trun(self):
 		if self.is_rm:
 			return 'deleted'
-		if self.drawing:
-			return '(drawing)'
 		else:
 			return self.body
+	def file_type(self):
+		mimetypes.add_type("image/webp", ".webp")
+		# Get the file MIME type
+		if not self.file:
+			return None
+		mime_type, encoding = mimetypes.guess_type(self.file.name)
+		if mime_type:
+			# Determine the type of file
+			type_main, type_sub = mime_type.split('/')
+			if type_main == 'image':
+				return 1
+			elif type_main == 'video':
+				return 2
+			elif type_main == 'audio':
+				return 3
+			else:
+				return 0
+		else:
+			return 0
 	def is_mine(self, user):
 		if user.is_authenticated:
 			return (self.creator == user)
@@ -1238,12 +1187,6 @@ class Comment(models.Model):
 		else:
 			self.status = 2
 			AuditLog.objects.create(type=1, comment=self, user=self.creator, by=request.user)
-		if self.screenshot:
-			util.image_rm(self.screenshot)
-			self.screenshot = None
-		if self.drawing:
-			util.image_rm(self.drawing)
-			self.drawing = None
 		self.save()
 	def setup(self, request):
 		self.has_yeah = self.has_yeah(request)
@@ -1277,23 +1220,19 @@ class Profile(models.Model):
 	origin_id = models.CharField(max_length=16, null=True, blank=True)
 	origin_info = models.CharField(max_length=255, null=True, blank=True)
 
-	comment = models.TextField(blank=True, default='')
-	country = models.CharField(max_length=120, blank=True, default='')
-	whatareyou = models.CharField(max_length=120, blank=True, default='')
+	comment = models.TextField(blank=True, null=True)
+	country = models.CharField(max_length=120, blank=True)
+	whatareyou = models.CharField(max_length=120, blank=True)
 	#birthday = models.DateField(null=True, blank=True)
 	id_visibility = models.SmallIntegerField(default=0, choices=visibility)
 	
-	pronoun_is = models.IntegerField(default=0, help_text='haha attack helicopter.', choices=(
-	(0, "Not specified"), (1, "He/him"), (2, "She/her"), (3, "He/she"), (4, "It"), (5, "They/Them")
-	)) 
+	pronoun_is = models.CharField(max_length=16, blank=True)
 
 	let_friendrequest = models.SmallIntegerField(default=0, choices=visibility)
 	yeahs_visibility = models.SmallIntegerField(default=0, choices=visibility)
 	comments_visibility = models.SmallIntegerField(default=2, choices=visibility)
-	#relationship_visibility = models.SmallIntegerField(default=0, choices=visibility)
-	weblink = models.CharField(max_length=1200, blank=True, default='')
-	#gameskill = models.SmallIntegerField(default=0)
-	external = models.CharField(max_length=255, blank=True, default='')
+	weblink = models.CharField(max_length=1200, blank=True)
+	external = models.CharField(max_length=255, blank=True)
 	favorite = models.ForeignKey(Post, blank=True, null=True, on_delete=models.SET_NULL)
 
 	let_yeahnotifs = models.BooleanField(default=True)
@@ -1302,9 +1241,7 @@ class Profile(models.Model):
 	#let_avatar = models.BooleanField(default=False)
 	# Post limit, 0 for none
 	limit_post = models.SmallIntegerField(default=0, help_text='Great for spammers, set to \"0\" to remove the restriction.')
-	# If this is true, the user can't change their avatar or nickname
 	cannot_edit = models.BooleanField(default=False, help_text='Make it so this user cannot change settings.')
-	email_login = models.SmallIntegerField(default=1, choices=((0, 'Do not allow'), (1, 'Okay'), (2, 'Only allow')))
 	
 	def __str__(self):
 		return "profile for " + self.user.username
@@ -1609,38 +1546,13 @@ class Conversation(models.Model):
 		for msg in msgs:
 			msg.mine = msg.mine(request.user)
 		return msgs
-	def make_message(self, request):
-		if not request.user.has_freedom() and (request.POST.get('url') or request.FILES.get('screen')):
-			return 6
-		if Message.real.filter(creator=request.user, created__gt=timezone.now() - timedelta(seconds=2)).exists():
-			return 3
-		if len(request.POST['body']) > 50000 or (len(request.POST['body']) < 1 and not request.POST.get('_post_type') == 'painting'):
-			return 1
-		if request.user.unread_warning():
-			return 4
-		upload = None
-		drawing = None
-		if request.FILES.get('screen'):
-			upload = util.image_upload(request.FILES['screen'], True)
-			if upload == 1:
-				return 2
-		if request.POST.get('_post_type') == 'painting':
-			if not request.POST.get('painting'):
-				return 2
-			drawing = util.image_upload(request.POST['painting'], False, True)
-			if drawing == 1:
-				return 2
-		new_post = self.message_set.create(body=request.POST.get('body'), creator=request.user, feeling=int(request.POST.get('feeling_id', 0)), drawing=drawing, screenshot=upload)
-		new_post.mine = True
-		return new_post
 class Message(models.Model):
 	id = models.AutoField(primary_key=True)
 	conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
 	feeling = models.SmallIntegerField(default=0, choices=feelings)
 	body = models.TextField(null=True)
-	drawing = models.CharField(max_length=200, null=True, blank=True)
-	screenshot = models.CharField(max_length=1200, null=True, blank=True, default='')
-	url = models.URLField(max_length=1200, null=True, blank=True, default='')
+	file = models.FileField(max_length=1024, null=True, blank=True, upload_to='message_file/%Y/%m/%d/')
+	url = models.URLField(max_length=1200, null=True, blank=True)
 	created = models.DateTimeField(auto_now_add=True)
 	read = models.BooleanField(default=False)
 	is_rm = models.BooleanField(default=False)
@@ -1654,10 +1566,27 @@ class Message(models.Model):
 	def trun(self):
 		if self.is_rm:
 			return 'deleted'
-		if self.drawing:
-			return '(drawing)'
 		else:
 			return self.body
+	def file_type(self):
+		mimetypes.add_type("image/webp", ".webp")
+		# Get the file MIME type
+		if not self.file:
+			return None
+		mime_type, encoding = mimetypes.guess_type(self.file.name)
+		if mime_type:
+			# Determine the type of file
+			type_main, type_sub = mime_type.split('/')
+			if type_main == 'image':
+				return 1
+			elif type_main == 'video':
+				return 2
+			elif type_main == 'audio':
+				return 3
+			else:
+				return 0
+		else:
+			return 0
 	def mine(self, user):
 		if self.creator == user:
 			return True
@@ -1665,14 +1594,7 @@ class Message(models.Model):
 	def rm(self, request):
 		if self.conversation.source == request.user or self.conversation.target == request.user:
 			self.is_rm = True
-			if self.screenshot:
-				util.image_rm(self.screenshot)
-				self.screenshot = None
-			if self.drawing:
-				util.image_rm(self.drawing)
-				self.drawing = None
 			self.save()
-
 	def makeopt(ls):
 		if len(ls) < 1:
 			raise ValueError
@@ -1843,12 +1765,10 @@ class ProfileHistory(models.Model):
 	
 # blah blah blah
 # this method will be executed when...
-def rm_post_image(sender, instance, **kwargs):
-	if instance.screenshot:
-		util.image_rm(instance.screenshot)
-	if instance.drawing:
-		util.image_rm(instance.drawing)
+'''def rm_post_image(sender, instance, **kwargs):
+	if instance.file:
+		util.image_rm(instance.file)
 # when pre_delete happens on these
 pre_delete.connect(rm_post_image, sender=Post)
 pre_delete.connect(rm_post_image, sender=Comment)
-pre_delete.connect(rm_post_image, sender=Message)
+pre_delete.connect(rm_post_image, sender=Message)'''

@@ -4,7 +4,10 @@ Stuff that is done:
 - Hide email password reset form if no SMTP server is set up. (done by Arian Kordi)
 - We are now using django groups.
 - Admins have a better interface.
-- Post limit shows publicly, with indication on how many posts are left.
+- Post limit shows for admins, with indication on how many posts are left.
+- Image and video file boxes in one.
+- Full ImageField integration.
+
 
 Stuff that is in progress
 - New Warning system.
@@ -17,18 +20,13 @@ Todo:
 	When banning someone, add the option to ban or revoke invites for whoever invited that person.
 - FIX THE FUCKING CONTACT PAGE (nah not doing that lmao)
 - also, CONTINUE MOVING OVER TO FORMS.PY
-	Profile settings
 	Email reset form
-	Post forms
 	Signup page
 	A bunch of other forms I haven't thought about.
 
 Ideas:
 - An account approval system, we really need one. "is_new" exists in the user model, we just have to put that to use.
 - "Muting" feature to replace "active"
-- Image and video file boxes in one.
 - Make it, so you need to enter your current password to change your email address.
 - Ways for mods to view who invited who easily.
-- Full ImageField integration.
-- Filefield may have to be used for both photos and videos.
 - remove the useless feedback thing. (You can just make a bug reporting community)

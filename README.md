@@ -1,6 +1,9 @@
 # About
 Cedar-Django is a fork of Closedverse with custom features added to it.
 
+### Upload anything you want.
+You can upload whatever files you want to the site. The primary supported file types are Images, Videos and audio files. Other files will have a download button.
+
 ### Theme changing
 Just like in Indigo, you can change the color of your theme. While this is only visible to each user specifically, a global theme can be set in Settings.py.
 
@@ -33,6 +36,7 @@ Moderators and staff will be able to revoke a user's ability to add new users if
 - Django 3.2.2
 - urllib3
 - lxml
+- django-cleanup
 - passlib
 - bcrypt
 - pillow
@@ -59,7 +63,7 @@ You need Pip
 
 4.
 Get everything else you need.
-`pip3 install Django==3.2.2 urllib3 lxml passlib bcrypt pillow django-markdown-deux django-markdown2 whitenoise django-xff`
+`pip3 install Django==3.2.2 urllib3 lxml passlib bcrypt pillow django-markdown-deux django-markdown2 whitenoise django-xff django-cleanup`
 
 5.
 Clone the clone!

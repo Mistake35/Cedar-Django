@@ -1,4 +1,4 @@
-{% load closedverse_tags %}<div {% if post.spoils and not post.is_mine or post.creator.banned %}data-href-hidden{% else %}data-href{% endif %}="{% url "main:post-view" post.id %}" class="post trigger{% if post.screenshot and not for_announcements %} with-image{% endif %}{% if post.spoils and not post.is_mine or post.creator.banned %} hidden test-hidden{% endif %}" tabindex="0">
+{% load closedverse_tags %}<div {% if post.spoils and not post.is_mine or post.creator.banned %}data-href-hidden{% else %}data-href{% endif %}="{% url "main:post-view" post.id %}" class="post trigger{% if post.file_type == 1 and not for_announcements %} with-image{% endif %}{% if post.spoils and not post.is_mine or post.creator.banned %} hidden test-hidden{% endif %}" tabindex="0">
   
     <p class="community-container"><a {% if post.community.clickable %}href="{% url "main:community-view" post.community_id %}"{% endif %}><img src="{{ post.community.icon }}" class="community-icon">{{ post.community.name }}</a></p>
 
@@ -16,27 +16,22 @@
 				<span class="spoiler">Edited ({% time post.edited %})</span>·
 				{% endif %}
               <a class="timestamp" {% if post.spoils and not post.is_mine %}data-href-hidden{% else %}href{% endif %}="{% url "main:post-view" post.id %}">{% time post.created %}</a>
-			  	{% if post.drawing %}
-				<span class="spoiler">(handwritten)</span>
-				{% endif %}
             </p>
-				{% if post.yt_vid %}
+				{% if post.yt_vid and not post.file_type == 2 %}
 					<a href="{% url "main:post-view" post.id %}" class="{% if not for_announcements %}screenshot-container {% else %}announcement-container {% endif %}video"><img height="48" src="https://i.ytimg.com/vi/{{ post.yt_vid }}/default.jpg"></a>
+				{% endif %}
+			{% if post.file %}
+				{% if post.file_type == 1 %}
+				<a href="{% url "main:post-view" post.id %}" class="{% if not for_announcements %}screenshot-container {% else %}announcement-container {% endif %}still-image"><img src="{{ post.file.url }}"></a>
+				{% elif post.file_type == 2 %}
+				<div class="{% if not for_announcements %}screenshot-container {% else %}announcement-container {% endif %} video"><video src="{{ post.file.url }}" width="50" height="48"></video></div>
+				{% else %}<a>File attached</a>
+				{% endif %}
 			{% endif %}
-			{% if post.screenshot %}
-			<a href="{% url "main:post-view" post.id %}" class="{% if not for_announcements %}screenshot-container {% else %}announcement-container {% endif %}still-image"><img src="{{ post.screenshot }}"></a>
-			{% endif %}
-			{% if post.video %}
-			<div class="{% if not for_announcements %}screenshot-container {% else %}announcement-container {% endif %} video"><video src="{{ post.video }}" width="50" height="48"></video></div>
-			{% endif %}
-			{% if post.drawing %}
-			<p class="post-content-memo"><img src="{{ post.drawing }}" class="post-memo"></p>
-			{% else %}
 				{% if post.has_line_trun %}
 				<p class="post-content-text">{{ post.body|truncatechars:100 }}</p>
 				{% else %}
 				<p class="post-content-text">{{ post.body|truncatechars:100|linebreaksbr }}</p>
-				{% endif %}
 			{% endif %}
 			{% if post.spoils and not post.is_mine and not post.creator.banned %}
 			<div class="hidden-content"><p>This post contains spoilers.

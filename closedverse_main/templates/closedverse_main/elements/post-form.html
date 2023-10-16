@@ -10,19 +10,6 @@
 	
     {% feeling_selector %}
 	<div class="textarea-with-menu active-text">
-		<menu class="textarea-menu">
-			<li><label class="textarea-menu-text">
-				<input type="radio" name="_post_type" value="body">
-			</label></li>
-			<li><label class="textarea-menu-memo">
-			<input type="radio" name="_post_type" value="painting">
-			</label></li>
-			<!--
-			<li><label class="textarea-menu-poll">
-			<input type="radio" name="_post_type" value="poll">
-			</label></li>
-			-->
-		</menu>
   <div class="textarea-container">
     <textarea name="body" class="textarea-text textarea " maxlength="2200" placeholder="{% if community.is_activity %}Share a post to your followers.{% else %}Share your thoughts in a post to {{ community.name }}{% endif %}" data-open-folded-form="" data-required=""></textarea>
   </div>

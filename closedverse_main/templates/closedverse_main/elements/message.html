@@ -10,8 +10,12 @@
 		  {% else %}
           <div class="post-content-text">{{ message.body }}</div>
 		  {% endif %}
-		  {% if message.screenshot %}
-		  <div class="screenshot-container still-image"><img src="{{ message.screenshot }}"></div>
-		  {% endif %}
+		{% if message.file %}
+			{% if message.file_type == 1 %}<div class="screenshot-container still-image"><img src="{{ message.file.url }}"></div>
+			{% elif message.file_type == 2 %}<div class="screenshot-container"><video controls src="{{ message.file.url }}" style="max-width:100%;max-height: 450px;"></video></div>
+			{% elif message.file_type == 3 %}<div class="screenshot-container"><audio controls src="{{ message.file.url }}"></audio></div>
+			{% elif message.file_type == 0 %}<a class="button download-confirm" href="{{ message.file.url }}">Download {{ message.file }}</a>
+			{% endif %}
+		{% endif %}
         </div>
       </div>

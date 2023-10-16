@@ -21,28 +21,24 @@
 		<span class="spoiler">Edited</span>·
 		{% endif %}
       <a class="timestamp" {% if post.spoils and not post.is_mine %}data-href-hidden{% else %}href{% endif %}="{% if post.is_reply %}{% url "main:comment-view" post.id %}{% else %}{% url "main:post-view" post.id %}{% endif %}">{% time post.created %}</a>
-				{% if post.drawing %}
-				<span class="spoiler">(handwritten)</span>
-				{% endif %}
 	</p>
     <div class="body post-content">
-		{% if post.yt_vid %}
+		{% if post.yt_vid and not post.file_type == 2 %}
 		<a href="{% url "main:post-view" post.id %}" class="screenshot-container video"><img height="48" src="https://i.ytimg.com/vi/{{ post.yt_vid }}/default.jpg"></a>
-		{% elif post.discord_vid %}
-      <div class="screenshot-container video"><video src="{{ post.url }}" height="48"></video></div>
 		{% endif %}
-			{% if post.drawing %}
-			<p class="post-content-memo"><img src="{{ post.drawing }}" class="post-memo"></p>
+			{% if post.has_line_trun %}
+			<p class="post-content-text">{{ post.body|truncatechars:200 }}</p>
 			{% else %}
-				{% if post.has_line_trun %}
-				<p class="post-content-text">{{ post.body|truncatechars:200 }}</p>
-				{% else %}
-				<p class="post-content-text">{{ post.body|truncatechars:200|linebreaksbr }}</p>
+			<p class="post-content-text">{{ post.body|truncatechars:200|linebreaksbr }}</p>
+			{% endif %}
+			{% if post.file %}
+				{% if post.file_type == 1 %}<a class="screenshot-container still-image" href="{% if post.is_reply %}{% url "main:comment-view" post.id %}{% else %}{% url "main:post-view" post.id %}{% endif %}"><img src="{{ post.file.url }}"></a>
+				{% elif post.file_type == 2 %}<div class="screenshot-container still-image"><video controls src="{{ post.file.url }}" style="max-width:100%;max-height: 450px;"></video></div>
+				{% elif post.file_type == 3 %}<div class="screenshot-container audio"><audio controls src="{{ post.file.url }}"></audio></div>
+				{% else %}<a>File attached</a>
 				{% endif %}
 			{% endif %}
-			{% if post.screenshot %}<a class="screenshot-container still-image" href="{% if post.is_reply %}{% url "main:comment-view" post.id %}{% else %}{% url "main:post-view" post.id %}{% endif %}"><img src="{{ post.screenshot }}"></a>{% endif %}
-			{% if post.video %}<div class="screenshot-container still-image"><video controls src="{{ post.video }}" style="max-width:100%;max-height: 450px;"></video></div>{% endif %}
-		{% if post.spoils and not post.is_mine and not post.creator.banned %}
+			{% if post.spoils and not post.is_mine and not post.creator.banned %}
 		<div class="hidden-content"><p>This post contains spoilers.</p>
               <button type="button" class="hidden-content-button">View Post</button>
         </div>
