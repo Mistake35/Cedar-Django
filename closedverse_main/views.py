@@ -924,6 +924,8 @@ def post_create(request, community):
 			new_post = form.save(commit=False)
 			new_post.creator = request.user
 			new_post.community = community
+			new_post.feeling = form.cleaned_data.get('feeling_id')
+			new_post.spoils = form.cleaned_data.get('is_spoiler')
 			new_post.save()
 		else:
 			return json_response(form.errors.as_text())
@@ -1065,6 +1067,8 @@ def post_comments(request, post):
 			new_comment.creator = request.user
 			new_comment.community = post.community
 			new_comment.original_post = post
+			new_comment.feeling = form.cleaned_data.get('feeling_id')
+			new_comment.spoils = form.cleaned_data.get('is_spoiler')
 			new_comment.save()
 		else:
 			return json_response(form.errors.as_text())
@@ -1398,6 +1402,7 @@ def messages_view(request, username):
 			new_message = form.save(commit=False)
 			new_message.creator = request.user
 			new_message.conversation = conversation
+			new_message.feeling = form.cleaned_data.get('feeling_id')
 			new_message.save()
 		else:
 			return json_response(form.errors.as_text())

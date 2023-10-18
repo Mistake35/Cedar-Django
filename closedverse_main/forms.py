@@ -57,7 +57,6 @@ class message_form(forms.ModelForm):
 		fields = (
 			'body', 
 			'file', 
-			'feeling_id',
 		)
 
 class comment_form(forms.ModelForm):
@@ -81,8 +80,6 @@ class comment_form(forms.ModelForm):
 		fields = (
 			'body', 
 			'file', 
-			'feeling_id',
-			'is_spoiler',
 		)
 
 class post_form(forms.ModelForm):
@@ -117,8 +114,6 @@ class post_form(forms.ModelForm):
 			'body', 
 			'url', 
 			'file', 
-			'feeling_id',
-			'is_spoiler',
 		)
 
 class edit_community(forms.ModelForm):
