@@ -57,7 +57,7 @@ class UserManager(BaseUserManager):
 			profile.origin_info = json.dumps(nn)
 			user.avatar_type = 2
 		else:
-			user.avatar_input = util.get_gravatar(email) or ('s' if getrandbits(1) else '')
+			user.avatar_input = util.get_gravatar(email) or None
 			
 			user.avatar_type = 1
 		user.set_password(password)
@@ -242,6 +242,10 @@ class User(AbstractBaseUser, PermissionsMixin):
 		return int(limit) - recent_posts
 		
 	def get_class(self):
+			if self.banned() or not self.is_active:
+				first = settings.STATIC_URL + "img/banned.svg"
+				second = "Banned"
+				return [first, second]
 			if not self.role:
 				return [None, None]
 			second = self.role.organization

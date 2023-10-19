@@ -1,5 +1,5 @@
 {% if not post.is_rm %}
-{% load closedverse_tags %}<div id="post-{{ post.id }}" {% if post.spoils and not post.is_mine or post.creator.banned %}data-href-hidden{% else %}data-href{% endif %}="{% if post.is_reply %}{% url "main:comment-view" post.id %}{% else %}{% url "main:post-view" post.id %}{% endif %}" class="post post-subtype-default trigger{% if post.spoils and not post.is_mine or post.creator.banned or post.user_is_blocked %} hidden test-hidden{% endif %}{% if type == 2 %} post-list-outline{% endif %}" tabindex="0">
+{% load closedverse_tags %}<div id="post-{{ post.id }}" {% if post.spoils and not post.is_mine %}data-href-hidden{% else %}data-href{% endif %}="{% if post.is_reply %}{% url "main:comment-view" post.id %}{% else %}{% url "main:post-view" post.id %}{% endif %}" class="post post-subtype-default trigger{% if post.spoils and not post.is_mine or post.user_is_blocked %} hidden test-hidden{% endif %}{% if type == 2 %} post-list-outline{% endif %}" tabindex="0">
   {% if with_community_container %}
   <p class="community-container">
 	{% if post.is_reply %}
@@ -38,22 +38,14 @@
 				{% else %}<a>File attached</a>
 				{% endif %}
 			{% endif %}
-			{% if post.spoils and not post.is_mine and not post.creator.banned %}
+			{% if post.user_is_blocked %}
+			<div class="hidden-content"><p>Content hidden because you've blocked this user.{% if post.user_is_blocked %} Oh yeah, and spoilers too I guess.{% endif %}</p>
+                <button type="button" class="hidden-content-button">View Anyway</button>
+          	</div>
+			{% elif post.spoils and not post.is_mine %}
 		<div class="hidden-content"><p>This post contains spoilers.</p>
               <button type="button" class="hidden-content-button">View Post</button>
         </div>
-		{% endif %}
-		{% if post.creator.banned %}
-			<div class="hidden-content"><p>Content hidden because {{ post.creator.username }} was banned. </p>
-			{% if post.creator.active_ban.reason %}
-			<p>Reason: {{post.creator.active_ban.reason }}
-			{% endif %}
-                <button type="button" class="hidden-content-button">View Anyway</button>
-          </p></div>
-		{% elif post.user_is_blocked %}
-			<div class="hidden-content"><p>Content hidden because you've blocked this user.</p>
-                <button type="button" class="hidden-content-button">View Anyway</button>
-          	</div>
 		{% endif %}
         <div class="post-meta">
           <button type="button" {% if not post.can_yeah %}disabled{% endif %} class="symbol submit yeah-button
@@ -67,7 +59,7 @@
           <div class="reply symbol"><span class="symbol-label">Comments</span><span class="reply-count">{{ post.number_comments }}</span></div>
 		  {% endif %}
 		</div>
-{% if post.recent_comment and not post.recent_comment.creator.banned %}
+{% if post.recent_comment %}
 	<div class="recent-reply-content">
 {% if post.number_comments > 1 %}
 <div class="recent-reply-read-more-container" tabindex="0">

@@ -1,4 +1,4 @@
-{% load closedverse_tags %}<div {% if post.spoils and not post.is_mine or post.creator.banned %}data-href-hidden{% else %}data-href{% endif %}="{% url "main:post-view" post.id %}" class="post trigger{% if post.file_type == 1 and not for_announcements %} with-image{% endif %}{% if post.spoils and not post.is_mine or post.creator.banned %} hidden test-hidden{% endif %}" tabindex="0">
+{% load closedverse_tags %}<div {% if post.spoils and not post.is_mine %}data-href-hidden{% else %}data-href{% endif %}="{% url "main:post-view" post.id %}" class="post trigger{% if post.file_type == 1 and not for_announcements %} with-image{% endif %}{% if post.spoils and not post.is_mine %} hidden test-hidden{% endif %}" tabindex="0">
   
     <p class="community-container"><a {% if post.community.clickable %}href="{% url "main:community-view" post.community_id %}"{% endif %}><img src="{{ post.community.icon }}" class="community-icon">{{ post.community.name }}</a></p>
 
@@ -33,17 +33,9 @@
 				{% else %}
 				<p class="post-content-text">{{ post.body|truncatechars:100|linebreaksbr }}</p>
 			{% endif %}
-			{% if post.spoils and not post.is_mine and not post.creator.banned %}
+			{% if post.spoils and not post.is_mine %}
 			<div class="hidden-content"><p>This post contains spoilers.
                 <button type="button" class="hidden-content-button">View Post</button>
-          </p></div>
-			{% endif %}
-			{% if post.creator.banned %}
-			<div class="hidden-content"><p>Content hidden because {{ post.creator.username }} was banned. </p>
-			{% if post.creator.active_ban.reason %}
-			<p>Reason: {{post.creator.active_ban.reason }}
-			{% endif %}
-                <button type="button" class="hidden-content-button">View Anyway</button>
           </p></div>
 			{% endif %}
 			{% if not for_announcements %}

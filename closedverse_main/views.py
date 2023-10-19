@@ -1595,6 +1595,9 @@ def user_tools_bans(request, username):
 				ban.to = user
 				ban.by = request.user
 				ban.ip_address = user.addr
+				if form.cleaned_data.get('purge') == "1":
+					Post.real.filter(creator=user, is_rm=False).update(is_rm=True, status=5)
+					Comment.real.filter(creator=user, is_rm=False).update(is_rm=True, status=5)
 				ban.save()
 				AuditLog.objects.create(type=5, user=user, by=request.user)
 				return redirect('main:user-view', user)

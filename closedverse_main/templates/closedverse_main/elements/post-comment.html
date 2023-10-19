@@ -1,4 +1,4 @@
-{% if not comment.is_rm %}{% load closedverse_tags %}<li id="comment-{{ comment.id }}" {% if comment.spoils and not comment.is_mine or comment.creator.banned %}data-href-hidden{% else %}data-href{% endif %}="{% url "main:comment-view" comment.id %}" class="post {% if comment.owner_post %}my{% else %}other{% endif %}{% if comment.spoils and not comment.is_mine or comment.creator.banned %} hidden{% endif %} trigger">
+{% if not comment.is_rm %}{% load closedverse_tags %}<li id="comment-{{ comment.id }}" {% if comment.spoils and not comment.is_mine %}data-href-hidden{% else %}data-href{% endif %}="{% url "main:comment-view" comment.id %}" class="post {% if comment.owner_post %}my{% else %}other{% endif %}{% if comment.spoils and not comment.is_mine %} hidden{% endif %} trigger">
   {% user_icon_container comment.creator comment.feeling %}
   <div class="body">
     <div class="header">
@@ -20,19 +20,11 @@
 	{% else %}<a>File attached</a>
 	{% endif %}
 	{% endif %}
-	{% if comment.spoils and not comment.is_mine and not comment.creator.banned %}
+	{% if comment.spoils and not comment.is_mine %}
 		<div class="hidden-content"><p>This comment contains spoilers.</p>
       <button type="button" class="hidden-content-button">View Comment</button>
     </div>
 	{% endif %}
-	{% if comment.creator.banned %}
-			<div class="hidden-content"><p>Content hidden because {{ comment.creator.username }} was banned. </p>
-			{% if comment.creator.active_ban.reason %}
-			<p>Reason: {{comment.creator.active_ban.reason }}
-			{% endif %}
-                <button type="button" class="hidden-content-button">View Anyway</button>
-          </p></div>
-			{% endif %}
 
     <div class="reply-meta">
 		<button type="button" {% if not comment.can_yeah %}disabled{% endif %} class="symbol submit yeah-button

@@ -11,6 +11,9 @@
 		<p class="settings-label">Ban this user for:</p>
 		{{ form.expiry_date }}
 		<p class='note'>{{ user.username }} will be banned from {{ brand_name }} until the time runs out.</p>
+		<p class="settings-label">Purge this user?</p>
+		{{ form.purge }}
+		<p class='note'>Should we purge {{ user.username }}? All comments and posts will be removed.</p>
 		</li>
 		{% csrf_token %}
 		<div class="form-buttons">

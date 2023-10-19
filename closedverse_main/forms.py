@@ -1,6 +1,6 @@
 from django import forms
 import uuid
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 import io
 from .models import *
 from django.core.files.base import ContentFile
@@ -13,34 +13,52 @@ from django.core.validators import EmailValidator
 
 def compress_and_resize_content(image, icon=False):
 	try:
-		im = Image.open(image)
-		im = im.convert('RGB')
-
-		if icon == True:
-			width, height = im.size
-			min_dimension = min(width, height)
-			left = (width - min_dimension) / 2
-			top = (height - min_dimension) / 2
-			right = (width + min_dimension) / 2
-			bottom = (height + min_dimension) / 2
-			im = im.crop((left, top, right, bottom))
-			im.thumbnail((100, 100))
+		im = open_and_convert_image(image)
+		
+		if icon:
+			im = crop_to_square(im)
+			im = resize_image(im, (100, 100))
 		else:
-			im.thumbnail((1200, 1200))
-
-		output = io.BytesIO()
-		# no more webp
-		im.save(output, format='JPEG', quality=85)
-		output.seek(0)
-		random_name = f"{uuid.uuid4()}.jpg"
-		return ContentFile(output.read(), name=random_name)
-	except:
+			im = resize_image(im, (1200, 1200))
+		return save_image_to_webp(im)
+	except UnidentifiedImageError:
+		print("Error: Unable to identify the image file.")
 		return image
+	except Exception as e:
+		print(f"Error: {e}")
+		return image
+
+def open_and_convert_image(image):
+	im = Image.open(image)
+	if im.mode in ('RGBA', 'LA') or (im.mode == 'P' and 'transparency' in im.info):
+		return im.convert('RGBA')
+	else:
+		return im.convert('RGB')
+
+def crop_to_square(im):
+	width, height = im.size
+	min_dimension = min(width, height)
+	left = (width - min_dimension) / 2
+	top = (height - min_dimension) / 2
+	right = (width + min_dimension) / 2
+	bottom = (height + min_dimension) / 2
+	return im.crop((left, top, right, bottom))
+
+def resize_image(im, size):
+	im.thumbnail(size)
+	return im
+
+def save_image_to_webp(im):
+	output = io.BytesIO()
+	im.save(output, format='WEBP', quality=85, method=6, minimize_size=True)
+	output.seek(0)
+	random_name = f"{uuid.uuid4()}.webp"
+	return ContentFile(output.read(), name=random_name)
 
 class message_form(forms.ModelForm):
 	body = forms.CharField(max_length=2200, required=True)
 	file = forms.FileField(required=False)
-	feeling_id = forms.IntegerField(required=False)
+	feeling_id = forms.IntegerField(required=False, min_value=0, max_value=5)
 
 	def clean_file(self):
 		file = self.cleaned_data.get('file')
@@ -62,7 +80,7 @@ class message_form(forms.ModelForm):
 class comment_form(forms.ModelForm):
 	body = forms.CharField(max_length=2200, required=True)
 	file = forms.FileField(required=False)
-	feeling_id = forms.IntegerField(required=False)
+	feeling_id = forms.IntegerField(required=False, min_value=0, max_value=5)
 	is_spoiler = forms.BooleanField(required=False)
 
 	def clean_file(self):
@@ -86,7 +104,7 @@ class post_form(forms.ModelForm):
 	body = forms.CharField(max_length=2200, required=True)
 	url = forms.URLField(required=False)
 	file = forms.FileField(required=False)
-	feeling_id = forms.IntegerField(required=False)
+	feeling_id = forms.IntegerField(required=False, min_value=0, max_value=5)
 	is_spoiler = forms.BooleanField(required=False)
 
 	def clean_file(self):
@@ -254,7 +272,8 @@ class give_ban(forms.ModelForm):
 	]
 	# In the future we can add options for IP bans and shit.
 	reason = forms.CharField(required=True, widget=forms.Textarea(attrs={'class': 'textarea'}))
-	expiry_date = forms.ChoiceField(required=False, choices=BAN_OPTIONS, initial=1)
+	expiry_date = forms.ChoiceField(required=True, choices=BAN_OPTIONS, initial=1)
+	purge = forms.ChoiceField(required=True, choices=((1, "Purge"), (2, "Don't purge")))
 
 	def clean_expiry_date(self):
 		expiry_choice = self.cleaned_data['expiry_date']
