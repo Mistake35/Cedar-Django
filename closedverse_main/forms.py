@@ -272,7 +272,7 @@ class give_ban(forms.ModelForm):
 	]
 	# In the future we can add options for IP bans and shit.
 	reason = forms.CharField(required=True, widget=forms.Textarea(attrs={'class': 'textarea'}))
-	expiry_date = forms.ChoiceField(required=True, choices=BAN_OPTIONS, initial=1)
+	expiry_date = forms.ChoiceField(required=False, choices=BAN_OPTIONS, initial=1)
 	purge = forms.ChoiceField(required=True, choices=((1, "Purge"), (2, "Don't purge")))
 
 	def clean_expiry_date(self):
