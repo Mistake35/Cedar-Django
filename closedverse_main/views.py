@@ -21,7 +21,6 @@ from django.urls import reverse
 from random import getrandbits
 import json
 import traceback
-import subprocess
 from datetime import datetime, timedelta
 from django.utils import timezone
 from django.contrib.auth.hashers import identify_hasher
