@@ -1,5 +1,5 @@
 # About
-Cedar-Django is a fork of Closedverse with custom features added to it.
+Cedar-Django is a fork of Closedverse with a clusterfuck of features added. Cedar-Django is no longer in active development and simply served as a way for me to learn how to host, code, etc. If you wish to host, or modify Cedar-Django, feel free to.
 
 ### Upload anything you want.
 You can upload whatever files you want to the site. The primary supported file types are Images, Videos and audio files. Other files will have a download button.
