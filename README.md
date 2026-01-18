@@ -110,15 +110,19 @@ Be sure to replace "127.0.0.1" with your public IP if you're using this publical
 If you have no issues, you can skip this.
 
 Q: "HELP, I'M GETTING A BAD REQUEST (400) ERROR!"
+
 A: Add your public IP to the `ALLOWED_HOSTS` bit in settings.py along with your domain that you'll be using.
 
 Q: "django.db.utils.OperationalError: no such table: ban_usersban"
+
 A: You forgot to migrate and make the database.
 
 Q: "Why is the page white, with no color or style at all?"
+
 A: You need to collect the static files as mentioned prior.
 
 Q: "Why is pip giving me an externally managed environment error?"
+
 A: You need to setup a venv. Run `python3 -m venv <venv-name>`, then when it's done so `source <venv-name>/bin/activate`. **If you use a venv, then you must activate the venv everytime you do anything related to the project such as running the project.**
 
 You may have to do some additional troubleshooting, and that's the joy of web-hosting.
