@@ -6,7 +6,7 @@
 			<img src="{{ brand_logo }}">
 			<p class="lh">{{ title }}</p>
 			{% if reset_supported %}
-			<p>If you've forgotten your password or need to reset it for some reason, you've come to the right place.<br>Yes, this works.</p>
+			<p>If you've forgotten your password or need to reset it for some reason, you've come to the right place.</p>
 				<h3 class="label"><label>E-mail address: <input type="email" class="auth-input" name="email" placeholder="Email" required></label></h3>				
 				{% csrf_token %}
 			<p class="red" style="margin-bottom:6px"></p>
@@ -16,8 +16,8 @@
 				<p>Notice: Your user ID is used to log in, and is sometimes referred to as a username. It is below your nickname in most cases, please make sure you are using your user ID and your password.</p>
 			</div>
 			{% else %}
-			<p>Password resets are not enabled on this instance of {{ brand_name }}.
-			<p>To remedy this, tell the owner of the service to set up an SMTP server and specify it in their {{ brand_name }} configuration.</p>
+			<p>Password resets are not enabled on {{ brand_name }}.
+			<p>To remedy this, tell the owner of the service to set up an SMTP server and specify it in their Cedar-Django configuration.</p>
 			<br>
 			{% endif %}
 		</form>
