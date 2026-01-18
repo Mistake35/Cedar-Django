@@ -176,11 +176,13 @@ sudo systemctl status django
 # Optional but recommended things
 
 17.
-Optional, but recommended: using gunicorn instead of runserver
+Using gunicorn instead of runserver
+
 Run `pip3 install gunicorn`
+
 See if it works: `python3 -m gunicorn closedverse.wsgi --bind 127.0.0.1:8000`. If it does, edit the systemd service to use gunicorn instead of runserver.
 
-18.
+19.
 Reverse proxying using apache2 (If you use nginx, you can lookup a tutorial)
 
 Run `sudo a2enmod proxy proxy_fcgi proxy_http`, `cd /etc/apache2/sites-available` then `sudo nano cedar-django.conf`
@@ -199,7 +201,7 @@ Paste this in:
 </VirtualHost>
 ```
 then run `sudo a2ensite cedar-django` and `sudo systemctl restart apache2`
-Make sure apache2 listens on port 80. It does by default.
+Make sure apache2 listens on port 80.
 
 # FAQ
 Q: "I want SSL!"
