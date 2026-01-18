@@ -219,6 +219,6 @@ Q: "How can I set this up with MySQL/MariaDB?"
 A: By default, this project uses SQLite. To use MySQL or MariaDB (instructions are the exact same since MariaDB is a drop-in replacement for MySQL): Install default-libmysqlclient-dev with `sudo apt install default-libmysqlclient-dev`, run `pip3 install mysqlclient` then go to closedverse/settings.py and comment out the DATABASES with `backends.sqlite3` and uncomment the DATABASES with `backends.mysql`. After that, fill out the NAME, PASSWORD, HOST and PORT accordingly.
 
 # I'm having issues setting this up, how can I contact you?
-**If your problem is with a website that is using Cedar-Django, then contact the owner of that website, an administrator or a moderator. This repository is unrelated to any Cedar-Django instances.**
+**If your problem is with a website that is using Cedar-Django, then contact the owner, a moderator or administrator of that website. This repository is unrelated to any Cedar-Django instances.**
 
 If you're having issues setting this up, then make an issue, so that if you solve your issue anyone that has the same issue as you will be able to (hopefully) solve it with your solution.
