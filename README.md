@@ -216,7 +216,7 @@ A: Go to closedverse_main/templates/closedverse_main, then find what page you wa
 
 Q: "How can I set this up with MySQL/MariaDB?"
 
-A: By default, this project uses SQLite. To use MySQL or MariaDB (instructions are the exact same since MariaDB is a drop-in replacement for MySQL): Install default-libmysqlclient-dev with `sudo apt install default-libmysqlclient-dev`, run `pip3 install mysqlclient` then go to closedverse/settings.py and comment out the DATABASES with `backends.sqlite3` and uncomment the DATABASES with `backends.mysql`. After that, fill out the NAME, PASSWORD, HOST and PORT accordingly.
+A: By default, this project uses SQLite. To use MySQL or MariaDB (instructions are the exact same since MariaDB is a drop-in replacement for MySQL), install default-libmysqlclient-dev with `sudo apt install default-libmysqlclient-dev`, run `pip3 install mysqlclient` then go to closedverse/settings.py and comment out the DATABASES with `backends.sqlite3` and uncomment the DATABASES with `backends.mysql`. After that, fill out the NAME, PASSWORD, HOST and PORT accordingly. It's recommended that you setup a seperate user for closedverse and give the closedverse user all rights to that database instead of using the root user, because if you're using the root user and your database credentials get leaked then people will know the credentials to access all of your databases.
 
 # I'm having issues setting this up, how can I contact you?
 **If your problem is with a website that is using Cedar-Django, then contact the owner, a moderator or administrator of that website. This repository is unrelated to any Cedar-Django instances.**
