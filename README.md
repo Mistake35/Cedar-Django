@@ -73,7 +73,7 @@ You need Pip
 
 4.
 Get everything else you need.
-`pip3 install Django==3.2.2 urllib3 lxml passlib bcrypt pillow django-markdown-deux django-markdown2 whitenoise django-xff django-cleanup`
+`pip3 install -r requirements.txt`
 
 5.
 Clone the clone!
@@ -210,10 +210,15 @@ Q: "I'm using a Cloudflare tunnel."
 
 A: Go to Zero Trust, Networks, Overview, Manage Tunnels, View Tunnels, click the 3 dots next to your tunnel that is running Cedar-Django, Configure, Published application routes, Add a published application route, select your domain, and for the service set the type as HTTP with the URL `127.0.0.1:8000` (or `127.0.0.1:80 if you're using the reverse proxy). Make sure your domain is in ALLOWED_HOSTS!
 
-Q: "I'm having trouble, how can I contact you?"
-
-A: You should use the Issues. That way, if anyone has the same problem as you and you manage to solve it, they can also solve it using your solution.
-
 Q: "How do I edit pages?"
 
 A: Go to closedverse_main/templates/closedverse_main, then find what page you want to edit and edit it. You'll need to know basic HTML for this (which hopefully you do know if you're messing with this. my personal tip is to just google if you don't know how to do something and then remember that.)
+
+Q: "How can I set this up with MySQL/MariaDB?"
+
+A: By default, this project uses SQLite. To use MySQL or MariaDB (instructions are the exact same since MariaDB is a drop-in replacement for MySQL): Install default-libmysqlclient-dev with `sudo apt install default-libmysqlclient-dev`, run `pip3 install mysqlclient` then go to closedverse/settings.py and comment out the DATABASES with `backends.sqlite3` and uncomment the DATABASES with `backends.mysql`. After that, fill out the NAME, PASSWORD, HOST and PORT accordingly.
+
+# I'm having issues setting this up, how can I contact you?
+**If your problem is with a website that is using Cedar-Django, then contact the owner of that website, an administrator or a moderator. This repository is unrelated to any Cedar-Django instances.**
+
+If you're having issues setting this up, then make an issue, so that if you solve your issue anyone that has the same issue as you will be able to (hopefully) solve it with your solution.
