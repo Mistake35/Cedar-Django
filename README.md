@@ -73,7 +73,7 @@ You need Pip
 
 4.
 Get everything else you need.
-`pip3 install -r requirements.txt`
+`pip3 install Django==3.2.2 urllib3 lxml passlib bcrypt pillow django-markdown-deux django-markdown2 whitenoise django-xff django-cleanup`
 
 5.
 Clone the clone!
