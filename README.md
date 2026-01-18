@@ -55,7 +55,9 @@ If these setup instructions below don't seem to work, then below are some other 
 # Install time
 
 Should probably say that:
+
 This is a lazy way to do it. You should use a reverse proxy to deploy the server up for prod. (fr don't do this if you're hosting in prod.)
+
 This guide assumes you're using Debian. If not, adjust accordingly.
 
 1.
