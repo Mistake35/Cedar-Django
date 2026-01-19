@@ -217,6 +217,7 @@ if os.path.isdir(os.path.join(BASE_DIR, '.git')):
         CLOSEDVERSE_GIT_URL = git_url_without_ext + '/commit/' + CLOSEDVERSE_GIT_VERSION
 
 # Google reCAPTCHA (v2) settings
+# recaptcha v3 does not work
 # This feature won't work if these fields are not populated.
 RECAPTCHA_PUBLIC_KEY = None
 RECAPTCHA_PRIVATE_KEY = None
@@ -290,3 +291,27 @@ XFF_HEADER_REQUIRED = True
 
 # uncomment this if you want miis to be retrieved on the server
 #mii_endpoint = '/origin?a='
+
+# smtp entries for things like password reset, uncomment them and put your things in, mailtrap is a good service if you need an smtp server, these things worked in my configuration
+#EMAIL_HOST = ''
+#EMAIL_HOST_USER = ''
+#EMAIL_HOST_PASSWORD = ''
+#EMAIL_PORT = ''
+#DEFAULT_FROM_EMAIL = ''
+#EMAIL_USE_TLS = True 
+#EMAIL_USE_SSL = False
+#EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+# only uncomment everything below if it says smtp auth extension is not supported by server
+
+#import smtplib
+#from django.core.mail.backends.smtp import EmailBackend
+
+#if not hasattr(smtplib.SMTP, '_patched_starttls'):
+    #original_starttls = smtplib.SMTP.starttls
+
+    #def safe_starttls(self, *args, **kwargs):
+        #return original_starttls(self)
+
+    #smtplib.SMTP.starttls = safe_starttls
+    #smtplib.SMTP._patched_starttls = True 
