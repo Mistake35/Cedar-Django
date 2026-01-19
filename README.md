@@ -82,31 +82,31 @@ Get everything else you need.
 Clone the clone!
 `git clone https://github.com/Mistake35/Cedar-Django`
 
-5.5 (recommended).
+(recommended).
 You should use FileZilla or some other SFTP client to make things easier in the future.
 
-6.
+7.
 Navigate to Cedar-Django
 `cd Cedar-Django`
 
-7.
+8.
 Edit the settings.py file.
 `nano closedverse/settings.py`
 
-8.
+9.
 Fill everything out as needed. Be sure to generate a secret key and paste it in too.
 
-9.
+10.
 Now it's time for the good stuff!
 Let's build the database
 `python3 manage.py makemigrations closedverse_main`
 `python3 manage.py migrate`
 
-10.
+11.
 Do the static files or no CSS or JS.
 `python3 manage.py collectstatic`
 
-11.
+12.
 Test the server!
 Be sure to replace "127.0.0.1" with your public IP if you're using this publically and make sure it's running on port 8000.
 `python3 manage.py runserver 127.0.0.1:8000`
