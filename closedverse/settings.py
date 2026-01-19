@@ -25,11 +25,10 @@ SECRET_KEY = ''
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-# This is just a default value for testing
-# Do not include 127.0.0.1 or localhost
-# in production for security reasons.
+# Add your domain or IP here.
+# Do not include 127.0.0.1 or localhost in production for security reasons.
 ALLOWED_HOSTS = [
-    '127.0.0.1',
+    '127.0.0.1', 'localhost',
 ]
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
@@ -54,7 +53,7 @@ INSTALLED_APPS = [
 X_FRAME_OPTIONS='SAMEORIGIN'
 
 MIDDLEWARE = [
-    # Uncomment if you need HTTP_X_FORWARDED_FOR support
+    # Uncomment if you need HTTP_X_FORWARDED_FOR support. If you're using Cloudflare, you will need this.'
     #'closedverse_main.middleware.ProxyMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -100,6 +99,18 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'sql.sqlite3'),
     }
 }
+# Uncomment the below and comment the above DATABASES to use MySQL instead of SQLite.
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.mysql',
+#        'NAME': 'database-name',
+#        'USER': 'username',
+#       'PASSWORD': 'user-password',
+#        'HOST': '127.0.0.1',
+#        'PORT': '3306',
+#    }
+#}
+
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
@@ -133,7 +144,7 @@ if not DEBUG:
 LANGUAGE_CODE = 'en-us'
 
 # replace with your own timezone
-TIME_ZONE = 'PST8PDT'
+TIME_ZONE = 'America/New_York'
 
 # Disable internationalization because Closedverse doesn't use it
 USE_I18N = False
@@ -246,7 +257,7 @@ invite_only = False
 # Minimum level required to view IP addresses and user agents. (default: 10)
 # Mods under this level will still be able to manage users, however will not be able to view any sensitive data.
 # Set this to 0 to prevent anyone from viewing data.
-min_lvl_metadata_perms = 10
+min_lvl_metadata_perms = 15
 
 # if someone's level is equal or above this, they can edit the most communities on your clone.
 level_needed_to_man_communities = 5

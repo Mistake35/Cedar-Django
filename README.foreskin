@@ -7,6 +7,8 @@ Stuff that is done:
 - Post limit shows for admins, with indication on how many posts are left.
 - Image and video file boxes in one.
 - Full ImageField integration.
+- FIX THE FUCKING CONTACT PAGE
+- remove the useless feedback thing. (You can just make a bug reporting and/or requests community)
 
 
 Stuff that is in progress
@@ -18,8 +20,7 @@ Todo:
 - Refine the invite system.
 	Make the invite page look better.
 	When banning someone, add the option to ban or revoke invites for whoever invited that person.
-- FIX THE FUCKING CONTACT PAGE (nah not doing that lmao)
-- also, CONTINUE MOVING OVER TO FORMS.PY
+- CONTINUE MOVING OVER TO FORMS.PY
 	Email reset form
 	Signup page
 	A bunch of other forms I haven't thought about.
@@ -29,4 +30,4 @@ Ideas:
 - "Muting" feature to replace "active"
 - Make it, so you need to enter your current password to change your email address.
 - Ways for mods to view who invited who easily.
-- remove the useless feedback thing. (You can just make a bug reporting community)
+- Update Django, possibly.
