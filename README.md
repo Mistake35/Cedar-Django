@@ -68,14 +68,17 @@ Time to update
 `sudo apt update && sudo apt upgrade`
 
 3.
-You need Pip
-`sudo apt install pip`
+You need Pip, and you may need a Virtual environment. You can set `<venv-name>` to any name, and simply putting in `venv` works just fine.
+`sudo apt install pip` `python3 -m venv <venv-name>`
 
 4.
+If you made a Virtual environment, on Linux you can enter it with `source <venv-name>/bin/activate`. You can hit tab to autofill directories quickly.
+
+5.
 Get everything else you need.
 `pip3 install Django==3.2.2 urllib3 lxml passlib bcrypt pillow django-markdown-deux django-markdown2 whitenoise django-xff django-cleanup`
 
-5.
+6.
 Clone the clone!
 `git clone https://github.com/Mistake35/Cedar-Django`
 
@@ -125,10 +128,10 @@ A: You need to collect the static files as mentioned prior.
 
 Q: "Why is pip giving me an externally managed environment error?"
 
-A: You need to setup a venv. Run `python3 -m venv <venv-name>`, then when it's done so `source <venv-name>/bin/activate`. **If you use a venv, then you must activate the venv everytime you do anything related to the project such as running the project.**
+A: Some modern Linux distros prevent you from installing system wide packages with Pip. You need to setup a Virtual Environment. Run `python3 -m venv <venv-name>`, and after, you run `source <venv-name>/bin/activate`. You can also hit tab in the terminal to autofill directories making it quicker if done in repetition. **If you use a venv, then you must activate the venv every time you do anything related to the project such as installing stuff with Pip and running the project.**
 
 You may have to do some additional troubleshooting, and that's the joy of web-hosting.
-Fixing problems yourself is a great way to learn how this shit works.
+Fixing problems yourself is a great way to learn how all this stuff works.
 
 # Yet even more steps
 
@@ -173,14 +176,15 @@ Make sure it works too!
 ```
 sudo systemctl status django
 ```
-# Optional but recommended things
+# Optional but recommended things:
 
 17.
-Using gunicorn instead of runserver
+Using Gunicorn instead of runserver will be better overall.
 
 Run `pip3 install gunicorn`
 
-See if it works: `python3 -m gunicorn closedverse.wsgi --bind 127.0.0.1:8000`. If it does, edit the systemd service to use gunicorn instead of runserver.
+See if it works: `python3 -m gunicorn closedverse.wsgi --bind 127.0.0.1:8000 -w 3`. If it does, edit the systemd service to use Gunicorn instead of runserver.
+Note that `-w 3` at the end specifies the worker count for Gunicorn
 
 19.
 Reverse proxying using apache2 (If you use nginx, you can lookup a tutorial)
@@ -206,7 +210,7 @@ Make sure apache2 listens on port 80.
 # FAQ
 Q: "I want SSL!"
 
-A: Just use Cloudflare. It'll do it all for you.
+A: Just use Cloudflare. It'll do it all for you, but if not, Certbot will take care of that.
 
 Q: "I'm using a Cloudflare tunnel."
 
