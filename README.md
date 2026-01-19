@@ -135,21 +135,21 @@ Fixing problems yourself is a great way to learn how all this stuff works.
 
 # Yet even more steps
 
-12.
+13.
 So your server is running, the URL works and everything? Good.
 Now it's time to create your account.
 `python3 manage.py createsuperuser`
 Enter your username, and password.
 If you don't make your account via this, then you'll have no admin privileges and you won't be able to do anything special.
 
-13.
+14.
 Make sure it's working by signing in.
 
-14.
+15.
 Alright now it's time to do some fun stuff! We're going to try and make this run at boot with systemd.
 `sudo nano /etc/systemd/system/django.service`
 
-15.
+16.
 Paste this in!
 Now it's time to change this if needed. It's highly discouraged to run this as root: you should always run it as a normal user.
 ```
@@ -166,7 +166,7 @@ ExecStart=/usr/bin/python3 manage.py runserver 127.0.0.1:8000
 WantedBy=multi-user.target
 ```
 
-16.
+17.
 Pop these in!
 ```
 sudo systemctl daemon-reload
@@ -178,7 +178,7 @@ sudo systemctl status django
 ```
 # Optional but recommended things:
 
-17.
+18.
 Using Gunicorn instead of runserver will be better overall.
 
 Run `pip3 install gunicorn`
